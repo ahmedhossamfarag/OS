@@ -1,8 +1,9 @@
 #include "shell.h"
 #include "screen_edit.h"
 
-void shell_listen()
+void shell_init()
 {
+	screen_edit_init();
 	screen_edit_clear();
 	set_keyboard_handler_proc(shell_keyboard_handler);
 }

@@ -1,16 +1,24 @@
 #include "screen_print.h"
 #include "low_level.h"
 
-char* screen_0 = (char*) VideoMemoryStart;
+#define screen_0 (char*) VideoMemoryStart
+
 char* screen_pntr = (char*) VideoMemoryStart;
 int screen_offset = 0;
 
 void screen_new_line()
 {
+    char* current_pntr = screen_pntr;
     int line = screen_offset / VideoMemoryLineLn;
     line ++;
     screen_offset = line * VideoMemoryLineLn;
     screen_pntr = screen_0 + (screen_offset * 2);
+    while (current_pntr < screen_pntr)
+    {
+        *current_pntr = 0;
+        current_pntr += 2;
+    }
+    
 }
 
 void screen_print(char c){
@@ -48,6 +56,7 @@ void screen_clear(){
     }
     screen_pntr = screen_0;
     screen_offset = 0;
+    screen_set_cursor(screen_offset);
 }
 
 void screen_set_cursor(int offset)

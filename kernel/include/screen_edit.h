@@ -5,6 +5,8 @@
 #define REG_SCREEN_CTRL 0x3D4
 #define REG_SCREEN_DATA 0x3D5
 
+void screen_edit_init();
+
 void screen_edit_print_char(char c);
 
 void screen_edit_print_str(const char* str);

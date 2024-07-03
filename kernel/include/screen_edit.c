@@ -3,10 +3,18 @@
 
 #define current_line screen_edit_offset / VideoMemoryLineLn
 
-char* screen_edit_0 = (char*)VideoMemoryStart;
-char* screen_edit_end = (char*)VideoMemoryStart + (VideoMemoryEndOffset * 2);
-char* screen_edit_pntr = (char*)VideoMemoryStart;
-int screen_edit_offset = 0;
+char* screen_edit_0;
+char* screen_edit_end;
+char* screen_edit_pntr;
+int screen_edit_offset;
+
+
+void screen_edit_init() {
+    screen_edit_0 = (char*)VideoMemoryStart;
+    screen_edit_end = (char*)VideoMemoryStart + (VideoMemoryEndOffset * 2);
+    screen_edit_pntr = (char*)VideoMemoryStart;
+    screen_edit_offset = 0;
+}
 
 void screen_edit_set_cursor(int offset)
 {
@@ -18,7 +26,8 @@ void screen_edit_set_cursor(int offset)
 
 void screen_edit_shift_right(char* from, char* to) {
     char* start = from;
-    while (to < screen_edit_end - 2 && *from != '\0') {
+    if(*from == '\0') return;
+    while (to < screen_edit_end - 2 && *(from+2) != '\0') {
         from += 2;
         to += 2;
     }
@@ -27,9 +36,9 @@ void screen_edit_shift_right(char* from, char* to) {
         to -= 2;
         from -= 2;
     }
-    while (to >= from)
+    while (to >= start)
     {
-        *to = '\0';
+        *to = ' ';
         to -= 2;
     }
 }
@@ -41,11 +50,7 @@ void screen_edit_shift_left(char* from, char* to) {
             to += 2;
             from += 2;
         } while (from < screen_edit_end && *from != '\0');
-        while (to < from)
-        {
-            *to = '\0';
-            to += 2;
-        }
+        *to = '\0';
     }
     else
     {
@@ -54,7 +59,7 @@ void screen_edit_shift_left(char* from, char* to) {
 }
 
 void screen_edit_print(char c) {
-    screen_edit_shift_right(screen_edit_pntr, screen_edit_pntr + 1);
+    screen_edit_shift_right(screen_edit_pntr, screen_edit_pntr + 2);
     *screen_edit_pntr = c;
     screen_edit_pntr++;
     *screen_edit_pntr = 0x0f;
@@ -99,9 +104,7 @@ void screen_edit_cursor_up()
     if (line > 0) {
         screen_edit_offset -= VideoMemoryLineLn;
         screen_edit_pntr -= VideoMemoryLineLn * 2;
-        if (screen_edit_offset > 0 && *(screen_edit_pntr - 2) == '\0') {
-            screen_edit_cursor_left();
-        }
+        screen_edit_set_cursor(screen_edit_offset);
     }
 }
 
@@ -113,6 +116,8 @@ void screen_edit_cursor_down()
         screen_edit_pntr += VideoMemoryLineLn * 2;
         if (*(screen_edit_pntr - 2) == '\0') {
             screen_edit_cursor_left();
+        }else{
+            screen_edit_set_cursor(screen_edit_offset);
         }
     }
 }
@@ -135,20 +140,8 @@ void screen_edit_cursor_right()
         if (*screen_edit_pntr != '\0') {
             screen_edit_pntr += 2;
             screen_edit_offset++;
+            screen_edit_set_cursor(screen_edit_offset);
         }
-        else
-        {
-            char* next_pntr = screen_edit_pntr;
-            while (next_pntr < screen_edit_end && *next_pntr == '\0')
-            {
-                next_pntr += 2;
-            }
-            if (next_pntr != screen_edit_end) {
-                screen_edit_pntr = next_pntr;
-                screen_edit_offset = (screen_edit_pntr - screen_edit_0) / 2;
-            }
-        }
-        screen_edit_set_cursor(screen_edit_offset);
     }
 }
 
@@ -161,6 +154,7 @@ void screen_edit_new_line()
         screen_edit_offset = line * VideoMemoryLineLn;
         screen_edit_pntr = screen_edit_0 + (screen_edit_offset * 2);
         screen_edit_shift_right(current_pntr, screen_edit_pntr);
+        screen_edit_set_cursor(screen_edit_offset);
     }
 }
 

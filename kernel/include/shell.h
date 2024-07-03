@@ -1,6 +1,6 @@
 #include "keyboard.h"
 
-void shell_listen();
+void shell_init();
 
 void shell_end_listen();
 
