@@ -3,12 +3,24 @@
   "WorkspaceRootPath": "D:\\VSC\\OS\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\VSC\\OS\\kernel\\include\\keyboard.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:kernel\\include\\keyboard.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\VSC\\OS\\kernel\\include\\shell.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:kernel\\include\\shell.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\VSC\\OS\\kernel\\kernel.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:kernel\\kernel.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\VSC\\OS\\kernel\\include\\screen_edit.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:kernel\\include\\screen_edit.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\VSC\\OS\\kernel\\include\\screen_edit.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:kernel\\include\\screen_edit.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\VSC\\OS\\kernel\\include\\shell.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:kernel\\include\\shell.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -18,7 +30,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 6,
           "Children": [
             {
               "$type": "Bookmark",
@@ -34,15 +46,28 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "keyboard.c",
-              "DocumentMoniker": "D:\\VSC\\OS\\kernel\\include\\keyboard.c",
-              "RelativeDocumentMoniker": "kernel\\include\\keyboard.c",
-              "ToolTip": "D:\\VSC\\OS\\kernel\\include\\keyboard.c",
-              "RelativeToolTip": "kernel\\include\\keyboard.c",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAIAAAAWAAAA",
+              "DocumentIndex": 3,
+              "Title": "screen_edit.c",
+              "DocumentMoniker": "D:\\VSC\\OS\\kernel\\include\\screen_edit.c",
+              "RelativeDocumentMoniker": "kernel\\include\\screen_edit.c",
+              "ToolTip": "D:\\VSC\\OS\\kernel\\include\\screen_edit.c",
+              "RelativeToolTip": "kernel\\include\\screen_edit.c",
+              "ViewState": "AQIAAGoAAAAAAAAAAAAAAKUAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000423|",
-              "WhenOpened": "2024-07-02T21:44:16.066Z",
+              "WhenOpened": "2024-07-03T09:56:24.299Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "screen_edit.h",
+              "DocumentMoniker": "D:\\VSC\\OS\\kernel\\include\\screen_edit.h",
+              "RelativeDocumentMoniker": "kernel\\include\\screen_edit.h",
+              "ToolTip": "D:\\VSC\\OS\\kernel\\include\\screen_edit.h",
+              "RelativeToolTip": "kernel\\include\\screen_edit.h",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAkAAAAQAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-07-03T09:56:23.435Z",
               "EditorCaption": ""
             },
             {
@@ -53,9 +78,35 @@
               "RelativeDocumentMoniker": "kernel\\kernel.c",
               "ToolTip": "D:\\VSC\\OS\\kernel\\kernel.c",
               "RelativeToolTip": "kernel\\kernel.c",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAYAAAAAAAAA",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAQAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000423|",
-              "WhenOpened": "2024-07-02T21:41:46.74Z",
+              "WhenOpened": "2024-07-03T09:54:20.707Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "shell.c",
+              "DocumentMoniker": "D:\\VSC\\OS\\kernel\\include\\shell.c",
+              "RelativeDocumentMoniker": "kernel\\include\\shell.c",
+              "ToolTip": "D:\\VSC\\OS\\kernel\\include\\shell.c",
+              "RelativeToolTip": "kernel\\include\\shell.c",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAEAAAAYAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000423|",
+              "WhenOpened": "2024-07-03T09:24:37.197Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "shell.h",
+              "DocumentMoniker": "D:\\VSC\\OS\\kernel\\include\\shell.h",
+              "RelativeDocumentMoniker": "kernel\\include\\shell.h",
+              "ToolTip": "D:\\VSC\\OS\\kernel\\include\\shell.h",
+              "RelativeToolTip": "kernel\\include\\shell.h",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAQAAAAYAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-07-03T09:24:27.982Z",
               "EditorCaption": ""
             }
           ]

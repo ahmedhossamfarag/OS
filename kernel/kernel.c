@@ -2,8 +2,6 @@
 #include "include/interrupt.h"
 #include "include/pic.h"
 #include "include/timer.h"
-#include "include/libc.h"
-#include "include/keyboard.h"
 
 int main () {
     screen_clear();

@@ -106,13 +106,14 @@ void keyboard_handler() {
 }
 
 static int8_t shift; // Shift key state
-static int8_t Extended; // Extended key state
+static int8_t extended; // Extended key state
+static int8_t numlock;
 
 void handle_scancode(uint8_t scancode) {
     KeyInfo info;
 
     if (scancode == 0xE0) {
-        Extended = 1;
+        extended = 1;
         return;
     }
 
@@ -127,7 +128,7 @@ void handle_scancode(uint8_t scancode) {
 
 
     // Check if the scancode is a make code (key pressed)
-    if (Extended == 0) {
+    if (extended == 0) {
         if (shift) {
             info.character = key_shift_char_map[scancode];
             info.key_code = key_shift_code_map[scancode];
@@ -136,12 +137,17 @@ void handle_scancode(uint8_t scancode) {
             info.character = key_char_map[scancode];
             info.key_code = key_code_map[scancode];
         }
+
+        if (numlock && info.key_code == NUM_PAD_CHAR) {
+            info.character = key_shift_char_map[scancode];
+            info.key_code = key_shift_code_map[scancode];
+        }
     }
     else {
         // Handle Extended Keys
         info.character = key_extended_char_map[scancode];
         info.key_code = key_extended_code_map[scancode];
-        Extended = 0;
+        extended = 0;
     }
 
     if (info.key_code == SHIFT_RIGHT) {
@@ -149,6 +155,9 @@ void handle_scancode(uint8_t scancode) {
             shift = 0;
         else
             shift = 1;
+    }
+    else if (info.key_code == NUM_LOCK && info.key_release) {
+        numlock = ~numlock;
     }
 
     if (keyboard_handler_proc) {
