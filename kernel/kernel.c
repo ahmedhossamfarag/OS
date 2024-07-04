@@ -2,6 +2,8 @@
 #include "include/interrupt.h"
 #include "include/pic.h"
 #include "include/timer.h"
+#include "include/memory.h"
+#include "include/libc.h"
 
 int main () {
     screen_clear();
@@ -12,6 +14,7 @@ int main () {
     disable_timer();
     enable_interrupt();
     screen_print_str("\nInterrupts Enabled");
-    screen_print_char('\n');
+    memory_init();
+    screen_print_str("\nMemory In");
     return 0;
 }
