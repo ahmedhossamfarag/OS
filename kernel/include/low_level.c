@@ -25,6 +25,16 @@
     __asm__("out %%ax, %%dx" : :"a" (data), "d" (port));
  }
 
+ 
+void outsw(unsigned short port, const void *addr, int count) {
+    __asm__ volatile ("rep outsw" : "+S"(addr), "+c"(count) : "d"(port));
+}
+
+void insw(unsigned short port, void *addr, int count) {
+    __asm__ volatile ("rep insw" : "+D"(addr), "+c"(count) : "d"(port));
+}
+
+
 inline void io_wait(){
     // Port 0x80 is used for 'checkpoints' during POST.
     // The Linux kernel uses it for the same purpose, so we shall too.

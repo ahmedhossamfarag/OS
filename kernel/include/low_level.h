@@ -9,4 +9,8 @@
 
  void port_word_out(unsigned short port, unsigned short data);
  
+void outsw(unsigned short port, const void *addr, int count);
+
+void insw(unsigned short port, void *addr, int count);
+
  void io_wait(void);

@@ -5,6 +5,8 @@ C_OBJ = ${C_SOURCES:.c=.o}
 ASM_SOURCES = $(wildcard kernel/include/*.asm)
 ASM_OBJ = ${ASM_SOURCES:.asm=.o}
 
+BOOT_DIR = $(wildcard boot/*.asm)
+
 
 %.o : %.c ${HEADERS}
 	gcc -m32 -ffreestanding -c -fno-pie $< -o $@
@@ -13,7 +15,7 @@ ASM_OBJ = ${ASM_SOURCES:.asm=.o}
 	nasm $< -f elf -o $@
 
 # Build the boot binary file
-boot.bin: boot/boot.asm
+boot.bin: boot/boot.asm ${BOOT_DIR}
 	nasm $< -f bin -o $@
 
 # Build the kernel binary

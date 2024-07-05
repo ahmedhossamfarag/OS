@@ -5,6 +5,9 @@ extern void isr_exception_handler();
 extern void isr_pic_handler();
 extern void isr_timer_handler();
 extern void isr_keyboard_handler();
+extern void isr_mouse_handler();
+extern void isr_rtc_handler();
+extern void isr_fpu_handler();
 extern void isr_default();
 
 IDTEntry idt[IDT_ENTRIES];
@@ -35,6 +38,9 @@ void map_idt_isr(){
 
     set_idt_entry(PIC_M_OFFSET, (uint32_t)(isr_timer_handler));
     set_idt_entry(PIC_M_OFFSET + 1, (uint32_t)(isr_keyboard_handler));
+    set_idt_entry(PIC_M_OFFSET + 8, (uint32_t)(isr_rtc_handler));
+    set_idt_entry(PIC_M_OFFSET + 12, (uint32_t)(isr_mouse_handler));
+    set_idt_entry(PIC_M_OFFSET + 13, (uint32_t)(isr_fpu_handler));
 }
 
 

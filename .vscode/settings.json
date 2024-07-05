@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "low_level.h": "c",
-        "screen_print.h": "c"
+        "screen_print.h": "c",
+        "cstdint": "cpp",
+        "ata.h": "c"
     }
 }

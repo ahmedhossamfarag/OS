@@ -37,7 +37,7 @@ const char* str_reverse(const char* str) {
 
 static char str[10];
 
-const char* int_to_str(int val)
+const char* int_to_str(unsigned int val)
 {
 	for (int i = 0; i < 10; i++) str[i] = '\0';
 	for (int i = 0; i < 10; i++)
@@ -51,7 +51,7 @@ const char* int_to_str(int val)
 	return str_reverse(str);
 }
 
-const char* int_to_hex_str(int val)
+const char* int_to_hex_str(unsigned int val)
 {
 	for (int i = 0; i < 10; i++) str[i] = '\0';
 	for (int i = 0; i < 10; i++)
