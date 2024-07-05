@@ -3,6 +3,8 @@
         "low_level.h": "c",
         "screen_print.h": "c",
         "cstdint": "cpp",
-        "ata.h": "c"
+        "ata.h": "c",
+        "pic.h": "c",
+        "libc.h": "c"
     }
 }

@@ -17,17 +17,24 @@ void fpu_handler() {
     if(fpu_handler_proc)
         fpu_handler_proc(status);
 
-    // Clear the exception flags in the status word
-    asm volatile ("fnclex");
-
     pic_sendEOI(FPU_IRQ);
 }
 
 
-void configure_fpu(uint16_t mask) {
+void fpu_enable_mask(uint16_t mask) {
     unsigned int cw;
     _FPU_GETCW(cw);
     cw |= mask;
     _FPU_SETCW(cw);
 }
 
+void fpu_clear_mask(uint16_t mask) {
+    unsigned int cw;
+    _FPU_GETCW(cw);
+    cw &= ~mask;
+    _FPU_SETCW(cw);
+}
+
+void enable_fpu_exceptions() {
+    irq_clear_mask(FPU_IRQ);
+}

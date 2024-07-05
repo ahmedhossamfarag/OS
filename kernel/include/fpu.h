@@ -19,10 +19,11 @@
 #define _FPU_MASK_OM 0x08   /* Overflow mask.  */
 #define _FPU_MASK_UM 0x10   /* Underflow mask.  */
 #define _FPU_MASK_PM 0x20   /* Precision mask.  */
+#define _FPU_MASK_ALL 0x7F   /* All masks.  */
 
 /* Functions for accessing the FPU control word.  */
 
-#define _FPU_GETCW(cw) __asm__ __volatile__ ("fnstcw %0" : "=m" (cw))
+#define _FPU_GETCW(cw) __asm__ __volatile__ ("fstcw %0" : "=m" (cw))
 #define _FPU_SETCW(cw) __asm__ __volatile__ ("fldcw %0" : : "m" (cw))
 
 
@@ -42,4 +43,10 @@ void set_fpu_handler_proc(void (*proc)(uint16_t));
 /* IRQ 13 */
 void fpu_handler();
 
-void configure_fpu(uint16_t mask);
+/* enable fpu exceptions */
+void fpu_enable_mask(uint16_t mask);
+
+/* disable fpu exceptions */
+void fpu_clear_mask(uint16_t mask);
+
+void enable_fpu_exceptions();

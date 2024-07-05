@@ -58,3 +58,25 @@ void set_mouse_handler_proc(void (*proc)(MouseInfo))
 {
     mouse_handler_proc = proc;
 }
+
+
+
+static void enable_mouse_device() {
+    // Enable the auxiliary device - the mouse
+    outb(PS2_CMD_PORT, 0xA8);
+    // Enable IRQ12 (unmask it)
+    outb(PS2_CMD_PORT, 0x20); // Command to read the command byte
+    uint8_t status = inb(PS2_DATA_PORT);
+    status |= 0x02;
+    outb(PS2_CMD_PORT, 0x60); // Command to write the command byte
+    outb(PS2_DATA_PORT, status);
+
+    // Enable mouse interrupt
+    outb(PS2_CMD_PORT, 0xD4);
+    outb(PS2_DATA_PORT, 0xF4);
+}
+
+void initialize_mouse() {
+    enable_mouse_device();
+    irq_clear_mask(MouseIRQ);
+}

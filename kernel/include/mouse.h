@@ -1,3 +1,7 @@
+#define PS2_CMD_PORT 0x64
+#define PS2_DATA_PORT 0x60
+
+
 #define LeftButton 0x01
 #define RightButton 0x02
 #define MiddleButton 0x04
@@ -29,3 +33,5 @@ typedef struct{
 void mouse_handler();
 
 void set_mouse_handler_proc(void (*proc)(MouseInfo));
+
+void initialize_mouse();
