@@ -5,6 +5,7 @@
         "cstdint": "cpp",
         "ata.h": "c",
         "pic.h": "c",
-        "libc.h": "c"
+        "libc.h": "c",
+        "keyboard.h": "c"
     }
 }

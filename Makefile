@@ -1,15 +1,17 @@
-C_SOURCES = $(wildcard kernel/*.c kernel/include/*.c)
-HEADERS = $(wildcard kernel/*.h kernel/include/*.h)
+C_SOURCES = $(wildcard kernel/*.c kernel/source/base/*.c kernel/source/drivers/*.c kernel/source/lib/*.c)
+HEADERS = $(wildcard kernel/include/base/*.h kernel/include/drivers/*.h kernel/include/lib/*.h)
 C_OBJ = ${C_SOURCES:.c=.o}
 
-ASM_SOURCES = $(wildcard kernel/include/*.asm)
+ASM_SOURCES = $(wildcard kernel/source/base/*.asm kernel/source/drivers/*.asm kernel/source/lib/*.asm)
 ASM_OBJ = ${ASM_SOURCES:.asm=.o}
+
+GCC_INCLUDE := -Ikernel/include/base -Ikernel/include/drivers -Ikernel/include/lib
 
 BOOT_DIR = $(wildcard boot/*.asm)
 
 
 %.o : %.c ${HEADERS}
-	gcc -m32 -ffreestanding -c -fno-pie $< -o $@
+	gcc -m32 -ffreestanding -c -fno-pie ${GCC_INCLUDE} $< -o $@
 
 %.o : %.asm
 	nasm $< -f elf -o $@

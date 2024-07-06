@@ -1,9 +1,9 @@
-#include "include/screen_print.h"
-#include "include/interrupt.h"
-#include "include/pic.h"
-#include "include/timer.h"
-#include "include/memory.h"
-#include "include/libc.h"
+#include "screen_print.h"
+#include "interrupt.h"
+#include "pic.h"
+#include "timer.h"
+#include "memory.h"
+#include "libc.h"
 
 int main () {
     screen_clear();
