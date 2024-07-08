@@ -6,6 +6,7 @@
         "ata.h": "c",
         "pic.h": "c",
         "libc.h": "c",
-        "keyboard.h": "c"
+        "keyboard.h": "c",
+        "disk.h": "c"
     }
 }

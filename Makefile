@@ -24,15 +24,19 @@ boot.bin: boot/boot.asm ${BOOT_DIR}
 kernel.bin: kernel/kernel_entry.o ${C_OBJ} ${ASM_OBJ}
 	ld -m elf_i386 -o $@ -T link.ld $^ --oformat binary
 
+# Disk binary
+disk.bin:
+	dd if=/dev/zero of=disk.bin count=10000
+
 # Build the os image
-os-image: boot.bin kernel.bin
+os-image: boot.bin kernel.bin disk.bin
 	cat $^ > os-image
 
 
 all: os-image
 
-run: all
+run: clean all
 	qemu-system-x86_64 -drive file=os-image,format=raw
 
 clean:
-	rm -fr *.bin *.o kernel/*.o kernel/include/*.o *.dis os-image
+	rm -fr *.bin *.o kernel/*.o kernel/source/base/*.o kernel/source/drivers/*.o kernel/source/lib/*.o *.dis os-image

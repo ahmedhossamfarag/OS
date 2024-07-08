@@ -3,8 +3,9 @@
 #include "pic.h"
 #include "timer.h"
 #include "memory.h"
-#include "libc.h"
-
+#include "strlib.h"
+#include "disk.h"
+#include "ata.h"
 int main () {
     screen_clear();
     screen_print_str("Welcome To Kernel");
@@ -16,5 +17,9 @@ int main () {
     screen_print_str("\nInterrupts Enabled");
     memory_init();
     screen_print_str("\nMemory In");
+    disk_init();
+    char str[10];
+    println(int_to_str(disk_alloc(1), str));
+
     return 0;
 }
