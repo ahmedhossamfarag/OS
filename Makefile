@@ -35,7 +35,7 @@ os-image: boot.bin kernel.bin disk.bin
 
 all: os-image
 
-run: clean all
+run: all
 	qemu-system-x86_64 -drive file=os-image,format=raw
 
 clean:

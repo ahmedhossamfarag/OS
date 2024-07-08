@@ -5,6 +5,7 @@ extern keyboard_handler
 extern mouse_handler
 extern rtc_handler
 extern fpu_handler
+extern page_fault_handler
 
 global isr_exception_handler
 global isr_pic_handler
@@ -14,7 +15,7 @@ global isr_default
 global isr_mouse_handler
 global isr_rtc_handler
 global isr_fpu_handler
-
+global isr_page_fault_handler
 
 isr_exception_handler:
     call exception_handler
@@ -43,6 +44,10 @@ isr_rtc_handler:
 
 isr_fpu_handler:
     call fpu_handler
+    iret
+
+isr_page_fault_handler:
+    call page_fault_handler
     iret
 
 isr_default:

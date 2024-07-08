@@ -72,7 +72,7 @@ uint32_t disk_alloc(uint32_t size) {
 }
 
 void disk_free(uint32_t lba, uint32_t size) {
-    if(lba == 0 || lba >= DiskSize || size == 0)    return;
+    if(lba < FirstBlockLBA || lba >= DiskSize || size == 0)    return;
 
     DiskFreeBlock free_block = {lba, size};
     DiskMap* map = (DiskMap*) alloc(SectorSize);
@@ -104,8 +104,8 @@ void disk_free(uint32_t lba, uint32_t size) {
             if(!done){
                 *(map->free_blocks+map->n_blocks) = *(map->free_blocks+map->n_blocks-1);
                 *(map->free_blocks+map->n_blocks-1) = free_block;
+                map->n_blocks += 1;
             }
-            map->n_blocks += 1;
         }else{
             DiskFreeBlock base_block = map->free_blocks[map->n_blocks-1];
             create_map(lba, base_block);

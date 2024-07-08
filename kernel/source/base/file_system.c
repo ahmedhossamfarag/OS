@@ -13,6 +13,7 @@ static uint32_t create_dir_ex(File* first_file){
         if(lba)
         {
             dir->next_lba = 0;
+            dir->n_files = 0;
             File file = {0,0};
             for (File* f = dir->files; f < dir->files+ DirExEntity_N_Files; f++)
             {
@@ -272,6 +273,7 @@ uint8_t file_write(File* file, char* from, uint32_t size){
             ata_write(PRIMARY_BASE, 0, entity->lba, n_sectors, from);
             entity->size = size;
             entity->n_sectors = n_sectors;
+            ata_write(PRIMARY_BASE, 0, file->lba, 1, entity);
             done = 1;
         }
         free((char*)entity, SectorSize);
@@ -280,7 +282,7 @@ uint8_t file_write(File* file, char* from, uint32_t size){
 }
 
 File file_create(File* parent, const char* name){
-    File file = {0, FILE_TYPE};
+    File file = {FILE_TYPE, 0};
 
     if(!name) return file;
 
@@ -297,7 +299,13 @@ File file_create(File* parent, const char* name){
             uint32_t lba = parent ? parent->lba : RootDirLBA;
             DirEntity* dir_entity = (DirEntity*) entity;
             ata_read(PRIMARY_BASE, 0, lba, 1, dir_entity);
-            if(dir_append(dir_entity->lba, &file)){
+            if (!dir_entity->lba) {
+                dir_entity->lba = create_dir_ex(&file);
+                if (dir_entity->lba) {
+                    dir_entity->n_files++;
+                    ata_write(PRIMARY_BASE, 0, lba, 1, dir_entity);
+                }
+            }else if(dir_append(dir_entity->lba, &file)){
                 dir_entity->n_files ++;
                 ata_write(PRIMARY_BASE, 0, lba, 1, dir_entity);
             }
@@ -308,7 +316,7 @@ File file_create(File* parent, const char* name){
 }
 
 File dir_create(File* parent, const char* name){
-    File file = {0, DIR_TYPE};
+    File file = {DIR_TYPE, 0};
 
     if(!name) return file;
 
@@ -325,7 +333,13 @@ File dir_create(File* parent, const char* name){
             uint32_t lba = parent ? parent->lba : RootDirLBA;
             DirEntity* dir_entity = (DirEntity*) entity;
             ata_read(PRIMARY_BASE, 0, lba, 1, dir_entity);
-            if(dir_append(dir_entity->lba, &file)){
+            if (!dir_entity->lba) {
+                dir_entity->lba = create_dir_ex(&file);
+                if (dir_entity->lba) {
+                    dir_entity->n_files++;
+                    ata_write(PRIMARY_BASE, 0, lba, 1, dir_entity);
+                }
+            }else if(dir_append(dir_entity->lba, &file)){
                 dir_entity->n_files ++;
                 ata_write(PRIMARY_BASE, 0, lba, 1, dir_entity);
             }
