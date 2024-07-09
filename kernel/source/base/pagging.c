@@ -32,10 +32,24 @@ void enable_paging() {
 }
 
 /* INT 14 */
-void page_fault_handler() {
+void page_fault_handler(uint32_t error_code) {
     uint32_t faulting_address;
     asm volatile("mov %%cr2, %0" : "=r"(faulting_address));
 
-    // Determine cause and handle page fault
-    // Example: load page from disk if not present
+    // Analyze the faulting address and error code
+    if (!(error_code & 0x1)) {
+        // Page not present
+    } else {
+        // Page protection violation
+        if (error_code & 0x2) {
+            // Write operation
+        } else {
+            // Read operation
+        }
+        if (error_code & 0x4) {
+            // Fault occurred in user mode
+        } else {
+            // Fault occurred in kernel mode
+        }
+    }
 }

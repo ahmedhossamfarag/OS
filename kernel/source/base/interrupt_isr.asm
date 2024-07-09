@@ -47,6 +47,7 @@ isr_fpu_handler:
     iret
 
 isr_page_fault_handler:
+    push dword [esp + 36] 
     call page_fault_handler
     iret
 
