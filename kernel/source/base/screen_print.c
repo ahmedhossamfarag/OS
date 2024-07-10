@@ -6,6 +6,21 @@
 char* screen_pntr = (char*) VideoMemoryStart;
 int screen_offset = 0;
 
+void screen_scroll_up()
+{
+    int line_length = VideoMemoryLineLn*2;
+    for (char* pntr = screen_0 + line_length; pntr < screen_0 + (VideoMemoryEndOffset * 2); pntr++)
+    {
+        *(pntr - line_length) = *pntr;
+    }
+    for (char* pntr = screen_0 + (VideoMemoryEndOffset * 2) - line_length; pntr < screen_0 + (VideoMemoryEndOffset * 2); pntr+=2)
+    {
+        *pntr = 0;
+    }
+    screen_pntr -= line_length;
+    screen_offset -= VideoMemoryLineLn;
+}
+
 void screen_new_line()
 {
     char* current_pntr = screen_pntr;
@@ -22,6 +37,9 @@ void screen_new_line()
 }
 
 void screen_print(char c){
+    if(screen_offset >= VideoMemoryEndOffset){
+        screen_scroll_up();
+    }
     if(c == '\n'){
         screen_new_line();
     }else{

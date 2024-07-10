@@ -1,20 +1,23 @@
 #include "pagging.h"
+#include "screen_print.h"
 
-page_table_t kernel_page_table __attribute__((aligned(PAGE_SIZE)));
+page_table_t* kernel_page_table;
 
 void init_page_tables() {
-    for (int i = 0; i < NUM_PAGES; i++) {
-        kernel_page_table.entries[i].present = 1;
-        kernel_page_table.entries[i].rw = 1;
-        kernel_page_table.entries[i].user = 0;
-        kernel_page_table.entries[i].pwt = 0;
-        kernel_page_table.entries[i].pcd = 0;
-        kernel_page_table.entries[i].accessed = 0;
-        kernel_page_table.entries[i].dirty = 0;
-        kernel_page_table.entries[i].pat = 0;
-        kernel_page_table.entries[i].global = 0;
-        kernel_page_table.entries[i].ignored = 0;
-        kernel_page_table.entries[i].frame = i;
+    kernel_page_table = (page_table_t*) 0xC0000;
+    for (int i = 0; i < NUM_PAGES; i++)
+    {
+        kernel_page_table->entries[i].present = 1;
+        kernel_page_table->entries[i].accessed = 0;
+        kernel_page_table->entries[i].dirty = 0;
+        kernel_page_table->entries[i].rw = 1;
+        kernel_page_table->entries[i].user = 0;
+        kernel_page_table->entries[i].pwt = 0;
+        kernel_page_table->entries[i].pcd = 0;
+        kernel_page_table->entries[i].pat = 0;
+        kernel_page_table->entries[i].global = 0;
+        kernel_page_table->entries[i].ignored = 0;
+        kernel_page_table->entries[i].frame = i;
     }
     enable_paging();
 }
@@ -22,7 +25,7 @@ void init_page_tables() {
 
 void enable_paging() {
     // Load the page directory address into CR3
-    asm volatile("mov %0, %%cr3" :: "r"(&kernel_page_table));
+    asm volatile("mov %0, %%cr3" :: "r"(kernel_page_table));
 
     // Enable paging (set the PG bit in CR0)
     uint32_t cr0;

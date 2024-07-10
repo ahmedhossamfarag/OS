@@ -4,6 +4,8 @@
 #define REG_SCREEN_CTRL 0x3D4
 #define REG_SCREEN_DATA 0x3D5
 
+void screen_scroll_up();
+
 void screen_new_line();
 
 void screen_print(char c);

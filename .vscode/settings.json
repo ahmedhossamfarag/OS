@@ -1,12 +1,5 @@
 {
     "files.associations": {
-        "low_level.h": "c",
-        "screen_print.h": "c",
-        "cstdint": "cpp",
-        "ata.h": "c",
-        "pic.h": "c",
-        "libc.h": "c",
-        "keyboard.h": "c",
-        "disk.h": "c"
+        "timer.h": "c"
     }
 }

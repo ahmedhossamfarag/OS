@@ -6,7 +6,8 @@
 #include "strlib.h"
 #include "disk.h"
 #include "file_system.h"
-#include "pagging.h"
+#include "scheduler.h"
+#include "gdt.h"
 
 int main () {
     screen_clear();
@@ -19,9 +20,12 @@ int main () {
     screen_print_str("\nInterrupts Enabled");
     memory_init();
     screen_print_str("\nMemory In");
-    disk_init();
-    file_system_init();
-    init_page_tables();
-
+    init_gdt();
+    screen_print_str("\nGDT & TSS In");
+    schudler_init();
+    while (1)
+    {
+    }
+    
     return 0;
 }
