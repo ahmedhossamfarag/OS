@@ -8,6 +8,25 @@
 #include "file_system.h"
 #include "scheduler.h"
 #include "gdt.h"
+#include "resources.h"
+#include "libc.h"
+
+void proc1(){
+    while (1)
+    {
+        for (int i = 0; i < 1e7; i++);
+        
+        print_str("Process_1;");
+    }
+}
+
+void proc2(){
+    while (1)
+    {
+        for (int i = 0; i < 1e7; i++);
+        print_str("Process_2;");
+    }
+}
 
 int main () {
     screen_clear();
@@ -21,8 +40,13 @@ int main () {
     memory_init();
     screen_print_str("\nMemory In");
     init_gdt();
-    screen_print_str("\nGDT & TSS In");
-    schudler_init();
+    screen_print_str("\nGDT & TSS In\n");
+    resources_init();
+    scheduler_init();
+    add_new_process(1, 0, (uint32_t) proc1, 0);
+    add_new_process(2, 0, (uint32_t) proc2, 0);
+    scheduler_enable();
+
     while (1)
     {
     }

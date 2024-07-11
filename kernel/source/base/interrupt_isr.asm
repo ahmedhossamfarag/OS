@@ -6,7 +6,35 @@
         iret 
 %endmacro
 
+%macro isr_state 1  
+    global isr_%+%1
+    extern %1
+    isr_%+%1:
+        pusha                  ; Save all general-purpose registers
+        push ds                ; Save data segment register
+        push es
+        push fs
+        push gs
+        push esp               ; Push the stack pointer to pass it to the C handler
 
+        mov eax, 0x10
+        mov ds, eax
+        mov es, eax
+        mov fs, eax
+        mov gs, eax
+
+        call %1     ; Call the C handler
+
+        pop esp                ; Restore the stack pointer
+        pop gs                 ; Restore segment registers
+        pop fs
+        pop es
+        pop ds
+        popa                   ; Restore general-purpose registers
+        iret                   ; Return from interrupt
+%endmacro
+
+global isr_default
 isr_default:
     nop
     iret
@@ -25,22 +53,8 @@ isr fpu_handler
 
 isr page_fault_handler
 
-global isr_timer_handler
-extern timer_handler
-isr_timer_handler:
-    pusha                  ; Save all general-purpose registers
-    push ds                ; Save data segment register
-    push es
-    push fs
-    push gs
-    push esp               ; Push the stack pointer to pass it to the C handler
+isr_state timer_handler
 
-    call timer_handler     ; Call the C handler
+isr_state resource_request_handler
 
-    pop esp                ; Restore the stack pointer
-    pop gs                 ; Restore segment registers
-    pop fs
-    pop es
-    pop ds
-    popa                   ; Restore general-purpose registers
-    iret                   ; Return from interrupt
+isr resource_free_handler
