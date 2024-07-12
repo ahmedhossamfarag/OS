@@ -14,9 +14,9 @@ void scheduler_init();
 
 void scheduler_enable();
 
-void schedule(cpu_state_t*);
+void schedule(cpu_state_t**);
 
 /* Excuted when the current process requests an unavailable resource*/
-void schedule_resource(cpu_state_t*);
+void schedule_resource(cpu_state_t**);
 
-void context_switch(cpu_state_t* cpu, pcb_t* next_process);
+void context_switch(cpu_state_t** cpu, pcb_t* next_process);

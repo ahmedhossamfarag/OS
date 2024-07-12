@@ -58,7 +58,7 @@ void scheduler_enable()
     enable_timer(10);
 }
 
-void schedule(cpu_state_t* state)
+void schedule(cpu_state_t** state)
 {
     pcb_t* next_process = process_dequeue();
 
@@ -75,13 +75,10 @@ void schedule(cpu_state_t* state)
     }
 }
 
-void schedule_resource(cpu_state_t* state){
+void schedule_resource(cpu_state_t** state){
     pcb_t* next_process = process_dequeue();
 
     if(next_process){
-
-    char s[10];
-    print(int_to_hex_str(next_process->pid, s));
         context_switch(state, next_process);
 
         if(current_process){
@@ -93,34 +90,10 @@ void schedule_resource(cpu_state_t* state){
     }
 }
 
-void context_switch(cpu_state_t* cpu, pcb_t* next_process){
+void context_switch(cpu_state_t** cpu, pcb_t* next_process){
 
     if(current_process){
-        current_process->registers.eip = cpu->eip;
-        // current_process->registers.cs = cpu->cs;
-        current_process->registers.ds = cpu->ds;
-        current_process->registers.es = cpu->es;
-        current_process->registers.fs = cpu->fs;
-        current_process->registers.gs = cpu->gs;
-        current_process->registers.eax = cpu->eax;
-        current_process->registers.ebx = cpu->ebx;
-        current_process->registers.ecx = cpu->ecx;
-        current_process->registers.edx = cpu->edx;
-        current_process->registers.esi = cpu->esi;
-        current_process->registers.edi = cpu->edi;
-        current_process->registers.eflags = cpu->eflags;
+        current_process->state = *cpu;
     }
-    cpu->eip = next_process->registers.eip;
-    // cpu->cs = next_process->registers.cs;
-    cpu->ds = next_process->registers.ds;
-    cpu->es = next_process->registers.es;
-    cpu->fs = next_process->registers.fs;
-    cpu->gs = next_process->registers.gs;
-    cpu->eax = next_process->registers.eax;
-    cpu->ebx = next_process->registers.ebx;
-    cpu->ecx = next_process->registers.ecx;
-    cpu->edx = next_process->registers.edx;
-    cpu->esi = next_process->registers.esi;
-    cpu->edi = next_process->registers.edi;
-    cpu->eflags = next_process->registers.eflags;
+    *cpu = next_process->state;
 }

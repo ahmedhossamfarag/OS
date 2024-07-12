@@ -31,7 +31,7 @@ void resource_request_handler(cpu_state_t* state){
                     r->waiters[r->n_waiters] = process;
                     r->n_waiters ++;
                 }
-                schedule_resource(state);
+                schedule_resource(&state);
             }else{
                 r->handler = process;
             }

@@ -14,8 +14,6 @@
 void proc1(){
     while (1)
     {
-        for (int i = 0; i < 1e7; i++);
-        
         print_str("Process_1;");
     }
 }
@@ -23,7 +21,6 @@ void proc1(){
 void proc2(){
     while (1)
     {
-        for (int i = 0; i < 1e7; i++);
         print_str("Process_2;");
     }
 }
@@ -31,8 +28,8 @@ void proc2(){
 int main () {
     screen_clear();
     screen_print_str("Welcome To Kernel");
-    pic_remap();
     init_idt();
+    pic_init();
     screen_print_str("\nIDT Initialized");
     disable_timer();
     enable_interrupt();
@@ -43,8 +40,8 @@ int main () {
     screen_print_str("\nGDT & TSS In\n");
     resources_init();
     scheduler_init();
-    add_new_process(1, 0, (uint32_t) proc1, 0);
-    add_new_process(2, 0, (uint32_t) proc2, 0);
+    add_new_process(1, 0, (uint32_t) proc1, 0x98000);
+    add_new_process(2, 0, (uint32_t) proc2, 0xA0000);
     scheduler_enable();
 
     while (1)

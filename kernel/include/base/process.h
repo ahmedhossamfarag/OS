@@ -18,7 +18,7 @@ typedef enum {
 
 typedef struct {
     uint32_t ds, es, fs, gs;
-    uint32_t edi, esi, ebp, _, ebx, edx, ecx, eax;
+    uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
     uint32_t eip, cs, eflags;
 } cpu_state_t;
 
@@ -34,8 +34,8 @@ typedef struct
 typedef struct {
     uint32_t pid;                 // Process ID
     uint32_t ppid;                // Parent Process ID
-    registers_t registers;         // CPU state
     process_state_t process_state;        // Process state
+    cpu_state_t* state;
 } pcb_t;
 
 pcb_t create_process(uint32_t pid, uint32_t ppid, uint32_t eip, uint32_t ebp);

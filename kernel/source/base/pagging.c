@@ -1,7 +1,10 @@
 #include "pagging.h"
 #include "screen_print.h"
+#include "interrupt.h"
 
 page_table_t* kernel_page_table;
+
+extern void isr_page_fault_handler();
 
 void init_page_tables() {
     kernel_page_table = (page_table_t*) 0xC0000;
@@ -19,6 +22,9 @@ void init_page_tables() {
         kernel_page_table->entries[i].ignored = 0;
         kernel_page_table->entries[i].frame = i;
     }
+
+    set_idt_entry(14, (uint32_t)(isr_page_fault_handler));
+
     enable_paging();
 }
 
