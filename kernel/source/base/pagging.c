@@ -2,26 +2,26 @@
 #include "screen_print.h"
 #include "interrupt.h"
 
-page_table_t* kernel_page_table;
+uint32_t* pagging_dir;
+uint32_t* pagging_table;
 
 extern void isr_page_fault_handler();
 
 void init_page_tables() {
-    kernel_page_table = (page_table_t*) 0xC0000;
-    for (int i = 0; i < NUM_PAGES; i++)
+    pagging_dir = (uint32_t*) 0x20000;
+    for (uint32_t* i = pagging_dir; i < pagging_dir + NUM_PAGES; i++)
     {
-        kernel_page_table->entries[i].present = 1;
-        kernel_page_table->entries[i].accessed = 0;
-        kernel_page_table->entries[i].dirty = 0;
-        kernel_page_table->entries[i].rw = 1;
-        kernel_page_table->entries[i].user = 0;
-        kernel_page_table->entries[i].pwt = 0;
-        kernel_page_table->entries[i].pcd = 0;
-        kernel_page_table->entries[i].pat = 0;
-        kernel_page_table->entries[i].global = 0;
-        kernel_page_table->entries[i].ignored = 0;
-        kernel_page_table->entries[i].frame = i;
+        *i = 0;
     }
+
+    pagging_table = (uint32_t*) 0x21000;
+    
+    for (int i = 0; i < NUM_PAGES; i++) {
+        // Set the page table entry to map to the physical address
+        pagging_table[i] = (i * PAGE_SIZE) | 3; // Present, Read/Write, Supervisor
+    }
+
+    pagging_dir[0] = ((uint32_t)pagging_table) | 3;
 
     set_idt_entry(14, (uint32_t)(isr_page_fault_handler));
 
@@ -31,7 +31,7 @@ void init_page_tables() {
 
 void enable_paging() {
     // Load the page directory address into CR3
-    asm volatile("mov %0, %%cr3" :: "r"(kernel_page_table));
+    asm volatile("mov %0, %%cr3" :: "r"(pagging_dir));
 
     // Enable paging (set the PG bit in CR0)
     uint32_t cr0;

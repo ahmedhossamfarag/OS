@@ -63,7 +63,7 @@ void schedule(cpu_state_t** state)
     pcb_t* next_process = process_dequeue();
 
     if(next_process){
-        context_switch(state, next_process);
+        context_switch(*state, next_process);
 
         if(current_process){
             current_process->process_state = PROCESS_STATE_READY;
@@ -79,7 +79,7 @@ void schedule_resource(cpu_state_t** state){
     pcb_t* next_process = process_dequeue();
 
     if(next_process){
-        context_switch(state, next_process);
+        context_switch(*state, next_process);
 
         if(current_process){
             current_process->process_state = PROCESS_STATE_WAITING;
@@ -90,10 +90,11 @@ void schedule_resource(cpu_state_t** state){
     }
 }
 
-void context_switch(cpu_state_t** cpu, pcb_t* next_process){
+void context_switch(cpu_state_t* cpu, pcb_t* next_process){
 
     if(current_process){
-        current_process->state = *cpu;
+        current_process->cpu_state = *cpu;
     }
-    *cpu = next_process->state;
+    next_process->cpu_state.esp = cpu->esp;
+    *cpu = next_process->cpu_state;
 }

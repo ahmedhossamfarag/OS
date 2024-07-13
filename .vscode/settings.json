@@ -2,6 +2,8 @@
     "files.associations": {
         "timer.h": "c",
         "libc.h": "c",
-        "interrupt.h": "c"
+        "interrupt.h": "c",
+        "tss.h": "c",
+        "pagging.h": "c"
     }
 }
