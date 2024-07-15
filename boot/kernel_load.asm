@@ -3,7 +3,7 @@
 mov bx , MSG_LOAD_KERNEL
 call print_string
 
-mov bx , KERNEL_OFFSET
+mov bx , KERNEL_LOAD_OFFSET
 mov dh , KERNEL_N_SECTORS
 mov dl , [ BOOT_DRIVE ]
 

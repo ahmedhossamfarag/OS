@@ -1,6 +1,7 @@
 ; kernel
 
-KERNEL_OFFSET equ 0x1000
+KERNEL_LOAD_OFFSET equ 0x1000
+KERNEL_OFFSET equ 0x80000
 
 ; kernel load
 
@@ -11,8 +12,8 @@ KERNEL_START_SECTOR equ 2
 
 ; video memory
 
-VIDEO_MEMORY equ 0xb8000
-WHITE_ON_BLACK equ 0x0f
+VIDEO_MEMORY equ 0xB8000
+WHITE_ON_BLACK equ 0x0F
 
 ; stack pointer
 

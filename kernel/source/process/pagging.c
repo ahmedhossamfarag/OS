@@ -3,13 +3,13 @@
 
 uint32_t* default_dir;
 
-uint32_t* user_dirs[4];
-uint8_t user_dir_available[4];
+uint32_t* user_dirs[N_DIRS];
+uint8_t user_dir_available[N_DIRS];
 
 extern void isr_page_fault_handler();
 
 void init_page_tables() {
-    uint32_t align = 0x20000;
+    uint32_t align = FIRST_DIR_ALIGN;
 
     // default pagging directory
 
@@ -34,9 +34,9 @@ void init_page_tables() {
 
 
     // user pagging directories
-    uint32_t frame = 0x40000;
+    uint32_t frame = FIRST_FRAME;
 
-    for (uint8_t j = 0; j < 4; j++)
+    for (uint8_t j = 0; j < N_DIRS; j++)
     {
         user_dirs[j] = (uint32_t*) align;
         align += PAGE_SIZE;
@@ -50,14 +50,14 @@ void init_page_tables() {
         pagging_table = (uint32_t*) align;
         align += PAGE_SIZE;
 
-        for (int i = 0; i < 1; i++)
+        for (int i = 0; i < PROCESS_N_PAGES; i++)
         {
             pagging_table[i] = frame | USER_PRIVILEGE;
             frame += PAGE_SIZE;
         }
         
 
-        for (int i = 1; i < NUM_PAGES; i++) {
+        for (int i = PROCESS_N_PAGES; i < NUM_PAGES; i++) {
             // Set the page table entry to map to the physical address
             pagging_table[i] = (i * PAGE_SIZE) | KERNEL_PRIVILEGE; // Present, Read/Write, Supervisor
         }
@@ -92,7 +92,7 @@ uint32_t *get_default_pagging_dir()
 
 uint32_t* get_available_pagging_dir()
 {
-    for (uint8_t i = 0; i < 4; i++)
+    for (uint8_t i = 0; i < N_DIRS; i++)
     {
         if(user_dir_available[i]){
             user_dir_available[i] = 0;
@@ -104,7 +104,7 @@ uint32_t* get_available_pagging_dir()
 
 void free_pagging_dir(uint32_t *dir)
 {
-    for (uint8_t i = 0; i < 4; i++)
+    for (uint8_t i = 0; i < N_DIRS; i++)
     {
         if(dir == user_dirs[i]){
             user_dir_available[i] = 1;

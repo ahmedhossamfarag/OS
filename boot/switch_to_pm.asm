@@ -23,5 +23,16 @@ mov gs , ax
 mov ebp , PROTECTED_MODE_SP ; Update our stack position so it is right
 mov esp , ebp
 
+; Shift Kernel
+mov esi , KERNEL_LOAD_OFFSET
+mov edi , KERNEL_OFFSET
+mov ecx , KERNEL_N_SECTORS * 512
+kernel_shift:
+    mov eax , [esi]
+    mov [edi] , eax
+    add esi , 4
+    add edi , 4
+    loop kernel_shift
+
 call KERNEL_OFFSET ; Finally , call the kernel
 jmp $
