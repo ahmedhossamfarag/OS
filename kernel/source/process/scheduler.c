@@ -73,7 +73,7 @@ void schedule(cpu_state_t** state)
     }
 }
 
-void schedule_resource(cpu_state_t** state){
+void schedule_waiting(cpu_state_t** state){
     pcb_t* next_process = process_dequeue();
 
     if(next_process){

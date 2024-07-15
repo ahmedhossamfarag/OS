@@ -10,7 +10,7 @@ void load_program()
     if(cr3){
         uint32_t* org = (uint32_t*) virtual_to_physical(0, cr3);
 
-        uint32_t* src = &proc1;
+        uint32_t* src = (uint32_t*) &proc1;
         for (int i = 0; i < 10; i++)
         {
             *org = *src;
@@ -19,6 +19,6 @@ void load_program()
         }
         
 
-        add_new_process(1, 0, cr3, 0xFFF);
+        add_new_process(1, 0, (uint32_t)cr3, 0xFFF);
     }
 }

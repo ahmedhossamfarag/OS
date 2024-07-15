@@ -1,11 +1,11 @@
-C_SOURCES = $(wildcard kernel/*.c kernel/source/base/*.c kernel/source/drivers/*.c kernel/source/lib/*.c)
-HEADERS = $(wildcard kernel/include/base/*.h kernel/include/drivers/*.h kernel/include/lib/*.h)
+C_SOURCES = $(wildcard kernel/*.c kernel/source/base/*.c kernel/source/drivers/*.c kernel/source/process/*.c kernel/source/lib/*.c)
+HEADERS = $(wildcard kernel/include/base/*.h kernel/include/drivers/*.h kernel/include/process/*.h kernel/include/lib/*.h)
 C_OBJ = ${C_SOURCES:.c=.o}
 
-ASM_SOURCES = $(wildcard kernel/source/base/*.asm kernel/source/drivers/*.asm kernel/source/lib/*.asm)
+ASM_SOURCES = $(wildcard kernel/source/base/*.asm kernel/source/drivers/*.asm kernel/source/process/*.asm kernel/source/lib/*.asm)
 ASM_OBJ = ${ASM_SOURCES:.asm=.o}
 
-GCC_INCLUDE := -Ikernel/include/base -Ikernel/include/drivers -Ikernel/include/lib
+GCC_INCLUDE := -Ikernel/include/base -Ikernel/include/drivers -Ikernel/include/process -Ikernel/include/lib
 
 BOOT_DIR = $(wildcard boot/*.asm)
 
@@ -39,4 +39,4 @@ run: all
 	qemu-system-x86_64 -drive file=os-image,format=raw
 
 clean:
-	rm -fr *.bin *.o kernel/*.o kernel/source/base/*.o kernel/source/drivers/*.o kernel/source/lib/*.o *.dis os-image
+	rm -fr *.bin *.o kernel/*.o kernel/source/base/*.o kernel/source/drivers/*.o kernel/source/process/*.o kernel/source/lib/*.o *.dis os-image
