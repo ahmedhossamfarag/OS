@@ -1,7 +1,7 @@
 #include "resources.h"
 #include "interrupt.h"
-#include "screen_print.h"
 #include "strlib.h"
+
 resource_t resources[RESOURCES_N];
 
 

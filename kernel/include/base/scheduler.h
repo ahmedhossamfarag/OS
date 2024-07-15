@@ -4,7 +4,7 @@
 
 pcb_t* get_current_process();
 
-uint8_t add_new_process(uint32_t pid, uint32_t ppid, uint32_t eip, uint32_t ebp);
+uint8_t add_new_process(uint32_t pid, uint32_t ppid, uint32_t cr3, uint32_t ebp);
 
 void process_inqueue(pcb_t* process);
 

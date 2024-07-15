@@ -1,8 +1,24 @@
 #include "interrupt_handler.h"
 #include "screen_print.h"
 #include "pic.h"
+#include "interrupt.h"
 
-void exception_handler(void) {
+void handler(){
+    print("Done");
+    while (1)
+    {
+        /* code */
+    }
+    
+}
+
+void interrupt_handler_init()
+{
+    set_idt_entry_user(0, (uint32_t)handler);
+}
+
+void exception_handler(void)
+{
     screen_print_str("\nException Handler");
 }
 

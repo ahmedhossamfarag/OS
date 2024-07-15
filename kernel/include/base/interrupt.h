@@ -18,6 +18,8 @@ typedef struct{
 
 void set_idt_entry(int n, uint32_t handler);
 
+void set_idt_entry_user(int n, uint32_t handler);
+
 void init_idt();
 
 void enable_interrupt();

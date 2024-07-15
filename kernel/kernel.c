@@ -11,37 +11,8 @@
 #include "resources.h"
 #include "libc.h"
 #include "pagging.h"
-
-
-extern void jump_usermode();
-
-void usermode_entry(){
-    print("\nUser Mode In\n");
-    scheduler_enable();
-    while (1)
-    {
-    }
-}
-
-void proc1(){
-    while (1)
-    {
-        for (int i = 0; i < 1e7; i++);
-        
-        printc('H');
-    }
-    
-}
-
-void proc2(){
-    while (1)
-    {
-        for (int i = 0; i < 1e7; i++);
-        
-        printc('V');
-    }
-    
-}
+#include "interrupt_handler.h"
+#include "loader.h"
 
 int main () {
     screen_clear();
@@ -51,17 +22,18 @@ int main () {
     screen_print_str("\nIDT Initialized");
     disable_timer();
     enable_interrupt();
+    interrupt_handler_init();
     screen_print_str("\nInterrupts Enabled");
     memory_init();
     screen_print_str("\nMemory In");
     init_gdt();
     screen_print_str("\nGDT & TSS In");
+    init_page_tables();
+    screen_print_str("\nPaging In");
     resources_init();
     scheduler_init();
-    add_new_process(1, 0, (uint32_t)proc1, 0x80000);
-    add_new_process(2, 0, (uint32_t)proc2, 0x70000);
-    jump_usermode();
-
+    load_program();
+    scheduler_enable();
     while (1)
     {
     }

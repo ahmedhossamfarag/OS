@@ -35,6 +35,7 @@ typedef struct {
     uint32_t ppid;                // Parent Process ID
     process_state_t process_state;        // Process state
     cpu_state_t cpu_state;
+    uint32_t cr3;
 } pcb_t;
 
-pcb_t create_process(uint32_t pid, uint32_t ppid, uint32_t eip, uint32_t ebp);
+pcb_t create_process(uint32_t pid, uint32_t ppid, uint32_t cr3, uint32_t ebp);

@@ -2,6 +2,9 @@
 #define NUM_PAGES 1024
 #define NUM_FRAMES 1024
 
+#define KERNEL_PRIVILEGE 3
+#define USER_PRIVILEGE 7
+
 #include <stdint.h>
 
 typedef struct {
@@ -26,6 +29,14 @@ typedef struct {
 void init_page_tables();
 
 void enable_paging();
+
+uint32_t* get_default_pagging_dir();
+
+uint32_t* get_available_pagging_dir();
+
+void free_pagging_dir(uint32_t* dir);
+
+uint32_t virtual_to_physical(uint32_t virtual_address, uint32_t* paging_dir);
 
 /* INT 14 */
 void page_fault_handler();
