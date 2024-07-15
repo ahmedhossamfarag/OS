@@ -26,7 +26,7 @@ mov esp , ebp
 ; Shift Kernel
 mov esi , KERNEL_LOAD_OFFSET
 mov edi , KERNEL_OFFSET
-mov ecx , KERNEL_N_SECTORS * 512
+mov ecx , KERNEL_N_SECTORS * 128
 kernel_shift:
     mov eax , [esi]
     mov [edi] , eax
