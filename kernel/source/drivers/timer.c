@@ -4,7 +4,7 @@
 
 
 
-static void (*timer_handler_proc)(cpu_state_t**);
+static void (*timer_handler_proc)(cpu_state_t*);
 
 void enable_timer(uint32_t frequency) {
     uint32_t divisor = CLOCK_FREQ / frequency;
@@ -22,12 +22,12 @@ void disable_timer() {
 
 void timer_handler(cpu_state_t* state) {
     if (timer_handler_proc) {
-        timer_handler_proc(&state);
+        timer_handler_proc(state);
     }
     pic_sendEOI(0);
 }
 
-void set_timer_handler_proc(void (*proc)(cpu_state_t**))
+void set_timer_handler_proc(void (*proc)(cpu_state_t*))
 {
     timer_handler_proc = proc;
 }

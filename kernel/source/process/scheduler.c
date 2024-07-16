@@ -1,53 +1,20 @@
 #include "scheduler.h"
 
-pcb_t processes[MAX_N_PROCESS];
-uint8_t n_processes;
-
-pcb_t* queue[MAX_N_PROCESS];
-uint8_t queue_size;
+uint8_t thread_n;
 
 pcb_t* current_process;
+thread_t* current_thread;
 
 pcb_t* get_current_process(){
     return current_process;
 }
 
-uint8_t add_new_process(uint32_t pid, uint32_t ppid, uint32_t cr3, uint32_t ebp){
-    if(n_processes < MAX_N_PROCESS){
-        processes[n_processes] = create_process(pid, ppid, cr3, ebp);
-        process_inqueue(&processes[n_processes]);
-        n_processes++;
-        return 1;
-    }
-    return 0;
-}
-
-void process_inqueue(pcb_t* process){
-    if(queue_size < MAX_N_PROCESS){
-        queue[queue_size] = process;
-        queue_size++;
-    }
-}
-
-pcb_t* process_dequeue(){
-
-    if(queue_size > 0){
-        pcb_t* next = queue[0];
-        for (uint8_t i = 0; i < queue_size - 1; i++)
-        {
-            queue[i] = queue[i+1];
-        }
-        queue_size--;
-        return next;
-    }
-    return 0;
-}
-
 void scheduler_init()
 {
-    n_processes = 0;
-    queue_size = 0;
-    current_process = 0;
+    process_init();
+    thread_n = 0;
+    current_process = get_default_process();
+    current_thread = get_process_thread(current_process, 0);
 }
 
 void scheduler_enable()
@@ -56,13 +23,20 @@ void scheduler_enable()
     enable_timer(10);
 }
 
-void schedule(cpu_state_t** state)
+void schedule(cpu_state_t* state)
 {
+    if(thread_n == 0){
+        schedule_process(state);
+    }else{
+        schedule_thread(state);
+    }
+    thread_n = (thread_n + 1) % MAX_N_THREAD;
+}
+
+void schedule_process(cpu_state_t* state){
     pcb_t* next_process = process_dequeue();
 
     if(next_process){
-        context_switch(*state, next_process);
-
         if(current_process){
             current_process->process_state = PROCESS_STATE_READY;
             process_inqueue(current_process);   
@@ -70,30 +44,61 @@ void schedule(cpu_state_t** state)
 
         next_process->process_state = PROCESS_STATE_RUNNING;
         current_process = next_process;
+
+        schedule_thread(state);
     }
 }
 
-void schedule_waiting(cpu_state_t** state){
+void schedule_thread(cpu_state_t* state){
+    thread_t* next_thread = get_process_thread(current_process, thread_n);
+    if(current_thread != next_thread){
+        context_switch(state, next_thread);
+        current_thread = next_thread;
+    }
+}
+
+void schedule_waiting(cpu_state_t* state){
     pcb_t* next_process = process_dequeue();
 
     if(next_process){
-        context_switch(*state, next_process);
-
         if(current_process){
             current_process->process_state = PROCESS_STATE_WAITING;
         }
 
         next_process->process_state = PROCESS_STATE_RUNNING;
         current_process = next_process;
+
+        schedule_thread(state);
     }
 }
 
-void context_switch(cpu_state_t* cpu, pcb_t* next_process){
+void schedule_terminate_current(cpu_state_t* state){
+    pcb_t* next_process = process_dequeue();
 
-    if(current_process){
-        current_process->cpu_state = *cpu;
+    if(!next_process){
+        next_process = get_default_process();
     }
-    next_process->cpu_state.esp = cpu->esp;
-    *cpu = next_process->cpu_state;
-    asm volatile("mov %0, %%cr3" :: "r"(next_process->cr3));
+
+    if(next_process){
+        if(current_process){
+            current_process->process_state = PROCESS_STATE_TERMINATED;
+            remove_process(current_process);
+        }
+
+        next_process->process_state = PROCESS_STATE_RUNNING;
+        current_process = next_process;
+
+        schedule_thread(state);
+    }
+}
+
+
+void context_switch(cpu_state_t* cpu, thread_t* next_thread){
+
+    if(current_thread){
+        current_thread->cpu_state = *cpu;
+    }
+    next_thread->cpu_state.esp = cpu->esp;
+    *cpu = next_thread->cpu_state;
+    asm volatile("mov %0, %%cr3" :: "r"(current_process->cr3));
 }

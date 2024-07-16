@@ -32,7 +32,7 @@ int main () {
     screen_print_str("\nPaging In");
     resources_init();
     scheduler_init();
-    load_program();
+    // load_program();
     scheduler_enable();
     while (1)
     {
