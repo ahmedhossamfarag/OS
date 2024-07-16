@@ -45,8 +45,8 @@ void schedule_process(cpu_state_t* state){
         next_process->process_state = PROCESS_STATE_RUNNING;
         current_process = next_process;
 
-        schedule_thread(state);
     }
+    schedule_thread(state);
 }
 
 void schedule_thread(cpu_state_t* state){
@@ -59,6 +59,10 @@ void schedule_thread(cpu_state_t* state){
 
 void schedule_waiting(cpu_state_t* state){
     pcb_t* next_process = process_dequeue();
+    
+    if(!next_process){
+        next_process = get_default_process();
+    }
 
     if(next_process){
         if(current_process){
@@ -68,8 +72,8 @@ void schedule_waiting(cpu_state_t* state){
         next_process->process_state = PROCESS_STATE_RUNNING;
         current_process = next_process;
 
-        schedule_thread(state);
     }
+    schedule_thread(state);
 }
 
 void schedule_terminate_current(cpu_state_t* state){
@@ -88,8 +92,8 @@ void schedule_terminate_current(cpu_state_t* state){
         next_process->process_state = PROCESS_STATE_RUNNING;
         current_process = next_process;
 
-        schedule_thread(state);
     }
+    schedule_thread(state);
 }
 
 
