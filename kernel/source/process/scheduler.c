@@ -76,7 +76,7 @@ void schedule_waiting(cpu_state_t* state){
     schedule_thread(state);
 }
 
-void schedule_terminate_current(cpu_state_t* state){
+void schedule_terminate_current_process(cpu_state_t* state){
     pcb_t* next_process = process_dequeue();
 
     if(!next_process){
@@ -96,6 +96,14 @@ void schedule_terminate_current(cpu_state_t* state){
     schedule_thread(state);
 }
 
+void schedule_terminate_current_thread(cpu_state_t* state){
+    remove_thread(current_process, current_thread->tid);
+    if(current_process->n_threads){
+        schedule_thread(state);
+    }else{
+        schedule_terminate_current_process(state);
+    }
+}
 
 void context_switch(cpu_state_t* cpu, thread_t* next_thread){
 
