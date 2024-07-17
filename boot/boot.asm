@@ -7,8 +7,6 @@ mov [ BOOT_DRIVE ] , dl ; BIOS stores our boot drive in DL
 mov bp , REAL_MODE_SP ; Set - up the stack.
 mov sp , bp
 
-mov bx , MSG_REAL_MODE
-call print_string
 
 %include "boot/kernel_load.asm"
 
@@ -17,8 +15,8 @@ call print_string
 halt:
 jmp $
 
-%include "boot/boot_data.asm"
-%include "boot/print_string.asm"
+; data
+BOOT_DRIVE db 0
 %include "boot/gdt.asm"
 
 

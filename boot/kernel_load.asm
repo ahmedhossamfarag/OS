@@ -1,8 +1,5 @@
 [bits 16]
 
-mov bx , MSG_LOAD_KERNEL
-call print_string
-
 mov bx , KERNEL_LOAD_OFFSET
 mov dh , KERNEL_N_SECTORS
 mov dl , [ BOOT_DRIVE ]
@@ -22,10 +19,7 @@ pop dx
 jmp load_end
 
 disk_error :
-mov bx , DISK_ERROR_MSG
-call print_string
 jmp $
 
 load_end:
-mov bx, LOAD_SUCC_MSG
-call print_string
+nop

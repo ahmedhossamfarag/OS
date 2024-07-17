@@ -29,7 +29,7 @@ int main () {
     init_gdt();
     screen_print_str("\nGDT & TSS In");
     init_page_tables();
-    screen_print_str("\nPaging In");
+    screen_print_str("\nPaging In\n");
     resources_init();
     scheduler_init();
     load_program();
