@@ -7,6 +7,8 @@
         "pagging.h": "c",
         "resources.h": "c",
         "process.h": "c",
-        "scheduler.h": "c"
+        "scheduler.h": "c",
+        "screen_print.h": "c",
+        "strlib.h": "c"
     }
 }
