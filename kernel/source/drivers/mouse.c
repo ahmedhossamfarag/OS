@@ -1,6 +1,7 @@
 #include "mouse.h"
 #include "pic.h"
 #include "low_level.h"
+#include "apic.h"
 
 int16_t MouseX;
 int16_t MouseY;
@@ -22,9 +23,7 @@ static void update_mouse_location(int16_t delta_x, int16_t delta_y){
 
 static void (*mouse_handler_proc)(MouseInfo);
 
-/* IRQ 12 */
-void mouse_handler() {
-
+static void handle_mouse_info(){
     MouseInfo info;
 
     uint8_t status = inb(MouseDataPort); // Read status byte from the PS/2 controller
@@ -49,6 +48,12 @@ void mouse_handler() {
     // Excute Proc
     if(mouse_handler_proc)
         mouse_handler_proc(info);
+}
+
+/* IRQ 12 */
+void mouse_handler() {
+
+    handle_mouse_info();
 
     // Send End of Interrupt (EOI) signal to the PIC
     pic_sendEOI(MouseIRQ);
@@ -78,5 +83,14 @@ static void enable_mouse_device() {
 
 void initialize_mouse() {
     enable_mouse_device();
-    irq_clear_mask(MouseIRQ);
+}
+
+
+/* IRQ 12 */
+void apic_mouse_handler() {
+
+    handle_mouse_info();
+
+    // Send End of Interrupt (EOI) signal to the PIC
+    apic_sendEOI();
 }

@@ -32,6 +32,15 @@ void init_page_tables() {
 
     default_dir[0] = ((uint32_t)pagging_table) | KERNEL_PRIVILEGE;
 
+    uint32_t* apic_pagging_table = (uint32_t*) align;
+    align += PAGE_SIZE;
+
+    for (int i = 0; i < NUM_PAGES; i++) {
+        // Set the page table entry to map to the physical address
+        apic_pagging_table[i] = ((i * PAGE_SIZE) + 0xFEC00000) | KERNEL_PRIVILEGE; // Present, Read/Write, Supervisor
+    }
+
+    default_dir[0xFEC00000 >> 22] = ((uint32_t)apic_pagging_table) | KERNEL_PRIVILEGE;
 
     // user pagging directories
     uint32_t frame = FIRST_FRAME;
@@ -63,6 +72,8 @@ void init_page_tables() {
         }
 
         user_dirs[j][0] = ((uint32_t)pagging_table) | USER_PRIVILEGE;
+
+        user_dirs[j][0xFEC00000 >> 22] = ((uint32_t)apic_pagging_table) | KERNEL_PRIVILEGE;
 
         user_dir_available[j] = 1;
     }

@@ -50,3 +50,5 @@ void fpu_enable_mask(uint16_t mask);
 void fpu_clear_mask(uint16_t mask);
 
 void enable_fpu_exceptions();
+
+void apic_fpu_handler();

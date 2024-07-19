@@ -60,3 +60,14 @@ isr_state resource_request_handler
 isr resource_free_handler
 
 isr_state lapic_timer_handler
+
+
+isr_state apic_timer_handler
+
+isr apic_keyboard_handler
+
+isr apic_mouse_handler
+
+isr apic_rtc_handler
+
+isr apic_fpu_handler

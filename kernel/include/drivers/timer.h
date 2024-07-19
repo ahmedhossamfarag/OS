@@ -15,3 +15,5 @@ void disable_timer();
 void timer_handler(cpu_state_t*);
 
 void set_timer_handler_proc(void (*proc)(cpu_state_t*));
+
+void apic_timer_handler(cpu_state_t* state);

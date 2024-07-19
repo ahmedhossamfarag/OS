@@ -1,6 +1,7 @@
 #include "timer.h"
 #include "low_level.h"
 #include "pic.h"
+#include "apic.h"
 
 
 
@@ -30,4 +31,13 @@ void timer_handler(cpu_state_t* state) {
 void set_timer_handler_proc(void (*proc)(cpu_state_t*))
 {
     timer_handler_proc = proc;
+}
+
+
+
+void apic_timer_handler(cpu_state_t* state) {
+    if (timer_handler_proc) {
+        timer_handler_proc(state);
+    }
+    apic_sendEOI();
 }

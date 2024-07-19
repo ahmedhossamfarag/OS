@@ -66,3 +66,5 @@ void rtc_enable_periodic_int(uint8_t rate);
 void rtc_set_alarm(unsigned char hour, unsigned char minute, unsigned char second);
 
 Time rtc_read_time();
+
+void apic_rtc_handler();

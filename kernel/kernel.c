@@ -15,9 +15,6 @@
 #include "loader.h"
 #include "apic.h"
 
-void f(cpu_state_t*){
-    printc('J');
-}
 
 int main () {
     screen_clear();
@@ -32,17 +29,13 @@ int main () {
     memory_init();
     screen_print_str("\nMemory In");
     init_gdt();
-    screen_print_str("\nGDT & TSS In\n");
-    // init_page_tables();
-    // screen_print_str("\nPaging In\n");
+    screen_print_str("\nGDT & TSS In");
+    init_page_tables();
+    screen_print_str("\nPaging In\n");
 
     apic_init();
-    set_lapic_timer_handler_proc(f);
-    enable_lapic_timer(0x10000, LAPIC_TIMER_PERIODIC_MODE);
 
-    while (1)
-    {
-    }
+    while (1);
     
     return 0;
 }

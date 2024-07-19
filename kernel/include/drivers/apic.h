@@ -62,3 +62,14 @@ void set_lapic_timer_handler_proc(void (*proc) (cpu_state_t*));
 void lapic_timer_handler(cpu_state_t* state);
 
 void enable_lapic_timer(uint32_t initial, uint32_t mode);
+
+// IOAPIC
+
+#define IOAPIC_REGSEL 0x00
+#define IOAPIC_WINDOW 0x10
+
+void set_ioapic(uint32_t offset, uint32_t value);
+
+uint32_t get_ioapic(uint32_t offset);
+
+void init_ioapic();

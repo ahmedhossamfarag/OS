@@ -35,3 +35,5 @@ void mouse_handler();
 void set_mouse_handler_proc(void (*proc)(MouseInfo));
 
 void initialize_mouse();
+
+void apic_mouse_handler();

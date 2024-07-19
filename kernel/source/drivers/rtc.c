@@ -1,6 +1,7 @@
 #include "rtc.h"
 #include "pic.h"
 #include "low_level.h"
+#include "apic.h"
 
 
 static uint8_t rtc_read(int8_t reg) {
@@ -100,4 +101,16 @@ Time rtc_read_time(){
     }
 
     return time;
+}
+
+void apic_rtc_handler() {
+    // Read from the RTC to clear the interrupt
+    rtc_read(RTC_Clear);
+    
+    // Perform necessary timekeeping or periodic tasks
+    if(rtc_handler_proc)
+        rtc_handler_proc();
+
+    // Send End of Interrupt (EOI) signal to the PIC
+    apic_sendEOI();
 }

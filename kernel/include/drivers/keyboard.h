@@ -38,3 +38,5 @@ void keyboard_handler();
 void handle_scancode(uint8_t scancode);
 
 void set_keyboard_handler_proc(void (*proc)(KeyInfo));
+
+void apic_keyboard_handler();

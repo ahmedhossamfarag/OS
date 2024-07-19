@@ -9,6 +9,11 @@
         "process.h": "c",
         "scheduler.h": "c",
         "screen_print.h": "c",
-        "strlib.h": "c"
+        "strlib.h": "c",
+        "keyboard.h": "c",
+        "mouse.h": "c",
+        "rtc.h": "c",
+        "fpu.h": "c",
+        "apic.h": "c"
     }
 }

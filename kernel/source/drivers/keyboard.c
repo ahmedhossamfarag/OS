@@ -1,6 +1,7 @@
 #include "keyboard.h"
 #include "pic.h"
 #include "low_level.h"
+#include "apic.h"
 
 extern char key_char_map[];
 extern char key_code_map[];
@@ -86,4 +87,16 @@ void handle_scancode(uint8_t scancode) {
 void set_keyboard_handler_proc(void(*proc)(KeyInfo))
 {
     keyboard_handler_proc = proc;
+}
+
+
+void apic_keyboard_handler() {
+
+    uint8_t scancode = inb(KEYBOARD_DATA_PORT);
+
+    // Handle the scancode
+    // (you'll need to implement a scancode-to-keycode mapping)
+    handle_scancode(scancode);
+
+    apic_sendEOI();
 }

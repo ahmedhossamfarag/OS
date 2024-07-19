@@ -2,6 +2,7 @@
 #include "screen_print.h"
 #include "strlib.h"
 #include "interrupt.h"
+#include "pic.h"
 
 uint8_t apic_detected;
 
@@ -32,6 +33,7 @@ void apic_init()
         disable_pic();
         enable_apic();
         initialize_lapic();
+        init_ioapic();
     }
 }
 
@@ -73,5 +75,55 @@ void enable_lapic_timer(uint32_t initial, uint32_t mode){
     set_lapic(LAPIC_TIMER_DIV, LAPIC_TIMER_DIV_16);
     set_lapic(LAPIC_TIMER_INIT, initial);
 }
+
+#pragma endregion
+
+#pragma region IOAPIC
+
+
+void set_ioapic(uint32_t offset, uint32_t value){
+    ioapic[offset / 4] = value;
+}
+
+uint32_t get_ioapic(uint32_t offset){
+    return ioapic[offset/4];
+}
+
+void ioapic_write(uint32_t reg, uint32_t value) {
+    set_ioapic(IOAPIC_REGSEL, reg);
+    set_ioapic(IOAPIC_WINDOW, value);
+}
+
+uint32_t ioapic_read(uint32_t reg) {
+    set_ioapic(IOAPIC_REGSEL, reg);
+    return get_ioapic(IOAPIC_WINDOW);
+}
+
+void ioapic_set_irq(uint8_t irq, uint32_t vector, uint32_t apic_id){
+    ioapic_write(0x10 + 2 * irq, vector);
+    ioapic_write(0x10 + 2 * irq + 1, (apic_id << 24));
+}
+
+extern void isr_apic_timer_handler();
+extern void isr_apic_keyboard_handler();
+extern void isr_apic_mouse_handler();
+extern void isr_apic_rtc_handler();
+extern void isr_apic_fpu_handler();
+
+void init_ioapic(){
+    ioapic_set_irq(0, PIC_M_OFFSET, 0);
+    ioapic_set_irq(1, PIC_M_OFFSET + 1, 0);
+    ioapic_set_irq(8, PIC_M_OFFSET + 8, 0);
+    ioapic_set_irq(12, PIC_M_OFFSET + 12, 0);
+    ioapic_set_irq(13, PIC_M_OFFSET + 13, 0);
+
+
+    set_idt_entry(PIC_M_OFFSET, (uint32_t)(isr_apic_timer_handler));
+    set_idt_entry(PIC_M_OFFSET + 1, (uint32_t)(isr_apic_keyboard_handler));
+    set_idt_entry(PIC_M_OFFSET + 8, (uint32_t)(isr_apic_rtc_handler));
+    set_idt_entry(PIC_M_OFFSET + 12, (uint32_t)(isr_apic_mouse_handler));
+    set_idt_entry(PIC_M_OFFSET + 13, (uint32_t)(isr_apic_fpu_handler));
+}
+
 
 #pragma endregion
