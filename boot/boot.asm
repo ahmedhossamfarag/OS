@@ -7,6 +7,7 @@ mov [ BOOT_DRIVE ] , dl ; BIOS stores our boot drive in DL
 mov bp , REAL_MODE_SP ; Set - up the stack.
 mov sp , bp
 
+%include "boot/info.asm"
 
 %include "boot/kernel_load.asm"
 

@@ -33,10 +33,3 @@ ms_error:
 ; mov [DISk_SIZE+2] , cx
 ; ds_error:
 ;     nop
-
-; get processor no
-mov eax, 1
-cpuid
-shr ebx, 16
-and ebx, 0xFF  ; EBX[23:16] contains the number of logical processors
-mov [PROCESSOR_NO] , bx

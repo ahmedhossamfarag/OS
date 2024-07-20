@@ -3,6 +3,8 @@
 #define DISk_SIZE 0x8400
 #define PROCESSOR_NO 0x8500
 
+#define MAX_N_APIC_IDS 10
+
 #include <stdint.h>
 
 typedef struct  {
@@ -14,8 +16,10 @@ typedef struct  {
 
 void info_init();
 
-uint32_t get_processor_no();
+uint32_t info_get_processor_no();
 
-uint32_t get_memory_size();
+uint32_t info_get_memory_size();
 
 void info_add_apic_id(uint32_t id);
+
+uint32_t info_get_apic_id(uint8_t i);

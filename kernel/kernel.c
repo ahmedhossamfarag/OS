@@ -15,10 +15,12 @@
 #include "loader.h"
 #include "apic.h"
 #include "acpi.h"
+#include "info.h"
 
 int main () {
     screen_clear();
     screen_print_str("Welcome To Kernel");
+    info_init();
     acpi_init();
     screen_print_str("\nACPI In");
     init_idt();

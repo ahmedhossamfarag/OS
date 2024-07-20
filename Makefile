@@ -36,7 +36,7 @@ os-image: boot.bin kernel.bin disk.bin
 all: os-image
 
 run: all
-	qemu-system-x86_64 -drive file=os-image,format=raw
+	qemu-system-x86_64 -smp 4 -m 2048 -drive file=os-image,format=raw
 
 clean:
 	rm -fr *.bin *.o kernel/*.o kernel/source/base/*.o kernel/source/drivers/*.o kernel/source/process/*.o kernel/source/lib/*.o *.dis os-image

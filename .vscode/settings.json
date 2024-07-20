@@ -15,6 +15,7 @@
         "rtc.h": "c",
         "fpu.h": "c",
         "apic.h": "c",
-        "stdint.h": "c"
+        "stdint.h": "c",
+        "info.h": "c"
     }
 }

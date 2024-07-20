@@ -4,7 +4,7 @@ uint32_t processor_no;
 uint32_t memory_size;
 
 
-uint32_t apic_ids[10];
+uint32_t apic_ids[MAX_N_APIC_IDS];
 uint8_t n_apic;
 
 MemoryRegion get_memory_region(uint32_t n)
@@ -31,12 +31,12 @@ void info_init()
     n_apic = 0;
 }
 
-uint32_t get_processor_no()
+uint32_t info_get_processor_no()
 {
     return n_apic;
 }
 
-uint32_t get_memory_size()
+uint32_t info_get_memory_size()
 {
     return  memory_size;
 }
@@ -44,6 +44,13 @@ uint32_t get_memory_size()
 
 void info_add_apic_id(uint32_t id)
 {
-    apic_ids[n_apic] = id;
-    n_apic ++;
+    if(n_apic < MAX_N_APIC_IDS){
+        apic_ids[n_apic] = id;
+        n_apic ++;
+    }
+}
+
+uint32_t info_get_apic_id(uint8_t i)
+{
+    return apic_ids[i];
 }
