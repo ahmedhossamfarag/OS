@@ -17,6 +17,18 @@ int str_cmp(const char* str1, const char* str2) {
 	return *(unsigned char*)str1 - *(unsigned char*)str2;
 }
 
+int str_cmp_n(const char* str1, const char* str2, int n){
+	for (int i = 0; i < n; i++)
+	{
+		if(*str1 != *str2){
+			return *(unsigned char*)str1 - *(unsigned char*)str2;
+		}
+		str1++;
+		str2++;
+	}
+	return 0;
+}
+
 const char* str_reverse(const char* str, char* rev_str) {
 	int len = str_len(str);
 	int j = len - 1;

@@ -17,3 +17,5 @@ void info_init();
 uint32_t get_processor_no();
 
 uint32_t get_memory_size();
+
+void info_add_apic_id(uint32_t id);

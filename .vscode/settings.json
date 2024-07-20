@@ -14,6 +14,7 @@
         "mouse.h": "c",
         "rtc.h": "c",
         "fpu.h": "c",
-        "apic.h": "c"
+        "apic.h": "c",
+        "stdint.h": "c"
     }
 }

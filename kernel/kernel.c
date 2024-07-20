@@ -14,11 +14,13 @@
 #include "interrupt_handler.h"
 #include "loader.h"
 #include "apic.h"
-
+#include "acpi.h"
 
 int main () {
     screen_clear();
     screen_print_str("Welcome To Kernel");
+    acpi_init();
+    screen_print_str("\nACPI In");
     init_idt();
     pic_init();
     screen_print_str("\nIDT Initialized");

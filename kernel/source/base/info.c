@@ -4,6 +4,9 @@ uint32_t processor_no;
 uint32_t memory_size;
 
 
+uint32_t apic_ids[10];
+uint8_t n_apic;
+
 MemoryRegion get_memory_region(uint32_t n)
 {
     MemoryRegion* pntr = (MemoryRegion*) MEMORY_MAP + (n*sizeof(MemoryRegion));
@@ -12,12 +15,9 @@ MemoryRegion get_memory_region(uint32_t n)
 
 void info_init()
 {
-    // processor no
-    uint32_t* pntr = (uint32_t*) PROCESSOR_NO;
-    processor_no = *pntr;
 
     // memory size
-    pntr = (uint32_t*) MEMORY_N_MAP;
+    uint32_t* pntr = (uint32_t*) MEMORY_N_MAP;
     uint32_t maps_no = *pntr;
     memory_size = 0;
     MemoryRegion mr;
@@ -26,11 +26,14 @@ void info_init()
         mr = get_memory_region(i);
         memory_size += mr.length;
     }
+
+    // apic
+    n_apic = 0;
 }
 
 uint32_t get_processor_no()
 {
-    return processor_no;
+    return n_apic;
 }
 
 uint32_t get_memory_size()
@@ -38,3 +41,9 @@ uint32_t get_memory_size()
     return  memory_size;
 }
 
+
+void info_add_apic_id(uint32_t id)
+{
+    apic_ids[n_apic] = id;
+    n_apic ++;
+}
