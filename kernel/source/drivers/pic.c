@@ -14,18 +14,18 @@ void pic_init(){
     pic_remap();
 
     for (int i = PIC_M_OFFSET; i < PIC_M_OFFSET + 8; i++){
-        set_idt_entry(i, (uint32_t)(isr_pic_handler));
+        idt_set_entry(i, (uint32_t)(isr_pic_handler));
     }
     
     for (int i = PIC_S_OFFSET; i < PIC_S_OFFSET + 8; i++){
-        set_idt_entry(i, (uint32_t)(isr_pic_handler));
+        idt_set_entry(i, (uint32_t)(isr_pic_handler));
     }
 
-    set_idt_entry(PIC_M_OFFSET, (uint32_t)(isr_timer_handler));
-    set_idt_entry(PIC_M_OFFSET + 1, (uint32_t)(isr_keyboard_handler));
-    set_idt_entry(PIC_M_OFFSET + 8, (uint32_t)(isr_rtc_handler));
-    set_idt_entry(PIC_M_OFFSET + 12, (uint32_t)(isr_mouse_handler));
-    set_idt_entry(PIC_M_OFFSET + 13, (uint32_t)(isr_fpu_handler));
+    idt_set_entry(PIC_M_OFFSET, (uint32_t)(isr_timer_handler));
+    idt_set_entry(PIC_M_OFFSET + 1, (uint32_t)(isr_keyboard_handler));
+    idt_set_entry(PIC_M_OFFSET + 8, (uint32_t)(isr_rtc_handler));
+    idt_set_entry(PIC_M_OFFSET + 12, (uint32_t)(isr_mouse_handler));
+    idt_set_entry(PIC_M_OFFSET + 13, (uint32_t)(isr_fpu_handler));
 }
 
 void pic_sendEOI(uint8_t irq)

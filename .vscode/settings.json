@@ -16,6 +16,8 @@
         "fpu.h": "c",
         "apic.h": "c",
         "stdint.h": "c",
-        "info.h": "c"
+        "info.h": "c",
+        "gdt.h": "c",
+        "memory.h": "c"
     }
 }

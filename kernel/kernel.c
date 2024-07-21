@@ -16,28 +16,42 @@
 #include "apic.h"
 #include "acpi.h"
 #include "info.h"
+#include "ata.h"
 
-int main () {
-    screen_clear();
-    screen_print_str("Welcome To Kernel");
+void kernel_load(){
+    uint32_t src = 1 + 50;
+    uint32_t* des = (uint32_t*) (0xA000000 + 50 * 512);
+    uint32_t n_sectors = 50;
+    ata_read(PRIMARY_BASE, 0, src, n_sectors, des);
+}
+
+void init(){
     info_init();
     acpi_init();
-    screen_print_str("\nACPI In");
-    init_idt();
-    pic_init();
-    screen_print_str("\nIDT Initialized");
-    disable_timer();
-    enable_interrupt();
-    interrupt_handler_init();
-    screen_print_str("\nInterrupts Enabled");
     memory_init();
-    screen_print_str("\nMemory In");
-    init_gdt();
-    screen_print_str("\nGDT & TSS In");
-    init_page_tables();
-    screen_print_str("\nPaging In\n");
-
+    idt_init();
+    pic_init();
+    interrupt_handler_init();
+    gdt_init();
+    pagging_init();
     apic_init();
+    scheduler_init();
+    resources_init();
+}
+
+void setup(){
+    enable_idt();
+    enable_interrupt();
+    enable_gdt();
+    enable_paging();
+}
+
+int main () {
+    kernel_load();
+    screen_clear();
+    init();
+    setup();
+    screen_print_str("Welcome To Kernel");
 
     while (1);
     

@@ -12,7 +12,7 @@ typedef struct  {
     uint64_t length;
     uint32_t type;
     uint32_t acpi;
-}MemoryRegion;
+}memory_region_t;
 
 void info_init();
 

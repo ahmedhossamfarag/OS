@@ -3,12 +3,12 @@
 #include "ata.h"
 
 
-static void create_map(uint32_t lba, DiskFreeBlock first_block){
-    DiskMap* map = (DiskMap*) alloc(SectorSize);
+static void create_map(uint32_t lba, disk_freeblock_t first_block){
+    disk_map_t* map = (disk_map_t*) alloc(SectorSize);
     if(map){
         map->identefier = MapIdentefier;
         map->next_map = 0;
-        for (DiskFreeBlock* b = map->free_blocks; b < map->free_blocks + Map_N_Blocks; b++)
+        for (disk_freeblock_t* b = map->free_blocks; b < map->free_blocks + Map_N_Blocks; b++)
         {
             b->lba = 0;
             b->size = 0;
@@ -21,11 +21,11 @@ static void create_map(uint32_t lba, DiskFreeBlock first_block){
 }
 
 void disk_init() {
-    DiskMap* map = (DiskMap*) alloc(SectorSize);
+    disk_map_t* map = (disk_map_t*) alloc(SectorSize);
     if(map){
         ata_read(PRIMARY_BASE, 0, FirstMapLBA, 1, map);
         if(map->identefier != MapIdentefier){
-            DiskFreeBlock first_block = {FirstBlockLBA, DiskSize};
+            disk_freeblock_t first_block = {FirstBlockLBA, DiskSize};
             create_map(FirstMapLBA, first_block);
         }
         free((char*)map, SectorSize);
@@ -35,14 +35,14 @@ void disk_init() {
 uint32_t disk_alloc(uint32_t size) {
     if(size == 0) return 0;
 
-    DiskMap* map = (DiskMap*) alloc(SectorSize);
+    disk_map_t* map = (disk_map_t*) alloc(SectorSize);
     uint32_t lba = 0;
     if(map){
         uint32_t map_lba = FirstMapLBA;
-        DiskFreeBlock* free_block = NULL;
+        disk_freeblock_t* free_block = NULL;
         do{
             ata_read(PRIMARY_BASE, 0, map_lba, 1, map);
-            for (DiskFreeBlock* b = map->free_blocks; b < map->free_blocks + map->n_blocks; b++)
+            for (disk_freeblock_t* b = map->free_blocks; b < map->free_blocks + map->n_blocks; b++)
             {
                 if(b->size >= size){
                     free_block = b;
@@ -58,7 +58,7 @@ uint32_t disk_alloc(uint32_t size) {
                 free_block->lba += size;
                 free_block->size -= size;
             }else{
-                for (DiskFreeBlock* b = free_block + 1; b < map->free_blocks + map->n_blocks-1; b++)
+                for (disk_freeblock_t* b = free_block + 1; b < map->free_blocks + map->n_blocks-1; b++)
                 {
                     *b = *(b+1);
                 }
@@ -74,8 +74,8 @@ uint32_t disk_alloc(uint32_t size) {
 void disk_free(uint32_t lba, uint32_t size) {
     if(lba < FirstBlockLBA || lba >= DiskSize || size == 0)    return;
 
-    DiskFreeBlock free_block = {lba, size};
-    DiskMap* map = (DiskMap*) alloc(SectorSize);
+    disk_freeblock_t free_block = {lba, size};
+    disk_map_t* map = (disk_map_t*) alloc(SectorSize);
     if(map){
         uint32_t map_lba = FirstMapLBA;
         do{
@@ -88,7 +88,7 @@ void disk_free(uint32_t lba, uint32_t size) {
 
         if(map->n_blocks < Map_N_Blocks){
             uint8_t done = 0;
-            for (DiskFreeBlock* b = map->free_blocks; b < map->free_blocks + map->n_blocks; b++){
+            for (disk_freeblock_t* b = map->free_blocks; b < map->free_blocks + map->n_blocks; b++){
                 if(b->lba+b->size == lba){
                     b->size += size;
                     done = 1;
@@ -107,7 +107,7 @@ void disk_free(uint32_t lba, uint32_t size) {
                 map->n_blocks += 1;
             }
         }else{
-            DiskFreeBlock base_block = map->free_blocks[map->n_blocks-1];
+            disk_freeblock_t base_block = map->free_blocks[map->n_blocks-1];
             create_map(lba, base_block);
             map->next_map = lba;
             free_block.lba ++;

@@ -12,14 +12,14 @@ typedef struct
 {
     uint32_t lba;
     uint32_t size;
-}__attribute__((packed)) DiskFreeBlock;
+}__attribute__((packed)) disk_freeblock_t;
 
 typedef struct{
     uint16_t identefier;
     uint32_t next_map;
     uint8_t n_blocks;
-    DiskFreeBlock free_blocks[Map_N_Blocks];
-}__attribute__((packed)) DiskMap;
+    disk_freeblock_t free_blocks[Map_N_Blocks];
+}__attribute__((packed)) disk_map_t;
 
 
 void disk_init();

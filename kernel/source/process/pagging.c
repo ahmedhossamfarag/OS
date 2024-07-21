@@ -8,7 +8,7 @@ uint8_t user_dir_available[N_DIRS];
 
 extern void isr_page_fault_handler();
 
-void init_page_tables() {
+void pagging_init() {
     uint32_t align = FIRST_DIR_ALIGN;
 
     // default pagging directory
@@ -16,32 +16,21 @@ void init_page_tables() {
     default_dir = (uint32_t*) align;
     align += PAGE_SIZE;
 
-    
-    for (uint32_t* i = default_dir; i < default_dir + NUM_PAGES; i++)
+    uint32_t* pagging_table;
+
+    for (uint32_t j = 0; j < NUM_PAGES; j++)
     {
-        *i = 0;
+        pagging_table = (uint32_t*) align;
+        align += PAGE_SIZE;
+
+        for (int i = 0; i < NUM_PAGES; i++) {
+            // Set the page table entry to map to the physical address
+            pagging_table[i] = ((i << 12) + (j << 22)) | KERNEL_PRIVILEGE; // Present, Read/Write, Supervisor
+        }
+
+        default_dir[j] = ((uint32_t)pagging_table) | KERNEL_PRIVILEGE;
     }
-
-    uint32_t* pagging_table = (uint32_t*) align;
-    align += PAGE_SIZE;
-
-    for (int i = 0; i < NUM_PAGES; i++) {
-        // Set the page table entry to map to the physical address
-        pagging_table[i] = (i * PAGE_SIZE) | KERNEL_PRIVILEGE; // Present, Read/Write, Supervisor
-    }
-
-    default_dir[0] = ((uint32_t)pagging_table) | KERNEL_PRIVILEGE;
-
-    uint32_t* apic_pagging_table = (uint32_t*) align;
-    align += PAGE_SIZE;
-
-    for (int i = 0; i < NUM_PAGES; i++) {
-        // Set the page table entry to map to the physical address
-        apic_pagging_table[i] = ((i * PAGE_SIZE) + 0xFEC00000) | KERNEL_PRIVILEGE; // Present, Read/Write, Supervisor
-    }
-
-    default_dir[0xFEC00000 >> 22] = ((uint32_t)apic_pagging_table) | KERNEL_PRIVILEGE;
-
+    
     // user pagging directories
     uint32_t frame = FIRST_FRAME;
 
@@ -51,37 +40,32 @@ void init_page_tables() {
         align += PAGE_SIZE;
 
         
-        for (uint32_t* i = user_dirs[j]; i < user_dirs[j] + NUM_PAGES; i++)
+        for (uint32_t i = 0; i < NUM_PAGES; i++)
         {
-            *i = 0;
+            user_dirs[j][i] = default_dir[i];
         }
 
-        pagging_table = (uint32_t*) align;
-        align += PAGE_SIZE;
-
-        for (int i = 0; i < PROCESS_N_PAGES; i++)
+        for (uint32_t i = 0; i < PROCESS_N_PAGE_TABLES; i++)
         {
-            pagging_table[i] = frame | USER_PRIVILEGE;
-            frame += PAGE_SIZE;
+            pagging_table = (uint32_t*) align;
+            align += PAGE_SIZE;
+
+            for (int k = 0; k < NUM_PAGES; k++)
+            {
+                pagging_table[k] = frame | USER_PRIVILEGE;
+                frame += PAGE_SIZE;
+            }
+
+            user_dirs[j][i] = ((uint32_t)pagging_table) | USER_PRIVILEGE;
         }
         
-
-        for (int i = PROCESS_N_PAGES; i < NUM_PAGES; i++) {
-            // Set the page table entry to map to the physical address
-            pagging_table[i] = (i * PAGE_SIZE) | KERNEL_PRIVILEGE; // Present, Read/Write, Supervisor
-        }
-
-        user_dirs[j][0] = ((uint32_t)pagging_table) | USER_PRIVILEGE;
-
-        user_dirs[j][0xFEC00000 >> 22] = ((uint32_t)apic_pagging_table) | KERNEL_PRIVILEGE;
 
         user_dir_available[j] = 1;
     }
 
 
-    set_idt_entry(14, (uint32_t)(isr_page_fault_handler));
+    idt_set_entry(14, (uint32_t)(isr_page_fault_handler));
 
-    enable_paging();
 }
 
 

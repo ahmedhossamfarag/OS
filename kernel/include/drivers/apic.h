@@ -72,4 +72,4 @@ void set_ioapic(uint32_t offset, uint32_t value);
 
 uint32_t get_ioapic(uint32_t offset);
 
-void init_ioapic();
+void ioapic_init();

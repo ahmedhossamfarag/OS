@@ -32,8 +32,8 @@ typedef struct  {
     uint32_t ldt;
     uint16_t trap;
     uint16_t iomap_base;
-} __attribute__((packed)) tss_entry;
+} __attribute__((packed)) tss_entry_t;
 
-void init_tss();
+void tss_init();
 
-void load_tss();
+void enable_tss();

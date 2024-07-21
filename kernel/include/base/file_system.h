@@ -12,13 +12,13 @@ typedef struct
     uint8_t type;
     uint32_t lba;
     char name_prefix[NamePrefixLength];
-}__attribute__((packed)) File;
+}__attribute__((packed)) file_t;
 
 typedef struct
 {
     uint32_t n_files;
-    File* files;
-} DirList;
+    file_t* files;
+} dir_list_t;
 
 
 typedef struct
@@ -28,7 +28,7 @@ typedef struct
     uint32_t size;
     char name[NameLength];
    
-}__attribute__((packed)) FileEntity;
+}__attribute__((packed)) file_entity_t;
 
 typedef struct
 {
@@ -36,30 +36,30 @@ typedef struct
     uint32_t lba;
     uint8_t n_files;
     char name[NameLength];
-}__attribute__((packed)) DirEntity;
+}__attribute__((packed)) dir_entity_t;
 
 typedef struct
 {
     uint32_t next_lba;
     uint8_t n_files;
-    File files[DirExEntity_N_Files];
-}__attribute__((packed)) DirExEntity;
+    file_t files[DirExEntity_N_Files];
+}__attribute__((packed)) dir_ex_entity_t;
 
 
 void file_system_init();
 
-void file_get_info(File* file, FileEntity* entity);
+void file_get_info(file_t* file, file_entity_t* entity);
 
-void dir_get_info(File* dir, DirEntity* entity);
+void dir_get_info(file_t* dir, dir_entity_t* entity);
 
-DirList dir_get_files_list(File* parent);
+dir_list_t dir_get_files_list(file_t* parent);
 
-uint8_t file_read(File* file, uint32_t seek, uint32_t count, char* to);
+uint8_t file_read(file_t* file, uint32_t seek, uint32_t count, char* to);
 
-uint8_t file_write(File* file, char* from, uint32_t size);
+uint8_t file_write(file_t* file, char* from, uint32_t size);
 
-File file_create(File* parent, const char* name);
+file_t file_create(file_t* parent, const char* name);
 
-File dir_create(File* parent, const char* name);
+file_t dir_create(file_t* parent, const char* name);
 
-uint8_t file_delete(File* parent, File* file);
+uint8_t file_delete(file_t* parent, file_t* file);

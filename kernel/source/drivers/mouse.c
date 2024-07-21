@@ -81,7 +81,7 @@ static void enable_mouse_device() {
     outb(PS2_DATA_PORT, 0xF4);
 }
 
-void initialize_mouse() {
+void mouse_init() {
     enable_mouse_device();
 }
 

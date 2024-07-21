@@ -2,9 +2,9 @@
 #define NUM_PAGES 1024
 #define NUM_FRAMES 1024
 
-#define FIRST_DIR_ALIGN 0X90000
-#define FIRST_FRAME 0X1000
-#define PROCESS_N_PAGES 0X10
+#define FIRST_DIR_ALIGN 0XC000000
+#define FIRST_FRAME 0X100000
+#define PROCESS_N_PAGE_TABLES 0x4
 #define N_DIRS 4
 
 #define KERNEL_PRIVILEGE 3
@@ -31,7 +31,7 @@ typedef struct {
 } page_table_t;
 
 
-void init_page_tables();
+void pagging_init();
 
 void enable_paging();
 

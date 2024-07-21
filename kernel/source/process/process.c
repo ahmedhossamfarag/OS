@@ -4,13 +4,16 @@
 
 pcb_t default_process;
 
-pcb_t processes[MAX_N_PROCESS];
+pcb_t* processes;
 uint8_t n_processes;
 
-pcb_t* queue[MAX_N_PROCESS];
+pcb_t** queue;
 uint8_t queue_size;
 
 void process_init(){
+    processes = (pcb_t*) alloc(MAX_N_PROCESS * sizeof(pcb_t));
+    queue = (pcb_t**) alloc(MAX_N_PROCESS * sizeof(pcb_t*));
+
     n_processes = 0;
     queue_size = 0;
 

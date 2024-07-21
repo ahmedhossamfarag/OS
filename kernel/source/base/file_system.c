@@ -5,17 +5,17 @@
 #include "strlib.h"
 #include "math.h"
 
-static uint32_t create_dir_ex(File* first_file){
+static uint32_t create_dir_ex(file_t* first_file){
     uint32_t lba = 0;
-    DirExEntity* dir = (DirExEntity*) alloc(SectorSize);
+    dir_ex_entity_t* dir = (dir_ex_entity_t*) alloc(SectorSize);
     if(dir){
         lba = disk_alloc(1);
         if(lba)
         {
             dir->next_lba = 0;
             dir->n_files = 0;
-            File file = {0,0};
-            for (File* f = dir->files; f < dir->files+ DirExEntity_N_Files; f++)
+            file_t file = {0,0};
+            for (file_t* f = dir->files; f < dir->files+ DirExEntity_N_Files; f++)
             {
                 *f = file;
             }
@@ -30,10 +30,10 @@ static uint32_t create_dir_ex(File* first_file){
     return lba;
 }
 
-static uint8_t dir_append(uint32_t lba, File* file){
+static uint8_t dir_append(uint32_t lba, file_t* file){
     if(!lba) return 0;
 
-    DirExEntity* dir = (DirExEntity*) alloc(SectorSize);
+    dir_ex_entity_t* dir = (dir_ex_entity_t*) alloc(SectorSize);
     uint8_t done = 0;
     if(dir){
         do
@@ -62,16 +62,16 @@ static uint8_t dir_append(uint32_t lba, File* file){
     return done;
 }
 
-static void dir_list(uint32_t lba, File* files){
+static void dir_list(uint32_t lba, file_t* files){
     if(!lba) return;
 
-    DirExEntity* dir = (DirExEntity*) alloc(SectorSize);
+    dir_ex_entity_t* dir = (dir_ex_entity_t*) alloc(SectorSize);
 
     if(dir){
         do
         {
             ata_read(PRIMARY_BASE, 0, lba, 1, dir);
-            for (File*  f = dir->files; f < dir->files + dir->n_files; f++)
+            for (file_t*  f = dir->files; f < dir->files + dir->n_files; f++)
             {
                 *files = *f;
                 files++;
@@ -82,9 +82,9 @@ static void dir_list(uint32_t lba, File* files){
     }
 }
 
-static File dir_find(uint32_t lba, const char* name){
-    DirExEntity* dir = (DirExEntity*) alloc(SectorSize);
-    File file = {0,0};
+static file_t dir_find(uint32_t lba, const char* name){
+    dir_ex_entity_t* dir = (dir_ex_entity_t*) alloc(SectorSize);
+    file_t file = {0,0};
 
     if(!lba) return file;
 
@@ -95,14 +95,14 @@ static File dir_find(uint32_t lba, const char* name){
             do
             {
                 ata_read(PRIMARY_BASE, 0, lba, 1, dir);
-                for (File*  f = dir->files; f < dir->files + dir->n_files; f++)
+                for (file_t*  f = dir->files; f < dir->files + dir->n_files; f++)
                 {
                     if(str_start_with(name, f->name_prefix)){
                         ata_read(PRIMARY_BASE, 0, f->lba, 1, entity);
                         if(f->type == FILE_TYPE)
-                            entity_name = ((FileEntity*)entity)->name;
+                            entity_name = ((file_entity_t*)entity)->name;
                         else
-                            entity_name = ((DirEntity*)entity)->name;
+                            entity_name = ((dir_entity_t*)entity)->name;
                         if(str_cmp(name, entity_name) == 0){
                             file = *f;
                             break;
@@ -119,12 +119,12 @@ static File dir_find(uint32_t lba, const char* name){
     return file;
 }
 
-static void file_delete_helper(char* entity, File* f);
+static void file_delete_helper(char* entity, file_t* f);
 
-static uint8_t dir_remove(uint32_t lba, File* file){
+static uint8_t dir_remove(uint32_t lba, file_t* file){
     if(!lba) return 0;
 
-    DirExEntity* dir = (DirExEntity*) alloc(SectorSize);
+    dir_ex_entity_t* dir = (dir_ex_entity_t*) alloc(SectorSize);
     uint8_t done = 0;
     if(dir){
         char* entity =  alloc(SectorSize);
@@ -132,11 +132,11 @@ static uint8_t dir_remove(uint32_t lba, File* file){
             do
             {
                 ata_read(PRIMARY_BASE, 0, lba, 1, dir);
-                for (File*  f = dir->files; f < dir->files + dir->n_files; f++)
+                for (file_t*  f = dir->files; f < dir->files + dir->n_files; f++)
                 {
                     if(f->lba == file->lba){
                         file_delete_helper(entity, f);
-                        for (File*  f2 = dir->files; f2 < dir->files + dir->n_files - 1; f2++)
+                        for (file_t*  f2 = dir->files; f2 < dir->files + dir->n_files - 1; f2++)
                         {
                             *f2 = *(f2+1);
                         }
@@ -159,7 +159,7 @@ static uint8_t dir_remove(uint32_t lba, File* file){
 static uint8_t dir_delete(uint32_t lba){
     if(!lba) return 0;
 
-    DirExEntity* dir = (DirExEntity*) alloc(SectorSize);
+    dir_ex_entity_t* dir = (dir_ex_entity_t*) alloc(SectorSize);
     uint8_t done = 0;
     if(dir){
         char* entity = alloc(SectorSize);
@@ -167,7 +167,7 @@ static uint8_t dir_delete(uint32_t lba){
             do
             {
                 ata_read(PRIMARY_BASE, 0, lba, 1, dir);
-                for (File*  f = dir->files; f < dir->files + dir->n_files; f++)
+                for (file_t*  f = dir->files; f < dir->files + dir->n_files; f++)
                 {
                     file_delete_helper(entity, f);
                 }
@@ -182,14 +182,14 @@ static uint8_t dir_delete(uint32_t lba){
     return done;
 }
 
-static void file_delete_helper(char* entity, File* f){
+static void file_delete_helper(char* entity, file_t* f){
     ata_read(PRIMARY_BASE, 0, f->lba, 1, entity);
     if(f->type == FILE_TYPE){
-        if(((FileEntity*)entity)->lba)
-            disk_free(((FileEntity*)entity)->lba, ((FileEntity*)entity)->n_sectors);
+        if(((file_entity_t*)entity)->lba)
+            disk_free(((file_entity_t*)entity)->lba, ((file_entity_t*)entity)->n_sectors);
     }else if(f->type == DIR_TYPE){
-        if(((DirEntity*)entity)->lba)
-            dir_delete(((DirEntity*)entity)->lba);
+        if(((dir_entity_t*)entity)->lba)
+            dir_delete(((dir_entity_t*)entity)->lba);
     }
     disk_free(f->lba, 1);
 }
@@ -197,7 +197,7 @@ static void file_delete_helper(char* entity, File* f){
 
 void file_system_init()
 {
-    DirEntity* dir = (DirEntity*) alloc(SectorSize);
+    dir_entity_t* dir = (dir_entity_t*) alloc(SectorSize);
     if(dir){
         ata_read(PRIMARY_BASE, 0, RootDirLBA, 1, dir);
         if(dir->identifier != DirEntityIdentifier){
@@ -210,28 +210,28 @@ void file_system_init()
     }   
 }
 
-void file_get_info(File *file, FileEntity *entity)
+void file_get_info(file_t *file, file_entity_t *entity)
 {
     if(!file || !file->lba || !entity) return;
     ata_read(PRIMARY_BASE, 0, file->lba, 1, entity);
 }
 
-void dir_get_info(File *dir, DirEntity *entity)
+void dir_get_info(file_t *dir, dir_entity_t *entity)
 {
     if(!dir || !dir->lba || !entity) return;
     ata_read(PRIMARY_BASE, 0, dir->lba, 1, entity);
 }
 
-DirList dir_get_files_list(File *parent)
+dir_list_t dir_get_files_list(file_t *parent)
 {
-    DirList list;
+    dir_list_t list;
     uint32_t lba = parent ? parent->lba : RootDirLBA;
-    DirEntity* dir = (DirEntity*) alloc(SectorSize);
+    dir_entity_t* dir = (dir_entity_t*) alloc(SectorSize);
     if(dir){
         ata_read(PRIMARY_BASE, 0, lba, 1, dir);
         list.n_files = dir->n_files;
         if(dir->lba){
-            list.files = (File*) alloc(sizeof(File)*list.n_files);
+            list.files = (file_t*) alloc(sizeof(file_t)*list.n_files);
             if(list.files){
                 dir_list(dir->lba, list.files);
             }
@@ -241,10 +241,10 @@ DirList dir_get_files_list(File *parent)
     return list;
 }
 
-uint8_t file_read(File* file, uint32_t seek, uint32_t count, char* to){
+uint8_t file_read(file_t* file, uint32_t seek, uint32_t count, char* to){
     if(!file || !file->lba || file->type != FILE_TYPE || count == 0 || !to) return 0;
 
-    FileEntity* entity = (FileEntity*) alloc(SectorSize);
+    file_entity_t* entity = (file_entity_t*) alloc(SectorSize);
     uint8_t done = 0;
     if(entity){
         ata_read(PRIMARY_BASE, 0, file->lba, 1, entity);
@@ -257,11 +257,11 @@ uint8_t file_read(File* file, uint32_t seek, uint32_t count, char* to){
     return done;
 }
 
-uint8_t file_write(File* file, char* from, uint32_t size){
+uint8_t file_write(file_t* file, char* from, uint32_t size){
     if(!file || !file->lba || file->type != FILE_TYPE || !from || size == 0) return 0;
 
     uint32_t n_sectors = math_ciel( (float) size / SectorSize);
-    FileEntity* entity = (FileEntity*) alloc(SectorSize);
+    file_entity_t* entity = (file_entity_t*) alloc(SectorSize);
     uint8_t done = 0;
     if(entity){
         ata_read(PRIMARY_BASE, 0, file->lba, 1, entity);
@@ -281,12 +281,12 @@ uint8_t file_write(File* file, char* from, uint32_t size){
     return done;
 }
 
-File file_create(File* parent, const char* name){
-    File file = {FILE_TYPE, 0};
+file_t file_create(file_t* parent, const char* name){
+    file_t file = {FILE_TYPE, 0};
 
     if(!name) return file;
 
-    FileEntity* entity = (FileEntity*) alloc(SectorSize);
+    file_entity_t* entity = (file_entity_t*) alloc(SectorSize);
     if(entity){
         file.lba = disk_alloc(1);
         if(file.lba){
@@ -297,7 +297,7 @@ File file_create(File* parent, const char* name){
             ata_write(PRIMARY_BASE, 0, file.lba, 1, entity);
             str_copy_n(name, file.name_prefix, NamePrefixLength);
             uint32_t lba = parent ? parent->lba : RootDirLBA;
-            DirEntity* dir_entity = (DirEntity*) entity;
+            dir_entity_t* dir_entity = (dir_entity_t*) entity;
             ata_read(PRIMARY_BASE, 0, lba, 1, dir_entity);
             if (!dir_entity->lba) {
                 dir_entity->lba = create_dir_ex(&file);
@@ -315,12 +315,12 @@ File file_create(File* parent, const char* name){
     return file;
 }
 
-File dir_create(File* parent, const char* name){
-    File file = {DIR_TYPE, 0};
+file_t dir_create(file_t* parent, const char* name){
+    file_t file = {DIR_TYPE, 0};
 
     if(!name) return file;
 
-    DirEntity* entity = (DirEntity*) alloc(SectorSize);
+    dir_entity_t* entity = (dir_entity_t*) alloc(SectorSize);
     if(entity){
         file.lba = disk_alloc(1);
         if(file.lba){
@@ -331,7 +331,7 @@ File dir_create(File* parent, const char* name){
             ata_write(PRIMARY_BASE, 0, file.lba, 1, entity);
             str_copy_n(name, file.name_prefix, NamePrefixLength);
             uint32_t lba = parent ? parent->lba : RootDirLBA;
-            DirEntity* dir_entity = (DirEntity*) entity;
+            dir_entity_t* dir_entity = (dir_entity_t*) entity;
             ata_read(PRIMARY_BASE, 0, lba, 1, dir_entity);
             if (!dir_entity->lba) {
                 dir_entity->lba = create_dir_ex(&file);
@@ -349,14 +349,14 @@ File dir_create(File* parent, const char* name){
     return file;
 }
 
-uint8_t file_delete(File* parent, File* file){
+uint8_t file_delete(file_t* parent, file_t* file){
     if(!file || !file->lba) return 0;
 
     if(parent){
         if(parent->type != DIR_TYPE) return 0;
     }
     uint8_t done = 0;
-    DirEntity* dir = (DirEntity*) alloc(SectorSize);
+    dir_entity_t* dir = (dir_entity_t*) alloc(SectorSize);
     if(dir){
         uint32_t lba = parent ? parent->lba : RootDirLBA;
         ata_read(PRIMARY_BASE, 0, lba, 1, dir);

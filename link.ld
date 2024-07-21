@@ -1,7 +1,7 @@
  OUTPUT_FORMAT(elf32-i386)
 
  SECTIONS {
-     . = 0x80000; /* Set the base address for the executable */
+     . = 0xA000000; /* Set the base address for the executable */
      .text : { *(.text) *(.text.*) }
      .rodata : { *(.rodata) *(.rodata.*) }
      .data : { *(.data) *(.data.*) }

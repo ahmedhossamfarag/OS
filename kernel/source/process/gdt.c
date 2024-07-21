@@ -1,9 +1,13 @@
 #include "gdt.h"
 #include "tss.h"
+#include "memory.h"
 
-gdt_entry gdt[GDT_N_ENTRIES];
+gdt_entry_t* gdt;
+gdt_ptr_t gdtp;
 
-void init_gdt() {
+void gdt_init() {
+    gdt = (gdt_entry_t*) alloc(GDT_N_ENTRIES * sizeof(gdt_entry_t));
+
     // Null segment
     set_gdt_entry(0, 0, 0, 0, 0);
 
@@ -20,19 +24,22 @@ void init_gdt() {
     set_gdt_entry(4, 0, 0xFFFFFFFF, 0xF2, 0xCF);
 
     // TSS Initialize
-    init_tss();
+    tss_init();
 
     // GDT pointer
 
-    gdt_ptr gdtp;
-    gdtp.limit = (sizeof(gdt_entry) * GDT_N_ENTRIES) - 1;
-    gdtp.base = (uint32_t)&gdt;
+    gdtp.limit = (sizeof(gdt_entry_t) * GDT_N_ENTRIES) - 1;
+    gdtp.base = (uint32_t)gdt;
+
+}
+
+void enable_gdt(){
 
     // Load the GDT
     asm volatile ("lgdt %0" : : "m" (gdtp));
 
 
-    load_tss();
+    enable_tss();
 }
 
 

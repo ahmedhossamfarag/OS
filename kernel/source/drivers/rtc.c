@@ -65,8 +65,8 @@ static uint8_t bcd_to_bin(uint8_t bcd) {
     return ((bcd / 16) * 10) + (bcd % 16);
 }
 
-Time rtc_read_time(){
-    Time time;
+time_t rtc_read_time(){
+    time_t time;
     uint8_t reg_a;
     uint8_t year_rh, year_lh;
 

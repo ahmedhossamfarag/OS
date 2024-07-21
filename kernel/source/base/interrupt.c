@@ -1,12 +1,12 @@
 #include "interrupt.h"
-
+#include "memory.h"
 extern void isr_exception_handler();
 extern void isr_default();
 
-IDTEntry idt[IDT_ENTRIES];
-IDTPointer idt_ptr;
+idt_entry_t* idt;
+idt_pointer_t idt_ptr;
 
-void set_idt_entry(int n, uint32_t handler) {
+void idt_set_entry(int n, uint32_t handler) {
     idt[n].offset_low = handler & 0xFFFF;
     idt[n].selector = 0x08; // Kernel code segment
     idt[n].zero = 0;
@@ -15,7 +15,7 @@ void set_idt_entry(int n, uint32_t handler) {
 }
 
 
-void set_idt_entry_user(int n, uint32_t handler){
+void idt_set_user_entry(int n, uint32_t handler){
     idt[n].offset_low = handler & 0xFFFF;
     idt[n].selector = 0x08; // Kernel code segment
     idt[n].zero = 0;
@@ -26,17 +26,21 @@ void set_idt_entry_user(int n, uint32_t handler){
 void map_idt_isr(){
     for (int i = 0; i < IDT_ENTRIES; i++)
     {
-        set_idt_entry(i, (uint32_t)(isr_exception_handler));
+        idt_set_entry(i, (uint32_t)(isr_exception_handler));
     }
 }
 
 
-void init_idt() {
-    idt_ptr.limit = sizeof(IDTEntry) * IDT_ENTRIES - 1;
+void idt_init() {
+    idt = (idt_entry_t*) alloc(IDT_ENTRIES * sizeof(idt_entry_t));
+
+    idt_ptr.limit = sizeof(idt_entry_t) * IDT_ENTRIES - 1;
     idt_ptr.base = (uint32_t)&idt[0];
 
     map_idt_isr();
+}
 
+void enable_idt(){
     __asm__ volatile ("lidt %0" : : "m"(idt_ptr)); // load the new IDT
 }
 

@@ -1,19 +1,22 @@
 #include "resources.h"
 #include "interrupt.h"
 #include "strlib.h"
+#include "memory.h"
 
-resource_t resources[RESOURCES_N];
+resource_t* resources;
 
 
 extern void isr_resource_request_handler();
 extern void isr_resource_free_handler();
 
 void resources_init(){
+    resources = (resource_t*) alloc(RESOURCES_N * sizeof(resource_t));
+
     resource_t screen = {SCREEN, 0, 0};
     resources[0] = screen;
     
-    set_idt_entry(RESOURCE_REQUEST_INT, (uint32_t)(isr_resource_request_handler));
-    set_idt_entry(RESOURCE_FREE_INT, (uint32_t)(isr_resource_free_handler));
+    idt_set_entry(RESOURCE_REQUEST_INT, (uint32_t)(isr_resource_request_handler));
+    idt_set_entry(RESOURCE_FREE_INT, (uint32_t)(isr_resource_free_handler));
 }
 
 void resource_request_handler(cpu_state_t* state){

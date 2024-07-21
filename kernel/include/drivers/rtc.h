@@ -1,4 +1,4 @@
-// Real Time Clock
+// Real time_t Clock
 
 #define RTC_INDEX_PORT 0x70
 #define RTC_DATA_PORT  0x71
@@ -54,7 +54,7 @@ typedef struct{
     uint8_t hour;
     uint8_t minute;
     uint8_t second;
-} Time;
+} time_t;
 
 void set_rtc_handler_proc(void (*proc)());
 
@@ -65,6 +65,6 @@ void rtc_enable_periodic_int(uint8_t rate);
 
 void rtc_set_alarm(unsigned char hour, unsigned char minute, unsigned char second);
 
-Time rtc_read_time();
+time_t rtc_read_time();
 
 void apic_rtc_handler();

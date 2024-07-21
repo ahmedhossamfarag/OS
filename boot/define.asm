@@ -1,7 +1,7 @@
 ; kernel
 
 KERNEL_LOAD_OFFSET equ 0x1000
-KERNEL_OFFSET equ 0x80000
+KERNEL_OFFSET equ 0xA000000
 
 ; kernel load
 

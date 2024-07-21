@@ -14,7 +14,7 @@ void handler(){
 
 void interrupt_handler_init()
 {
-    set_idt_entry_user(0, (uint32_t)handler);
+    idt_set_user_entry(0, (uint32_t)handler);
 }
 
 void exception_handler(void)
