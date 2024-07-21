@@ -11,7 +11,7 @@ extern void disable_pic();
 
 extern uint32_t detect_apic();
 
-extern void enable_apic();
+extern void enable_lapic();
 
 
 void initialize_lapic(){
@@ -29,11 +29,18 @@ void apic_init()
     if(detect_apic()){
         apic_detected = 1;
         disable_pic();
-        enable_apic();
-        initialize_lapic();
         ioapic_init();
     }
 }
+
+
+void enable_apic(){
+    if(apic_detected){
+        enable_lapic();
+        initialize_lapic();
+    }
+}
+
 
 void set_lapic(uint32_t offset, uint32_t value)
 {
@@ -142,6 +149,11 @@ void apic_send_init_ipi(uint8_t apic_id)
 /* Vector is Multiple of 4k*/
 void apic_send_startup_ipi(uint8_t apic_id, uint8_t vector) {
     apic_write_icr(apic_id << 24, ICR_STARTUP | vector);
+}
+
+void apic_send_ipi(uint8_t apic_id, uint8_t vector)
+{
+    apic_write_icr(apic_id << 24, vector | ICR_FIXED);
 }
 
 void apic_delay(uint32_t t){

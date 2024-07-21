@@ -9,7 +9,7 @@ tss_entry_t* tss;
 void tss_init(){
     n_tss = info_get_processor_no();
 
-    tss = (tss_entry_t*) alloc(n_tss * sizeof(tss));
+    tss = (tss_entry_t*) alloc(n_tss * sizeof(tss_entry_t));
 
     for (uint8_t i = 0; i < n_tss; i++)
     {

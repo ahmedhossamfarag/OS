@@ -19,7 +19,7 @@ void process_init(){
 
     default_process.cr3 = (uint32_t) get_default_pagging_dir();
     default_process.process_state = PROCESS_STATE_RUNNING;
-    default_process.n_threads = 1;
+    default_process.n_threads = MAX_N_THREAD;
 }
 
 pcb_t* get_default_process(){
@@ -146,5 +146,7 @@ void remove_thread(pcb_t *process, uint32_t tid)
 
 thread_t* get_process_thread(pcb_t *process, uint8_t n)
 {
-    return &process->threads[n%process->n_threads];
+    if(n < process->n_threads)
+        return &process->threads[n];
+    return 0;
 }

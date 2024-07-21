@@ -71,3 +71,5 @@ isr apic_mouse_handler
 isr apic_rtc_handler
 
 isr apic_fpu_handler
+
+isr_state schedule_thread

@@ -8,11 +8,7 @@
 
 void handler(){
     print("Done");
-    while (1)
-    {
-        /* code */
-    }
-    
+    while (1);
 }
 
 void interrupt_handler_init()

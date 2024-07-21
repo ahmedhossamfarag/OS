@@ -13,8 +13,8 @@ detect_apic:
     and eax, 0x200
     ret
 
-global enable_apic
-enable_apic:
+global enable_lapic
+enable_lapic:
     mov eax, 0x1B
     rdmsr
     bts eax, 11 ; Set the APIC enable bit

@@ -46,7 +46,9 @@ void setup()
     enable_idt();
     enable_interrupt();
     enable_gdt();
+    enable_apic();
     enable_paging();
+    enable_scheduler();
 }
 
 void start()
@@ -72,8 +74,6 @@ void ap_setup()
         apic_send_startup_ipi(apic_id, 0xA);
         apic_delay(1);
     }
-
-    start();
 }
 
 int main()
@@ -82,7 +82,7 @@ int main()
     screen_clear();
     init();
     ap_setup();
-
+    setup();
     
     while (1);
 

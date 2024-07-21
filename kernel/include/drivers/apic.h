@@ -74,14 +74,20 @@ uint32_t get_ioapic(uint32_t offset);
 
 void ioapic_init();
 
+void enable_apic();
+
 #pragma region ICR
 
-#define ICR_INIT  0x00000500  // Delivery mode: INIT
-#define ICR_STARTUP  0x00000600  // Delivery mode: STARTUP
+#define ICR_INIT  0x500  // Delivery mode: INIT
+#define ICR_STARTUP  0x600  // Delivery mode: STARTUP
+#define ICR_FIXED 0x000 // Dilevery mode: FIXED
+#define ICR_NONMUSK 0x400 // Dilevery mode: NON MUSKABLE
 
 void apic_send_init_ipi(uint8_t apic_id);
 
 void apic_send_startup_ipi(uint8_t apic_id, uint8_t vector);
+
+void apic_send_ipi(uint8_t apic_id, uint8_t vector);
 
 void apic_delay(uint32_t t);
 
