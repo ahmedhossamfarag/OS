@@ -54,3 +54,20 @@ uint32_t info_get_apic_id(uint8_t i)
 {
     return apic_ids[i];
 }
+
+
+
+uint8_t info_get_processor_id()
+{
+    unsigned int eax, ebx, ecx, edx;
+    
+    // Call CPUID with EAX=1
+    asm volatile (
+        "cpuid"
+        : "=a" (eax), "=b" (ebx), "=c" (ecx), "=d" (edx)
+        : "a" (1)
+    );
+    
+    unsigned int processor_id = (ebx >> 24) & 0xFF;
+    return processor_id;
+}

@@ -1,6 +1,7 @@
+#include "process.h"
 
 void interrupt_handler_init();
 
-void exception_handler(void);
+void exception_handler(cpu_state_t* cpu);
 
 void pic_handler(void);

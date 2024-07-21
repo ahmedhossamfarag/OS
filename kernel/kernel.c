@@ -18,14 +18,16 @@
 #include "info.h"
 #include "ata.h"
 
-void kernel_load(){
+void kernel_load()
+{
     uint32_t src = 1 + 50;
-    uint32_t* des = (uint32_t*) (0xA000000 + 50 * 512);
+    uint32_t *des = (uint32_t *)(0xA000000 + 50 * 512);
     uint32_t n_sectors = 50;
     ata_read(PRIMARY_BASE, 0, src, n_sectors, des);
 }
 
-void init(){
+void init()
+{
     info_init();
     acpi_init();
     memory_init();
@@ -39,21 +41,50 @@ void init(){
     resources_init();
 }
 
-void setup(){
+void setup()
+{
     enable_idt();
     enable_interrupt();
     enable_gdt();
     enable_paging();
 }
 
-int main () {
+void start()
+{
+    setup();
+
+    while (1);
+}
+
+void ap_setup()
+{
+    uint32_t *ap_ebp = (uint32_t *)0xA100;
+    uint32_t *ap_startup = (uint32_t *)0xA200;
+
+    *ap_startup = (uint32_t)start;
+
+    for (uint8_t apic_id = 1; apic_id < info_get_processor_no(); apic_id++)
+    {
+        *ap_ebp = 0x8000 + apic_id * 0x1000;
+
+        apic_send_init_ipi(apic_id);
+        apic_delay(1);
+        apic_send_startup_ipi(apic_id, 0xA);
+        apic_delay(1);
+    }
+
+    start();
+}
+
+int main()
+{
     kernel_load();
     screen_clear();
     init();
-    setup();
-    screen_print_str("Welcome To Kernel");
+    ap_setup();
 
-    while (1);
     
+    while (1);
+
     return 0;
 }

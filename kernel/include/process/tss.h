@@ -1,7 +1,8 @@
 #define KERNEL_DATA_SEGMENT 0x10
-#define KERNEK_STACK_POINTER 0X90000
-#define TSS_INDEX 5 
-#define TSS_SELECTOR TSS_INDEX * 8
+#define KERNEL_STACK_SIZE 0X1000
+#define KERNEK_STACK_POINTER(i) 0XB000000 - (i * KERNEL_STACK_SIZE)
+#define TSS_INDEX(i) (5 + i)
+#define TSS_SELECTOR(i) TSS_INDEX(i) * 8
 #include <stdint.h>
 
 typedef struct  {

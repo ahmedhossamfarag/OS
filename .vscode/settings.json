@@ -18,6 +18,7 @@
         "stdint.h": "c",
         "info.h": "c",
         "gdt.h": "c",
-        "memory.h": "c"
+        "memory.h": "c",
+        "interrupt_handler.h": "c"
     }
 }

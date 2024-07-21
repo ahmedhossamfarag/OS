@@ -2,6 +2,9 @@
 #include "screen_print.h"
 #include "pic.h"
 #include "interrupt.h"
+#include "apic.h"
+#include "strlib.h"
+
 
 void handler(){
     print("Done");
@@ -17,7 +20,7 @@ void interrupt_handler_init()
     idt_set_user_entry(0, (uint32_t)handler);
 }
 
-void exception_handler(void)
+void exception_handler(cpu_state_t* cpu)
 {
     screen_print_str("\nException Handler");
 }

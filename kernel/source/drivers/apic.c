@@ -1,6 +1,4 @@
 #include "apic.h"
-#include "screen_print.h"
-#include "strlib.h"
 #include "interrupt.h"
 #include "pic.h"
 
@@ -125,5 +123,29 @@ void ioapic_init(){
     idt_set_entry(PIC_M_OFFSET + 13, (uint32_t)(isr_apic_fpu_handler));
 }
 
+
+#pragma endregion
+
+#pragma region ICR
+
+
+static inline void apic_write_icr(uint32_t high, uint32_t low) {
+    set_lapic(LAPIC_ICR_HI, high);
+    set_lapic(LAPIC_ICR_LO, low);
+}
+
+void apic_send_init_ipi(uint8_t apic_id)
+{
+    apic_write_icr(apic_id << 24, ICR_INIT);
+}
+
+/* Vector is Multiple of 4k*/
+void apic_send_startup_ipi(uint8_t apic_id, uint8_t vector) {
+    apic_write_icr(apic_id << 24, ICR_STARTUP | vector);
+}
+
+void apic_delay(uint32_t t){
+    for (uint64_t i = 0; i < t*1e5; i++);
+}
 
 #pragma endregion

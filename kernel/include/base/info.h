@@ -23,3 +23,5 @@ uint32_t info_get_memory_size();
 void info_add_apic_id(uint32_t id);
 
 uint32_t info_get_apic_id(uint8_t i);
+
+uint8_t info_get_processor_id();

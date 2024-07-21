@@ -1,5 +1,3 @@
-#define GDT_N_ENTRIES 6
-
 #include <stdint.h>
 
 typedef struct {

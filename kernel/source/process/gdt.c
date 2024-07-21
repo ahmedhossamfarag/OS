@@ -1,11 +1,16 @@
 #include "gdt.h"
 #include "tss.h"
 #include "memory.h"
+#include "info.h"
+
+uint8_t GDT_N_ENTRIES;
 
 gdt_entry_t* gdt;
 gdt_ptr_t gdtp;
 
 void gdt_init() {
+    GDT_N_ENTRIES = 5 + info_get_processor_no();
+
     gdt = (gdt_entry_t*) alloc(GDT_N_ENTRIES * sizeof(gdt_entry_t));
 
     // Null segment

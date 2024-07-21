@@ -39,7 +39,7 @@ isr_default:
     nop
     iret
 
-isr exception_handler
+isr_state exception_handler
 
 isr pic_handler
     

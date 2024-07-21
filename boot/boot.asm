@@ -20,6 +20,7 @@ jmp $
 BOOT_DRIVE db 0
 %include "boot/gdt.asm"
 
+%include "boot/ap_setup.asm"
 
 ; Bootsector padding
 times 510 -( $ - $$ ) db 0

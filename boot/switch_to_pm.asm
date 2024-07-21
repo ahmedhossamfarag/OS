@@ -33,6 +33,9 @@ kernel_shift:
     add esi , 4
     add edi , 4
     loop kernel_shift
+    
+; AP Setup Shift
+call ap_setup_shift
 
 call KERNEL_OFFSET ; Finally , call the kernel
 jmp $
