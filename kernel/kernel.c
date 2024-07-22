@@ -8,6 +8,7 @@
 #include "file_system.h"
 #include "scheduler.h"
 #include "gdt.h"
+#include "tss.h"
 #include "resources.h"
 #include "libc.h"
 #include "pagging.h"
@@ -67,7 +68,7 @@ void ap_setup()
 
     for (uint8_t apic_id = 1; apic_id < info_get_processor_no(); apic_id++)
     {
-        *ap_ebp = 0x8000 + apic_id * 0x1000;
+        *ap_ebp = KERNEK_STACK_POINTER(apic_id);
 
         apic_send_init_ipi(apic_id);
         apic_delay(1);
@@ -79,10 +80,11 @@ void ap_setup()
 int main()
 {
     kernel_load();
-    screen_clear();
     init();
     ap_setup();
     setup();
+    screen_clear();
+    print("Welcome To Kernel");
     
     while (1);
 

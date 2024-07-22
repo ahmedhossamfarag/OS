@@ -1,4 +1,4 @@
-#define VideoMemoryStart 0xB8000
+#define VideoMemoryStart 0xB8000 + 0xF0000000
 #define VideoMemoryEndOffset 2000
 #define VideoMemoryLineLn 80
 #define REG_SCREEN_CTRL 0x3D4

@@ -30,6 +30,8 @@ void pagging_init() {
 
         default_dir[j] = ((uint32_t)pagging_table) | KERNEL_PRIVILEGE;
     }
+    // First Dir Shift
+    default_dir[0xF0000000 >> 22] = default_dir[0];
     
     // user pagging directories
     uint32_t frame = FIRST_FRAME;

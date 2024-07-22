@@ -58,7 +58,9 @@ void schedule_process(cpu_state_t* state){
 
         if(current_process){
             current_process->process_state = PROCESS_STATE_READY;
-            process_inqueue(current_process);   
+            if(current_process != get_default_process()){
+                process_inqueue(current_process);
+            }  
         }
 
         next_process->process_state = PROCESS_STATE_RUNNING;
