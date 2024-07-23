@@ -74,10 +74,10 @@ isr apic_fpu_handler
 
 isr_state schedule_thread
 
-isr schedule_process_waiting
+isr_state schedule_process_waiting
 
-isr schedule_thread_waiting
+isr_state schedule_thread_waiting
 
-isr schedule_process_terminated
+isr_state schedule_process_terminated
 
-isr schedule_thread_terminated
+isr_state schedule_thread_terminated
