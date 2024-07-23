@@ -35,9 +35,13 @@ void pic_handler(void) {
     uint8_t slave_irr = (irr >> 8) & 0xFF;
 
     if(master_isr){
-        pic_sendEOI(master_irr);
+        pic_sendEOI(0);
     }
     if(slave_isr){
-        pic_sendEOI(slave_irr);
+        pic_sendEOI(8);
     }
+
+    screen_print_str("pic ");
+    char s[10];
+    screen_print_str(int_to_hex_str(isr, s));
 }

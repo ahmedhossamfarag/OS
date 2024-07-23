@@ -51,6 +51,8 @@ isr rtc_handler
 
 isr fpu_handler
 
+isr ata_handler
+
 isr page_fault_handler
 
 isr_state timer_handler
@@ -71,6 +73,8 @@ isr apic_mouse_handler
 isr apic_rtc_handler
 
 isr apic_fpu_handler
+
+isr apic_ata_handler
 
 isr_state schedule_thread
 

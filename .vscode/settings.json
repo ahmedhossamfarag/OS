@@ -12,6 +12,10 @@
         "memlib.h": "c",
         "io_syscall.h": "c",
         "timer.h": "c",
-        "memory.h": "c"
+        "memory.h": "c",
+        "ata.h": "c",
+        "pic.h": "c",
+        "low_level.h": "c",
+        "screen_print.h": "c"
     }
 }

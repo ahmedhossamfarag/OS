@@ -14,11 +14,15 @@
 #include "resources.h"
 
 
+
+/*
+
+
 #define MAX_N_FILES 10
 file_t* open_files;
 uint32_t n_open_files;
 
-uint32_t fopen_handler()
+uint32_t fopen_handler(cpu_state_t*)
 {
 
     char* name;
@@ -69,7 +73,7 @@ static file_t* get_open_file(uint32_t lba){
     return 0;
 }
 
-uint32_t fsize_handler()
+uint32_t fsize_handler(cpu_state_t*)
 {
     uint32_t lba;
     uint32_t *to;
@@ -87,7 +91,7 @@ uint32_t fsize_handler()
     return 1;
 }
 
-uint32_t fclose_handler()
+uint32_t fclose_handler(cpu_state_t*)
 {
     uint32_t lba;
     asm("mov %%eax, %0":"=a"(lba));
@@ -104,7 +108,7 @@ uint32_t fclose_handler()
     }
 }
 
-uint32_t fread_handler()
+uint32_t fread_handler(cpu_state_t*)
 {
     uint32_t lba;
     char *to;
@@ -140,7 +144,7 @@ uint32_t fread_handler()
     return 0;
 }
 
-uint32_t fwrite_handler()
+uint32_t fwrite_handler(cpu_state_t*)
 {
     uint32_t lba;
     char *from;
@@ -158,7 +162,7 @@ uint32_t fwrite_handler()
     return 0;
 }
 
-uint32_t prints_handler()
+uint32_t prints_handler(cpu_state_t*)
 {
     char* str;
     asm("mov %%eax, %0":"=a"(str));
@@ -194,7 +198,7 @@ static void scans_line_keyboard_proc(key_info_t k){
     }
 }
 
-uint32_t scans_handler()
+uint32_t scans_handler(cpu_state_t*)
 {
     char* to;
     uint32_t n;
@@ -210,7 +214,7 @@ uint32_t scans_handler()
 
 }
 
-uint32_t scans_line_handler()
+uint32_t scans_line_handler(cpu_state_t*)
 {
     char* to;
     asm("mov %%edx, %0":"=d"(to));
@@ -227,3 +231,9 @@ void io_syscall_init(){
     open_files = (file_t*) alloc(MAX_N_FILES * sizeof(file_t));
     n_open_files = 0;
 }
+
+
+
+
+
+*/

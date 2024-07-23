@@ -8,7 +8,7 @@ extern void isr_keyboard_handler();
 extern void isr_mouse_handler();
 extern void isr_rtc_handler();
 extern void isr_fpu_handler();
-
+extern void isr_ata_handler();
 
 void pic_init(){
     pic_remap();
@@ -26,6 +26,7 @@ void pic_init(){
     idt_set_entry(PIC_M_OFFSET + 8, (uint32_t)(isr_rtc_handler));
     idt_set_entry(PIC_M_OFFSET + 12, (uint32_t)(isr_mouse_handler));
     idt_set_entry(PIC_M_OFFSET + 13, (uint32_t)(isr_fpu_handler));
+    idt_set_entry(PIC_M_OFFSET + 14, (uint32_t)(isr_ata_handler));
 }
 
 void pic_sendEOI(uint8_t irq)

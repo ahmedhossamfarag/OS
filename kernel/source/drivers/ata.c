@@ -1,5 +1,7 @@
 #include "ata.h"
 #include "low_level.h"
+#include "pic.h"
+#include "apic.h"
 
 static void ata_select_drive(uint16_t base, uint8_t drive) {
     outb(base + 6, 0xA0 | (drive << 4)); // 0xA0 for master, 0xB0 for slave
@@ -64,3 +66,30 @@ void ata_write(uint16_t base, uint8_t drive, uint32_t lba, uint8_t sector_count,
     }
 }
 
+uint8_t ata_get_status(){
+    return inb(PRIMARY_BASE + 7);
+}
+
+void (*ata_handler_proc)(uint8_t);
+
+void set_ata_handler_proc(void (*proc)(uint8_t))
+{
+    ata_handler_proc = proc;
+}
+
+void ata_handler()
+{
+    if(ata_handler_proc){
+        ata_handler_proc(ata_get_status());
+    }
+    pic_sendEOI(14);
+}
+
+
+void apic_ata_handler()
+{
+    if(ata_handler_proc){
+        ata_handler_proc(ata_get_status());
+    }
+    apic_sendEOI();
+}

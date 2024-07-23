@@ -114,6 +114,7 @@ extern void isr_apic_keyboard_handler();
 extern void isr_apic_mouse_handler();
 extern void isr_apic_rtc_handler();
 extern void isr_apic_fpu_handler();
+extern void isr_apic_ata_handler();
 
 void ioapic_init(){
     ioapic_set_irq(0, PIC_M_OFFSET, 0);
@@ -121,6 +122,7 @@ void ioapic_init(){
     ioapic_set_irq(8, PIC_M_OFFSET + 8, 0);
     ioapic_set_irq(12, PIC_M_OFFSET + 12, 0);
     ioapic_set_irq(13, PIC_M_OFFSET + 13, 0);
+    ioapic_set_irq(14, PIC_M_OFFSET + 14, 0);
 
 
     idt_set_entry(PIC_M_OFFSET, (uint32_t)(isr_apic_timer_handler));
@@ -128,6 +130,7 @@ void ioapic_init(){
     idt_set_entry(PIC_M_OFFSET + 8, (uint32_t)(isr_apic_rtc_handler));
     idt_set_entry(PIC_M_OFFSET + 12, (uint32_t)(isr_apic_mouse_handler));
     idt_set_entry(PIC_M_OFFSET + 13, (uint32_t)(isr_apic_fpu_handler));
+    idt_set_entry(PIC_M_OFFSET + 14, (uint32_t)(isr_apic_ata_handler));
 }
 
 
