@@ -10,6 +10,8 @@
         "stdint.h": "c",
         "syscall_map.h": "c",
         "memlib.h": "c",
-        "io_syscall.h": "c"
+        "io_syscall.h": "c",
+        "timer.h": "c",
+        "memory.h": "c"
     }
 }

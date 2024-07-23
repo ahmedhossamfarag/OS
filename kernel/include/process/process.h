@@ -20,6 +20,14 @@ typedef enum {
     PROCESS_STATE_TERMINATED
 } process_state_t;
 
+typedef enum {
+    THREAD_STATE_RUNNING,
+    THREAD_STATE_WAITING,
+    THREAD_STATE_READY,
+    THREAD_STATE_BLOCKED,
+    THREAD_STATE_TERMINATED
+} thread_state_t;
+
 typedef struct {
     uint32_t ds, es, fs, gs;
     uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
@@ -29,6 +37,9 @@ typedef struct {
 
 typedef struct{
     uint32_t tid;
+    void* parent;
+    uint8_t processor_id;
+    thread_state_t thread_state;
     cpu_state_t cpu_state;
 } thread_t;
 
@@ -37,7 +48,6 @@ typedef struct {
     uint32_t ppid;                // Parent Process ID
     process_state_t process_state;        // Process state
     thread_t threads[MAX_N_THREAD];
-    uint8_t n_threads;
     uint32_t cr3;
 } pcb_t;
 
@@ -55,6 +65,10 @@ pcb_t* process_dequeue();
 
 uint8_t add_new_thread(pcb_t* process, uint32_t tid, uint32_t eip, uint32_t ebp);
 
-void remove_thread(pcb_t* process, uint32_t tid);
+void remove_thread(pcb_t* process, thread_t* thread);
 
 thread_t* get_process_thread(pcb_t* process, uint8_t n);
+
+void process_awake(pcb_t* process);
+
+void thread_awake(thread_t* thread);

@@ -2,6 +2,7 @@
 #include "interrupt.h"
 #include "strlib.h"
 #include "memory.h"
+#include "int_map.h"
 
 resource_t* resources;
 
@@ -24,19 +25,19 @@ void resource_request_handler(cpu_state_t* state){
 
     uint32_t resource_id = state->eax;
 
-    pcb_t* process = get_current_process();
+    thread_t* thread = get_current_thread();
 
     for (resource_t* r = resources; r < resources + RESOURCES_N; r++)
     {
         if(r->id == resource_id){
-            if(r->handler && r->handler != process){
+            if(r->handler && r->handler != thread){
                 if(r->n_waiters < MAX_N_PROCESS){
-                    r->waiters[r->n_waiters] = process;
+                    r->waiters[r->n_waiters] = thread;
                     r->n_waiters ++;
                 }
-                schedule_waiting(state);
+                schedule_thread_waiting(state);
             }else{
-                r->handler = process;
+                r->handler = thread;
             }
             break;
         }
@@ -50,12 +51,12 @@ void resource_free_handler(){
     uint32_t resource_id;
     asm("mov %%eax, %0" : "=r"(resource_id));
 
-    pcb_t* process = get_current_process();
+    thread_t* thread = get_current_thread();
 
     for (resource_t* r = resources; r < resources + RESOURCES_N; r++)
     {
         if(r->id == resource_id){
-            if(r->handler == process){
+            if(r->handler == thread){
                 if(r->n_waiters > 0){
                     r->handler = r->waiters[0];
                     for (uint8_t i = 0; i < r->n_waiters - 1; i++)
@@ -64,8 +65,7 @@ void resource_free_handler(){
                     }
                     
                     r->n_waiters --;
-                    r->handler->process_state = PROCESS_STATE_READY;
-                    process_inqueue(r->handler);
+                    thread_awake(r->handler);
                 }else{
                     r->handler = 0;
                 }

@@ -2,6 +2,9 @@
 #include "info.h"
 #include "apic.h"
 #include "interrupt.h"
+#include "int_map.h"
+
+extern pcb_t* default_process;
 
 pcb_t* current_process;
 pcb_t* next_process;
@@ -16,14 +19,22 @@ thread_t *get_current_thread()
 }
 
 extern void isr_schedule_thread();
+extern void isr_schedule_process_waiting();
+extern void isr_schedule_thread_waiting();
+extern void isr_schedule_process_terminated();
+extern void isr_schedule_thread_terminated();
 
 void scheduler_init()
 {
     process_init();
-    current_process = get_default_process();
+    current_process = default_process;
     next_process = 0;
 
     idt_set_entry(SCHEDULE_INT, (uint32_t) isr_schedule_thread);
+    idt_set_entry(PROCESS_WAITING_INT, (uint32_t)isr_schedule_process_waiting);
+    idt_set_entry(THREAD_WAITING_INT, (uint32_t)isr_schedule_thread_waiting);
+    idt_set_entry(PROCESS_TERMINATED_INT, (uint32_t)isr_schedule_process_terminated);
+    idt_set_entry(THREAD_TERMINATED_INT, (uint32_t)isr_schedule_thread_terminated);
 }
 
 void enable_scheduler()
@@ -52,23 +63,30 @@ void schedule_process(cpu_state_t* state){
     next_process = process_dequeue();
 
     if(next_process){
+        if(current_process){
+            if(current_process != default_process){
+                for (thread_t* t = current_process->threads; t < current_process->threads + MAX_N_THREAD; t++)
+                {
+                    if(t->thread_state == THREAD_STATE_RUNNING){
+                        current_process->process_state = PROCESS_STATE_READY;
+                        break;
+                    }
+                }
+                if(current_process->process_state == PROCESS_STATE_READY){
+                    process_inqueue(current_process);
+                }
+            }  
+        }
+
         schedule_send_int();
 
         schedule_thread(state);
 
-        if(current_process){
-            current_process->process_state = PROCESS_STATE_READY;
-            if(current_process != get_default_process()){
-                process_inqueue(current_process);
-            }  
-        }
-
-        next_process->process_state = PROCESS_STATE_RUNNING;
         current_process = next_process;
+        next_process->process_state = PROCESS_STATE_RUNNING;
 
     }
 }
-
 
 void schedule_thread(cpu_state_t* state){
     if(next_process){
@@ -77,23 +95,28 @@ void schedule_thread(cpu_state_t* state){
         thread_t* current_thread = get_process_thread(current_process, cpu_id);
         thread_t* next_thread = get_process_thread(next_process, cpu_id);
 
-        if(!next_thread){
+        if(!next_thread || next_thread->thread_state != THREAD_STATE_READY){
             next_thread = get_process_thread(get_default_process(), cpu_id);
         }
 
         if(next_thread != current_thread){
 
             context_switch(state, current_thread,  next_thread, next_process->cr3);
+
+            current_thread->thread_state = THREAD_STATE_READY;
+            next_thread->thread_state = THREAD_STATE_RUNNING;
         }
 
     }
 }
 
-void schedule_waiting(cpu_state_t* state){
+void schedule_process_waiting(cpu_state_t* state){
+    if(info_get_processor_id() != 0) return;
+
     next_process = process_dequeue();
     
     if(!next_process){
-        next_process = get_default_process();
+        next_process = default_process;
     }
 
     schedule_send_int();
@@ -111,11 +134,27 @@ void schedule_waiting(cpu_state_t* state){
     }
 }
 
-void schedule_terminate_current_process(cpu_state_t* state){
+void schedule_thread_waiting(cpu_state_t* state){
+    uint32_t cpu_id = info_get_processor_id();
+
+    thread_t* current_thread = get_process_thread(current_process, cpu_id);
+    thread_t* next_thread = get_process_thread(default_process, cpu_id);
+
+    if(current_thread->thread_state == THREAD_STATE_RUNNING){
+        context_switch(state, current_thread, next_thread, default_process->cr3);
+        current_thread->thread_state = THREAD_STATE_WAITING;
+        next_thread->thread_state = THREAD_STATE_RUNNING;
+        
+    }
+}
+
+void schedule_process_terminated(cpu_state_t* state){
+    if(info_get_processor_id() != 0) return;
+
     pcb_t* next_process = process_dequeue();
 
     if(!next_process){
-        next_process = get_default_process();
+        next_process = default_process;
     }
 
     schedule_send_int();
@@ -134,20 +173,25 @@ void schedule_terminate_current_process(cpu_state_t* state){
     }
 }
 
-void schedule_terminate_current_thread(cpu_state_t* state){
+void schedule_thread_terminated(cpu_state_t* state){
     uint32_t cpu_id = info_get_processor_id();
 
     if(cpu_id == 0){
-        schedule_terminate_current_process(state);
+        schedule_process_terminated(state);
         return;
     }
 
     thread_t* current_thread = get_process_thread(current_process, cpu_id);
-    thread_t* next_thread = get_process_thread(get_default_process(), cpu_id);
+    thread_t* next_thread = get_process_thread(default_process, cpu_id);
 
-    remove_thread(current_process, current_thread->tid);
+    if(current_thread->thread_state == THREAD_STATE_RUNNING){
+        context_switch(state, current_thread, next_thread, default_process->cr3);
+        remove_thread(current_process, current_thread);
+        next_thread->thread_state = THREAD_STATE_RUNNING;
 
-    context_switch(state, current_thread, next_thread, get_default_process()->cr3);
+    }else if(current_thread->thread_state == THREAD_STATE_WAITING){
+        remove_thread(current_process, current_thread);
+    }
 }
 
 void context_switch(cpu_state_t* cpu, thread_t* current_thread, thread_t* next_thread, uint32_t cr3){
