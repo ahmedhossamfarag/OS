@@ -54,6 +54,8 @@ void dir_get_info(file_t* dir, dir_entity_t* entity);
 
 dir_list_t dir_get_files_list(file_t* parent);
 
+file_t file_open(file_t* parent, const char* name);
+
 uint8_t file_read(file_t* file, uint32_t seek, uint32_t count, char* to);
 
 uint8_t file_write(file_t* file, char* from, uint32_t size);

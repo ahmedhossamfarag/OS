@@ -1,0 +1,21 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/kernel/include/base",
+                "${workspaceFolder}/kernel/include/drivers",
+                "${workspaceFolder}/kernel/include/lib",
+                "${workspaceFolder}/kernel/include/process",
+                "${workspaceFolder}/kernel/include/syscall"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-x64",
+            "configurationProvider": "ms-vscode.makefile-tools"
+        }
+    ],
+    "version": 4
+}

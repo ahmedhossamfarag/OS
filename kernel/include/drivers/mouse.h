@@ -27,12 +27,12 @@ typedef struct{
     int16_t delta_y;
     uint16_t mouse_x;
     uint16_t mouse_y;
-} MouseInfo;
+} mouse_info_t;
 
 
 void mouse_handler();
 
-void set_mouse_handler_proc(void (*proc)(MouseInfo));
+void set_mouse_handler_proc(void (*proc)(mouse_info_t));
 
 void mouse_init();
 

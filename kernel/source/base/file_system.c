@@ -241,6 +241,24 @@ dir_list_t dir_get_files_list(file_t *parent)
     return list;
 }
 
+file_t file_open(file_t *parent, const char *name)
+{
+    file_t file = {0, 0};
+
+    if(parent->type != DIR_TYPE) return file;
+    
+    uint32_t lba = parent ? parent->lba : RootDirLBA;
+    dir_entity_t* dir = (dir_entity_t*) alloc(SectorSize);
+    if(dir){
+        ata_read(PRIMARY_BASE, 0, lba, 1, dir);
+        if(dir->lba){
+            file =  dir_find(dir->lba, name);
+        }
+        free((char*)dir, SectorSize);
+    }
+    return file;
+}
+
 uint8_t file_read(file_t* file, uint32_t seek, uint32_t count, char* to){
     if(!file || !file->lba || file->type != FILE_TYPE || count == 0 || !to) return 0;
 

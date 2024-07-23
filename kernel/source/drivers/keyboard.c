@@ -10,7 +10,7 @@ extern char key_shift_code_map[];
 extern char key_extended_char_map[];
 extern char key_extended_code_map[];
 
-static void (*keyboard_handler_proc)(KeyInfo);
+static void (*keyboard_handler_proc)(key_info_t);
 
 void keyboard_handler() {
 
@@ -28,7 +28,7 @@ static int8_t extended; // Extended key state
 static int8_t numlock;
 
 void handle_scancode(uint8_t scancode) {
-    KeyInfo info;
+    key_info_t info;
 
     if (scancode == 0xE0) {
         extended = 1;
@@ -84,7 +84,7 @@ void handle_scancode(uint8_t scancode) {
 }
 
 
-void set_keyboard_handler_proc(void(*proc)(KeyInfo))
+void set_keyboard_handler_proc(void(*proc)(key_info_t))
 {
     keyboard_handler_proc = proc;
 }

@@ -30,13 +30,13 @@ typedef struct {
 	char character;
 	uint8_t key_code;
 	uint8_t key_release;
-} KeyInfo;
+} key_info_t;
 
 /* IRQ 1 - INT 0x21*/
 void keyboard_handler();
 
 void handle_scancode(uint8_t scancode);
 
-void set_keyboard_handler_proc(void (*proc)(KeyInfo));
+void set_keyboard_handler_proc(void (*proc)(key_info_t));
 
 void apic_keyboard_handler();

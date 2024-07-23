@@ -21,10 +21,10 @@ static void update_mouse_location(int16_t delta_x, int16_t delta_y){
 }
 
 
-static void (*mouse_handler_proc)(MouseInfo);
+static void (*mouse_handler_proc)(mouse_info_t);
 
 static void handle_mouse_info(){
-    MouseInfo info;
+    mouse_info_t info;
 
     uint8_t status = inb(MouseDataPort); // Read status byte from the PS/2 controller
 
@@ -59,7 +59,7 @@ void mouse_handler() {
     pic_sendEOI(MouseIRQ);
 }
 
-void set_mouse_handler_proc(void (*proc)(MouseInfo))
+void set_mouse_handler_proc(void (*proc)(mouse_info_t))
 {
     mouse_handler_proc = proc;
 }

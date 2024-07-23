@@ -1,24 +1,15 @@
 {
     "files.associations": {
-        "timer.h": "c",
-        "libc.h": "c",
-        "interrupt.h": "c",
-        "tss.h": "c",
-        "pagging.h": "c",
-        "resources.h": "c",
-        "process.h": "c",
-        "scheduler.h": "c",
-        "screen_print.h": "c",
-        "strlib.h": "c",
-        "keyboard.h": "c",
+        "math.h": "c",
+        "file_system.h": "c",
+        "interrupt_handler.h": "c",
+        "iolib.h": "c",
+        "int_map.h": "c",
         "mouse.h": "c",
-        "rtc.h": "c",
-        "fpu.h": "c",
-        "apic.h": "c",
+        "process.h": "c",
         "stdint.h": "c",
-        "info.h": "c",
-        "gdt.h": "c",
-        "memory.h": "c",
-        "interrupt_handler.h": "c"
+        "syscall_map.h": "c",
+        "memlib.h": "c",
+        "io_syscall.h": "c"
     }
 }

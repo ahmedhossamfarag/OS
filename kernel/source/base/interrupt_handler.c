@@ -7,12 +7,16 @@
 
 
 void handler(){
-    print("Done");
+    print("done");
     while (1);
 }
 
+extern void isr_syscall_handler();
+
 void interrupt_handler_init()
 {
+    idt_set_user_entry(0x80, (uint32_t)isr_syscall_handler);
+
     idt_set_user_entry(0, (uint32_t)handler);
 }
 

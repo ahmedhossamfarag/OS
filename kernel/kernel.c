@@ -81,11 +81,12 @@ int main()
 {
     kernel_load();
     init();
-    ap_setup();
+    // ap_setup();
     setup();
     screen_clear();
-    print("Welcome To Kernel");
-    
+    // print("Welcome To Kernel");
+    load_program();
+
     while (1);
 
     return 0;

@@ -13,7 +13,7 @@ void shell_end_listen()
 	set_keyboard_handler_proc(0);
 }
 
-void shell_keyboard_handler(KeyInfo info)
+void shell_keyboard_handler(key_info_t info)
 {
 	if (info.key_release) {
 		if (info.character) {
