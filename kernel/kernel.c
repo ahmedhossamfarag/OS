@@ -77,6 +77,14 @@ void ap_setup()
     }
 }
 
+void succ(){
+    print("succ");
+}
+
+void error(){
+    print("error");
+}
+
 int main()
 {
     kernel_load();
@@ -85,7 +93,9 @@ int main()
     setup();
     screen_clear();
     // print("Welcome To Kernel");
-    load_program();
+    // load_program();
+
+    ata_read_sync(PRIMARY_BASE, 0, 100, 5, 0, succ, error);
 
     while (1);
 

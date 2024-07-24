@@ -22,7 +22,11 @@ void ata_read(uint16_t base, uint8_t drive, uint32_t lba, uint8_t sector_count, 
 /* lba: Logical Block Addressing */
 void ata_write(uint16_t base, uint8_t drive, uint32_t lba, uint8_t sector_count, const void *buffer);
 
-void set_ata_handler_proc(void (*proc)(uint8_t));
+
+void ata_read_sync(uint16_t base, uint8_t drive, uint32_t lba, uint8_t sector_count, void *buffer, void (*success_proc)(), void (*error_proc)());
+
+void ata_write_sync(uint16_t base, uint8_t drive, uint32_t lba, uint8_t sector_count, void *buffer, void (*success_proc)(), void (*error_proc)());
+
 
 void ata_handler();
 
