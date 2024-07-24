@@ -16,7 +16,6 @@ typedef enum {
     PROCESS_STATE_RUNNING,
     PROCESS_STATE_WAITING,
     PROCESS_STATE_READY,
-    PROCESS_STATE_BLOCKED,
     PROCESS_STATE_TERMINATED
 } process_state_t;
 
@@ -24,7 +23,6 @@ typedef enum {
     THREAD_STATE_RUNNING,
     THREAD_STATE_WAITING,
     THREAD_STATE_READY,
-    THREAD_STATE_BLOCKED,
     THREAD_STATE_TERMINATED
 } thread_state_t;
 
@@ -48,6 +46,7 @@ typedef struct {
     uint32_t ppid;                // Parent Process ID
     process_state_t process_state;        // Process state
     thread_t threads[MAX_N_THREAD];
+    uint8_t n_active_threads;
     uint32_t cr3;
 } pcb_t;
 

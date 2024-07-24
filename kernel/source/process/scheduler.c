@@ -65,15 +65,10 @@ void schedule_process(cpu_state_t* state){
     if(next_process){
         if(current_process){
             if(current_process != default_process){
-                for (thread_t* t = current_process->threads; t < current_process->threads + MAX_N_THREAD; t++)
-                {
-                    if(t->thread_state == THREAD_STATE_RUNNING){
-                        current_process->process_state = PROCESS_STATE_READY;
-                        break;
-                    }
-                }
-                if(current_process->process_state == PROCESS_STATE_READY){
+                if(current_process->n_active_threads){
                     process_inqueue(current_process);
+                }else{
+                    current_process->process_state = PROCESS_STATE_WAITING;
                 }
             }  
         }
@@ -143,6 +138,7 @@ void schedule_thread_waiting(cpu_state_t* state){
     if(current_thread->thread_state == THREAD_STATE_RUNNING){
         context_switch(state, current_thread, next_thread, default_process->cr3);
         current_thread->thread_state = THREAD_STATE_WAITING;
+        current_process->n_active_threads --;
         next_thread->thread_state = THREAD_STATE_RUNNING;
         
     }

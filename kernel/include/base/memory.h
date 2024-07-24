@@ -1,5 +1,5 @@
-#define MemoryBeginAddress 0xB000000
-#define MemorySize 0x1000000
+#define MemoryBeginAddress 0xB000000 + 0x100
+#define MemorySize 0x1000000 - 0x200
 #define MemoryEnd MemoryBeginAddress + MemorySize 
 #define NULL 0
 

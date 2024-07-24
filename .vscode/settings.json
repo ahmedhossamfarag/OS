@@ -16,6 +16,9 @@
         "ata.h": "c",
         "pic.h": "c",
         "low_level.h": "c",
-        "screen_print.h": "c"
+        "screen_print.h": "c",
+        "dslib.h": "c",
+        "vector": "c",
+        "strlib.h": "c"
     }
 }
