@@ -1,3 +1,5 @@
+/*
+
 #include "file_system.h"
 #include "disk.h"
 #include "memory.h"
@@ -389,3 +391,5 @@ uint8_t file_delete(file_t* parent, file_t* file){
     }
     return done;
 }
+
+*/

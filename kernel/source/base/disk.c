@@ -32,6 +32,9 @@ void disk_init() {
     }
 }
 
+/*
+
+
 uint32_t disk_alloc(uint32_t size) {
     if(size == 0) return 0;
 
@@ -124,3 +127,6 @@ void disk_free(uint32_t lba, uint32_t size) {
     }
 
 }
+
+
+*/

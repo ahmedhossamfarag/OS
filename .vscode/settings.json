@@ -19,6 +19,7 @@
         "screen_print.h": "c",
         "dslib.h": "c",
         "vector": "c",
-        "strlib.h": "c"
+        "strlib.h": "c",
+        "disk.h": "c"
     }
 }

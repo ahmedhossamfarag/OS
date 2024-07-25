@@ -24,6 +24,6 @@ typedef struct{
 
 void disk_init();
 
-uint32_t disk_alloc(uint32_t size);
+void disk_alloc(uint32_t size, uint32_t* res, void (*success_proc)(), void (*error_proc)());
 
-void disk_free(uint32_t lba, uint32_t size);
+void disk_free(uint32_t lba, uint32_t size, void (*success_proc)(), void (*error_proc)());
