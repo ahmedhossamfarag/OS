@@ -1,4 +1,4 @@
-C_SOURCES = $(wildcard kernel/*.c kernel/source/base/*.c kernel/source/drivers/*.c kernel/source/process/*.c kernel/source/lib/*.c kernel/source/syscall/*.c)
+C_SOURCES = $(wildcard kernel/*.c kernel/source/base/*.c kernel/source/drivers/*.c kernel/source/process/*.c kernel/source/lib/*.c kernel/source/syscall/*.c kernel/source/filesystem/*.c)
 HEADERS = $(wildcard kernel/include/base/*.h kernel/include/drivers/*.h kernel/include/process/*.h kernel/include/lib/*.h kernel/include/syscall/*.h)
 C_OBJ = ${C_SOURCES:.c=.o}
 
@@ -39,4 +39,4 @@ run: all
 	qemu-system-x86_64 -smp 4 -m 2048 -drive file=os-image,format=raw
 
 clean:
-	rm -fr *.bin *.o kernel/*.o kernel/source/base/*.o kernel/source/drivers/*.o kernel/source/process/*.o kernel/source/lib/*.o kernel/source/syscall/*.o *.dis os-image
+	rm -fr *.bin *.o kernel/*.o kernel/source/base/*.o kernel/source/drivers/*.o kernel/source/process/*.o kernel/source/lib/*.o kernel/source/syscall/*.o kernel/source/filesystem/*.o *.dis os-image

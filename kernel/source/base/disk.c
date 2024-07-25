@@ -1,7 +1,8 @@
+/*
+
 #include "disk.h"
 #include "memory.h"
 #include "ata.h"
-
 
 static void create_map(uint32_t lba, disk_freeblock_t first_block){
     disk_map_t* map = (disk_map_t*) alloc(SectorSize);
@@ -32,7 +33,7 @@ void disk_init() {
     }
 }
 
-/*
+
 
 
 uint32_t disk_alloc(uint32_t size) {

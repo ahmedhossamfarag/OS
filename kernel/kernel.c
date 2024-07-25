@@ -40,6 +40,7 @@ void init()
     apic_init();
     scheduler_init();
     resources_init();
+    disk_init();
 }
 
 void setup()
@@ -85,6 +86,24 @@ void error(){
     print("error");
 }
 
+extern disk_args_t disk_args;
+
+void f2(){
+    println("closed");
+}
+
+void f1(){
+    println("open");
+    char s[10];
+    println(int_to_str(disk_alloc(1), s));
+    println(int_to_str(disk_alloc(1), s));
+    disk_free(102, 1);
+    disk_free(103, 1);
+    println(int_to_str(disk_alloc(2), s));
+    println(int_to_str(disk_alloc(1), s));
+    disk_close(f2, error);
+}
+
 int main()
 {
     kernel_load();
@@ -92,10 +111,10 @@ int main()
     // ap_setup();
     setup();
     screen_clear();
-    // print("Welcome To Kernel");
+    print("Welcome To Kernel\n");
     // load_program();
 
-    ata_read_sync(PRIMARY_BASE, 0, 100, 5, 0, succ, error);
+    disk_open(f1, error);
 
     while (1);
 

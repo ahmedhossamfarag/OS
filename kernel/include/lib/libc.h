@@ -1,2 +1,1 @@
-void print_str(const char* c);
-
+void mem_copy(char* from, char* to, unsigned int size);

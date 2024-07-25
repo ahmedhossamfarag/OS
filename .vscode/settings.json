@@ -20,6 +20,8 @@
         "dslib.h": "c",
         "vector": "c",
         "strlib.h": "c",
-        "disk.h": "c"
+        "disk.h": "c",
+        "algorithm": "c",
+        "libc.h": "c"
     }
 }
