@@ -1,21 +1,35 @@
-#define RESOURCES_N 1
+#define RESOURCES_N 3
 
 #include "scheduler.h"
+#include "dslib.h"
 
 typedef enum {
-    SCREEN
+    SCREEN,
+    KEYBOARD,
+    DISK
 } resource_id_t;
 
-typedef struct{
+typedef struct
+{
+    thread_t* thread;
+    void(*handler_proc)();
+} resource_request_t;
+
+typedef struct
+{
     resource_id_t id;
+    queue_t* queue;
     thread_t* handler;
-    uint8_t n_waiters;
-    thread_t* waiters[MAX_N_PROCESS*MAX_N_THREAD];
-} resource_t;
+    void* lock;
+}resource_queue_t;
 
-void resources_init();
 
-/* INT 10 , id > eax*/
-void resource_request_handler();
+resource_queue_t* resource_queue_new(resource_id_t id, uint32_t capacity);
 
-void resource_free_handler();
+void resource_queue_inque(resource_queue_t* rq, thread_t* thread, void(*proc)());
+
+void resource_queue_deque(resource_queue_t* rq);
+
+void resource_lock_request(void** lock, void* handler);
+
+void resource_lock_free(void** lock, void* handler);

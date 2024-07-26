@@ -57,10 +57,6 @@ isr page_fault_handler
 
 isr_state timer_handler
 
-isr_state resource_request_handler
-
-isr resource_free_handler
-
 isr_state lapic_timer_handler
 
 

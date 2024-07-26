@@ -1,3 +1,5 @@
+/*
+
 #include "resources.h"
 #include "interrupt.h"
 #include "strlib.h"
@@ -72,5 +74,80 @@ void resource_free_handler(){
             }
             break;
         }
+    }
+}
+*/
+
+#include "resources.h"
+#include "memory.h"
+
+resource_queue_t *resource_queue_new(resource_id_t id, uint32_t capacity)
+{
+    resource_queue_t* rq = (resource_queue_t*) alloc(sizeof(resource_queue_t));
+    if(!rq){
+        return 0;
+    }
+    rq->id = id;
+    rq->handler = 0;
+    rq->queue = queue_new(capacity, alloc);
+    if(!rq->queue){
+        return 0;
+    }
+    return rq;
+}
+
+void resource_queue_inque(resource_queue_t *rq, thread_t *thread, void (*proc)())
+{
+    if(!rq){
+        return;
+    }
+    resource_lock_request(&rq->lock, thread);
+    if(!rq->handler){
+        rq->handler = thread;
+        resource_lock_free(&rq->lock, thread);
+        proc();
+    }else{
+        resource_request_t* req = (resource_request_t*) alloc(sizeof(resource_request_t));
+        if(req){
+            req->handler_proc = proc;
+            req->thread = thread;
+            queue_inque(rq->queue, req);
+            resource_lock_free(&rq->lock, thread);
+        }
+        resource_lock_free(&rq->lock, thread);
+    }
+}
+
+void resource_queue_deque(resource_queue_t *rq)
+{
+    if(!rq){
+        return;
+    }
+    thread_t* thread = get_current_thread();
+    resource_lock_request(&rq->lock, thread);
+    rq->handler = 0;
+    resource_request_t* next = queue_deque(rq->queue);
+    if(next){
+        rq->handler = next->thread;
+        void (*proc)() = next->handler_proc;
+        free(next, sizeof(resource_request_t));
+        resource_lock_free(&rq->lock, thread);
+        proc();
+    }else{
+        resource_lock_free(&rq->lock, thread);
+    }
+}
+
+void resource_lock_request(void **lock, void *handler)
+{
+    do{
+        while(*lock);
+        *lock = handler;
+    }while(*lock != handler);
+}
+
+void resource_lock_free(void** lock, void* handler){
+    if(*lock == handler){
+        *lock = 0;
     }
 }
