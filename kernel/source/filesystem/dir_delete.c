@@ -75,6 +75,7 @@ static void dir_delete_fs(){
         }
         ata_read_sync(PRIMARY_BASE, 0, args.dir->head, 1, args.fs, dir_delete_next, dir_delete_error);
     }else{
+        args.fs = 0;
         dir_delete_success();
     }
 }
