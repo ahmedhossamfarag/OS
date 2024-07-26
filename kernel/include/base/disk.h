@@ -1,3 +1,5 @@
+#pragma once
+
 #define RootDirLBA 101
 #define FirstBlockLBA 102
 #define MapIdentefier 0xAF55

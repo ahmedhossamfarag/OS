@@ -66,6 +66,11 @@ void disk_add_free_block(uint32_t lba, uint32_t size){
 void disk_free(uint32_t lba, uint32_t size){
     disk_map_t* map = disk_args.map;
 
+    if(!size)
+        return;
+    if(lba < FirstBlockLBA || lba > DiskSize - map->n_blocks - 1)
+        return;
+
     if(!disk_args.map->n_blocks){
         if(lba + size == map->free_head){
             map->free_head = lba;

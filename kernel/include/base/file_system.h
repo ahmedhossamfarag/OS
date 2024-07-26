@@ -6,62 +6,54 @@
 #define DirEntityIdentifier 0x88AA
 
 #include <stdint.h>
+#include "memory.h"
+#include "disk.h"
+#include "ata.h"
 
-typedef struct
-{
+typedef struct{
     uint8_t type;
     uint32_t lba;
-    char name_prefix[NamePrefixLength];
-}__attribute__((packed)) file_t;
+    uint32_t parent;
+    uint32_t prev;
+    uint32_t next;
+    char name[NameLength];
+} fs_entity_t;
 
-typedef struct
-{
-    uint32_t n_files;
-    file_t* files;
-} dir_list_t;
-
-
-typedef struct
-{
-    uint32_t lba;
-    uint32_t n_sectors;
+typedef struct{
+    fs_entity_t fs;
+    uint32_t data;
+    uint32_t n_blocks;
     uint32_t size;
-    char name[NameLength];
-   
-}__attribute__((packed)) file_entity_t;
+} file_entity_t;
 
-typedef struct
-{
-    uint32_t identifier;
-    uint32_t lba;
-    uint8_t n_files;
-    char name[NameLength];
-}__attribute__((packed)) dir_entity_t;
+typedef struct{
+    fs_entity_t fs;
+    uint32_t head;
+    uint32_t tail;
+    uint32_t n_childs;
+} dir_entity_t;
 
-typedef struct
-{
-    uint32_t next_lba;
-    uint8_t n_files;
-    file_t files[DirExEntity_N_Files];
-}__attribute__((packed)) dir_ex_entity_t;
+void filesystem_init();
 
+#define SUCC_ERR void (*success_proc)(), void (*error_proc)()
+#define SUCC_ERR_V void (*success_proc)(); void (*error_proc)();
 
-void file_system_init();
+void dir_create(dir_entity_t* parent, char* name, fs_entity_t* res, SUCC_ERR);
 
-void file_get_info(file_t* file, file_entity_t* entity);
+void dir_append(dir_entity_t* parent, fs_entity_t* fs, SUCC_ERR);
 
-void dir_get_info(file_t* dir, dir_entity_t* entity);
+void dir_remove(dir_entity_t* parent, fs_entity_t* fs, SUCC_ERR);
 
-dir_list_t dir_get_files_list(file_t* parent);
+void dir_list(dir_entity_t* parent, fs_entity_t* res, SUCC_ERR);
 
-file_t file_open(file_t* parent, const char* name);
+void dir_delete(dir_entity_t* parent, SUCC_ERR);
 
-uint8_t file_read(file_t* file, uint32_t seek, uint32_t count, char* to);
+void file_create(dir_entity_t* parent, char* name, fs_entity_t* res, SUCC_ERR);
 
-uint8_t file_write(file_t* file, char* from, uint32_t size);
+void file_open(dir_entity_t* parent, char* name, fs_entity_t* res, SUCC_ERR);
 
-file_t file_create(file_t* parent, const char* name);
+void file_read(file_entity_t* file, char* buffer, uint32_t sector_seek, uint32_t sector_count, SUCC_ERR);
 
-file_t dir_create(file_t* parent, const char* name);
+void file_write(file_entity_t* file, char* buffer, uint32_t sector_count, uint32_t size, SUCC_ERR);
 
-uint8_t file_delete(file_t* parent, file_t* file);
+void file_delete(file_entity_t* file, SUCC_ERR);

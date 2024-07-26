@@ -5,6 +5,9 @@
 queue_t *queue_new(uint32_t capacity, char *(*alloc)(uint32_t))
 {
     queue_t* queue = (queue_t*) alloc(sizeof(queue_t));
+    if(!queue){
+        return 0;
+    }
     queue->capacity = capacity;
     queue->data = (void**) alloc(capacity * sizeof(void*));
     queue->size = queue->head = queue->tail = 0;
@@ -70,6 +73,9 @@ void queue_delete(queue_t *queue, void (*free)(char *, uint32_t))
 list_t *list_new(char *(*alloc)(uint32_t), void (*free)(char *, uint32_t))
 {
     list_t* list = (list_t*) alloc(sizeof(list_t));
+    if(!list){
+        return 0;
+    }
     list->head = list->tail = 0;
     list->alloc = alloc;
     list->free = free;

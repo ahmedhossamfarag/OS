@@ -29,6 +29,9 @@ uint32_t disk_alloc_head(uint32_t size){
 }
 
 uint32_t disk_alloc(uint32_t size){
+    if(!size)
+        return 0;
+
     disk_map_t* map = disk_args.map;
     uint32_t lba;
 
