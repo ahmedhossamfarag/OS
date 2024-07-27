@@ -22,6 +22,7 @@
         "strlib.h": "c",
         "disk.h": "c",
         "algorithm": "c",
-        "libc.h": "c"
+        "libc.h": "c",
+        "resources.h": "c"
     }
 }

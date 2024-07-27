@@ -130,7 +130,7 @@ void resource_queue_deque(resource_queue_t *rq)
     if(next){
         rq->handler = next->thread;
         void (*proc)() = next->handler_proc;
-        free(next, sizeof(resource_request_t));
+        free((char*) next, sizeof(resource_request_t));
         resource_lock_free(&rq->lock, thread);
         proc();
     }else{

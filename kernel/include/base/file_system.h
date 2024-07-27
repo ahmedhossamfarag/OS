@@ -1,3 +1,5 @@
+#pragma once
+
 #define FILE_TYPE 0x33
 #define DIR_TYPE 0x55
 #define NameLength 100

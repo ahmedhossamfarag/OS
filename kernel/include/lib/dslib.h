@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdint.h>
 
 #pragma region Queue
@@ -43,6 +45,28 @@ void list_append(list_t* list, void* item);
 void* list_remove_first(list_t* list);
 
 void list_delete(list_t* list);
+
+#pragma endregion
+
+#pragma region Array
+
+typedef struct{
+    uint32_t capacity;
+    uint32_t size;
+    void** data;
+} array_t;
+
+array_t* array_new(uint32_t capacity, char* (*alloc)(uint32_t));
+
+uint8_t array_contains(array_t* arr, void** pntr);
+
+void** array_add(array_t* arr, void* item);
+
+void* array_get(array_t* arr, void** pntr);
+
+uint8_t array_remove(array_t* arr, void** pntr);
+
+void array_delete(array_t* arr, void (*free)(char*,uint32_t));
 
 #pragma endregion
 

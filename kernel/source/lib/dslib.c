@@ -127,3 +127,64 @@ void list_delete(list_t *list)
 }
 
 #pragma endregion
+
+#pragma region Array
+
+array_t* array_new(uint32_t capacity, char* (*alloc)(uint32_t)){
+    array_t* arr = (array_t*) alloc(sizeof(array_t));
+    if(!arr){
+        return 0;
+    }
+
+    arr->capacity = capacity;
+    arr->size = 0;
+    arr->data = (void**) alloc(capacity*sizeof(void*));
+
+    return arr;
+}
+
+uint8_t array_contains(array_t* arr, void** pntr){
+    for (void** p = arr->data; p < arr->data+arr->size; p++)
+    {
+        if(p == pntr){
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void** array_add(array_t* arr, void* item){
+    if(arr->size < arr->capacity){
+        void** pntr = arr->data + arr->size;
+        *pntr = item;
+        arr->size ++;
+        return pntr;
+    }
+    return 0;
+}
+
+void* array_get(array_t* arr, void** pntr){
+    if(array_contains(arr, pntr)){
+        return *pntr;
+    }
+    return 0;
+}
+
+uint8_t array_remove(array_t* arr, void** pntr){
+    if(array_contains(arr, pntr)){
+        for (void** p = pntr; p < arr->data + arr->size - 1; p++)
+        {
+            *p = *(p+1);
+        }
+        arr->size --;
+        return 1;
+    }
+    return 0;
+}
+
+void array_delete(array_t* arr, void (*free)(char*,uint32_t)){
+    free((char*)arr->data, arr->capacity * sizeof(void*));
+    free((char*)arr, sizeof(array_t));
+}
+
+#pragma endregion

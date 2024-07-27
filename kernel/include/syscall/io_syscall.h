@@ -1,20 +1,30 @@
 #include "process.h"
+#include "file_system.h"
 #include <stdint.h>
 
-uint32_t fopen_handler(cpu_state_t*);
+#define QUEUE_CAPACITY 10
 
-uint32_t fsize_handler(cpu_state_t*);
+typedef struct
+{
+    fs_entity_t* fs;
+    thread_t* handler;
+} open_file_t;
 
-uint32_t fclose_handler(cpu_state_t*);
 
-uint32_t fread_handler(cpu_state_t*);
+void fopen_handler(cpu_state_t*);
 
-uint32_t fwrite_handler(cpu_state_t*);
+void fsize_handler(cpu_state_t*);
 
-uint32_t prints_handler(cpu_state_t*);
+void fclose_handler(cpu_state_t*);
 
-uint32_t scans_handler(cpu_state_t*);
+void fread_handler(cpu_state_t*);
 
-uint32_t scans_line_handler(cpu_state_t*);
+void fwrite_handler(cpu_state_t*);
+
+void prints_handler(cpu_state_t*);
+
+void scans_handler(cpu_state_t*);
+
+void scans_line_handler(cpu_state_t*);
 
 void io_syscall_init();

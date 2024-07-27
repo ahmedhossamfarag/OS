@@ -18,6 +18,7 @@
 #include "acpi.h"
 #include "info.h"
 #include "ata.h"
+#include "syscall.h"
 
 void kernel_load()
 {
@@ -39,8 +40,9 @@ void init()
     pagging_init();
     apic_init();
     scheduler_init();
-    resources_init();
+    syscall_init();
     disk_init();
+    filesystem_init();
 }
 
 void setup()

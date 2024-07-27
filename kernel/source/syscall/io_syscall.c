@@ -1,3 +1,5 @@
+/*
+
 #include "io_syscall.h"
 #include "interrupt_handler.h"
 #include "screen_print.h"
@@ -13,9 +15,6 @@
 #include "math.h"
 #include "resources.h"
 
-
-
-/*
 
 
 #define MAX_N_FILES 10
