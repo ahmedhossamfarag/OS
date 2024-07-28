@@ -3,6 +3,9 @@ extern fsize_handler
 extern fclose_handler
 extern fread_handler
 extern fwrite_handler
+extern fcreate_handler
+extern fdelete_handler
+extern flist_handler
 
 extern prints_handler
 extern scans_handler
@@ -15,9 +18,9 @@ syscall_map:
     dd fclose_handler ;0x3
     dd fread_handler ;0x4
     dd fwrite_handler ;0x5
-    dd 0 ;0x6
-    dd 0 ;0x7
-    dd 0 ;0x8
+    dd fcreate_handler ;0x6
+    dd fdelete_handler ;0x7
+    dd flist_handler ;0x8
     dd 0 ;0x9
     dd 0 ;0xA
     dd 0 ;0xB

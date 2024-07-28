@@ -15,7 +15,7 @@ static struct
     char* data;
 } args;
 
-void fread_error(){
+static void fread_error(){
     if(args.data){
         free((char*)args.data, args.disk_count * SectorSize);
     }
@@ -24,7 +24,7 @@ void fread_error(){
     resource_queue_deque(disk_queue);
 }
 
-void fread_move_data(){
+static void fread_move_data(){
     uint32_t start = args.seek - args.disk_seek * SectorSize;
     uint32_t end = start + args.count;
     char* to = args.to;
@@ -34,7 +34,7 @@ void fread_move_data(){
     }
 }
 
-void fread_success(){
+static void fread_success(){
     fread_move_data();
     if(args.data){
         free((char*)args.data, args.disk_count * SectorSize);
@@ -45,7 +45,7 @@ void fread_success(){
 }
 
 
-void fread_proc(){
+static void fread_proc(){
     cpu_state_t* state = &disk_queue->handler->cpu_state;
     uint32_t pntr = state->eax;
     args.to = (char*) state->edx;

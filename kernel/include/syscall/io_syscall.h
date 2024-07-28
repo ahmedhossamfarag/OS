@@ -21,6 +21,12 @@ void fread_handler(cpu_state_t*);
 
 void fwrite_handler(cpu_state_t*);
 
+void fcreate_handler(cpu_state_t*);
+
+void fdelete_handler(cpu_state_t*);
+
+void flist_handler(cpu_state_t*);
+
 void prints_handler(cpu_state_t*);
 
 void scans_handler(cpu_state_t*);

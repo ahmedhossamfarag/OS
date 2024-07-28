@@ -18,6 +18,9 @@ void fsize_handler(cpu_state_t* state)
     if(op && op->fs->type == FILE_TYPE){
         state->eax = 1;
         *to = ((file_entity_t*)op->fs)->size;
+    }else if(op && op->fs->type == DIR_TYPE){
+        state->eax = 1;
+        *to = ((dir_entity_t*)op->fs)->n_childs;
     }else{
         state->eax = 0;
     }

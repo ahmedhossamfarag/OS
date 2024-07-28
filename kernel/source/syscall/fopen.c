@@ -89,6 +89,11 @@ static void fopen_proc()
         return;
     }
 
+    if(!name){
+        file_open(0, 0, args.fs, fopen_success, fopen_error);
+        return;
+    }
+
     str_split(name, '/', args.splits, args.name_splited);
 
     if (*args.splits)

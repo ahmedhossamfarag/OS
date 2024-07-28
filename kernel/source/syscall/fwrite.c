@@ -12,28 +12,28 @@ static struct
     char* data;
 } args;
 
-void fwrite_free(){
+static void fwrite_free(){
     if(args.data){
         free(args.data, args.sector_cnt*SectorSize);
     }
 }
 
 
-void fwrite_error(){
+static void fwrite_error(){
     fwrite_free();
     disk_queue->handler->cpu_state.eax = 0;
     thread_awake(disk_queue->handler);
     resource_queue_deque(disk_queue);
 }
 
-void fwrite_success(){
+static void fwrite_success(){
     fwrite_free();
     disk_queue->handler->cpu_state.eax = 1;
     thread_awake(disk_queue->handler);
     resource_queue_deque(disk_queue);
 }
 
-void fwrite_proc(){
+static void fwrite_proc(){
     cpu_state_t* state = &disk_queue->handler->cpu_state;
     uint32_t pntr = state->eax;
     char *from = (char*) state->edx;
