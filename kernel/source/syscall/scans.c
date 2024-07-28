@@ -16,8 +16,19 @@ static void scans_thread_awake(){
     resource_queue_deque(keyboard_queue);
 }
 
+static void scans_write_char(char c){
+    uint32_t current_cr3;
+    asm("mov %%cr3, %0":"=r"(current_cr3));
+    uint32_t th_cr3 = ((pcb_t*)keyboard_queue->handler->parent)->cr3;
+    asm volatile("mov %0, %%cr3" :: "r"(th_cr3));
+
+    *args.des = c;
+
+    asm volatile("mov %0, %%cr3" :: "r"(current_cr3));
+}
+
 static void scans_keyboard_proc(key_info_t k){
-    *args.des = k.character;
+    scans_write_char(k.character);
     args.nchars --;
     if(args.nchars){
         args.des ++;
@@ -28,10 +39,10 @@ static void scans_keyboard_proc(key_info_t k){
 
 static void scans_line_keyboard_proc(key_info_t k){
     if(k.key_code != ENTER){
-        *args.des = k.character;
+        scans_write_char(k.character);
         args.des ++;
     }else{
-        *args.des = '\0';
+        scans_write_char('\0');
         scans_thread_awake();
     }
 }

@@ -30,6 +30,11 @@ static void flist_error()
 }
 
 static void flist_copy_names(){
+    uint32_t current_cr3;
+    asm("mov %%cr3, %0":"=r"(current_cr3));
+    uint32_t th_cr3 = ((pcb_t*)disk_queue->handler->parent)->cr3;
+    asm volatile("mov %0, %%cr3" :: "r"(th_cr3));
+
     char* pntr = args.list;
     for (uint32_t i = 0; i < args.n_files; i++)
     {
@@ -38,6 +43,8 @@ static void flist_copy_names(){
         args.to += NameLength;
         pntr += SectorSize;
     }
+
+    asm volatile("mov %0, %%cr3" :: "r"(current_cr3));
     
 }
 

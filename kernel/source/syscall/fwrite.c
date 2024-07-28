@@ -33,6 +33,18 @@ static void fwrite_success(){
     resource_queue_deque(disk_queue);
 }
 
+static void fwrite_copy_data(char* from, uint32_t count){
+    uint32_t current_cr3;
+    asm("mov %%cr3, %0":"=r"(current_cr3));
+    uint32_t th_cr3 = ((pcb_t*)disk_queue->handler->parent)->cr3;
+    asm volatile("mov %0, %%cr3" :: "r"(th_cr3));
+
+    mem_copy(from, args.data, count);
+    
+    asm volatile("mov %0, %%cr3" :: "r"(current_cr3));
+
+}
+
 static void fwrite_proc(){
     cpu_state_t* state = &disk_queue->handler->cpu_state;
     uint32_t pntr = state->eax;
@@ -54,7 +66,7 @@ static void fwrite_proc(){
         return;
     }
 
-    mem_copy(from, args.data, count);
+    fwrite_copy_data(from, count);
 
     file_write((file_entity_t*)op->fs, args.data, args.sector_cnt, count, fwrite_success, fwrite_error);
 }

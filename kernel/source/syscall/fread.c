@@ -25,6 +25,11 @@ static void fread_error(){
 }
 
 static void fread_move_data(){
+    uint32_t current_cr3;
+    asm("mov %%cr3, %0":"=r"(current_cr3));
+    uint32_t th_cr3 = ((pcb_t*)disk_queue->handler->parent)->cr3;
+    asm volatile("mov %0, %%cr3" :: "r"(th_cr3));
+
     uint32_t start = args.seek - args.disk_seek * SectorSize;
     uint32_t end = start + args.count;
     char* to = args.to;
@@ -32,6 +37,8 @@ static void fread_move_data(){
         *to = *c;
         to++;
     }
+    
+    asm volatile("mov %0, %%cr3" :: "r"(current_cr3));
 }
 
 static void fread_success(){
