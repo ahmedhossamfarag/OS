@@ -26,7 +26,14 @@ static void pcreate_error(){
 }
 
 static void pcreate_move_data(){
+    uint32_t current_cr3;
+    asm("mov %%cr3, %0":"=r"(current_cr3));
+    uint32_t th_cr3 = args.cr3;
+    asm volatile("mov %0, %%cr3" :: "r"(th_cr3));
+
     mem_copy(args.data, args.to, args.n_sectors*SectorSize);
+
+    asm volatile("mov %0, %%cr3" :: "r"(current_cr3));
 }
 
 static void pcreate_add(){
