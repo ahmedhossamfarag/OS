@@ -71,11 +71,12 @@ static void create_thread(thread_t* thread, uint32_t tid, uint32_t eip, uint32_t
 
 }
 
-static void create_process(pcb_t* pcb, uint32_t pid, uint32_t ppid, uint32_t cr3, uint32_t ebp){
+static void create_process(pcb_t* pcb, uint32_t pid, uint32_t ppid, uint32_t cr3, uint32_t ebp, uint32_t memo_begin){
     pcb->pid = pid;
     pcb->ppid = ppid;
     pcb->process_state = PROCESS_STATE_READY;
     pcb->cr3 = cr3;
+    pcb->memo_begin = memo_begin;
 
     for (thread_t* t = pcb->threads; t < pcb->threads + MAX_N_THREAD; t++)
     {
@@ -88,13 +89,13 @@ static void create_process(pcb_t* pcb, uint32_t pid, uint32_t ppid, uint32_t cr3
     main_thread->processor_id = 0;
 }
 
-uint8_t add_new_process(uint32_t pid, uint32_t ppid, uint32_t cr3, uint32_t ebp){
+uint8_t add_new_process(uint32_t pid, uint32_t ppid, uint32_t cr3, uint32_t ebp, uint32_t memo_begin){
     resource_lock_request(&pstate_lock, (void*)(info_get_processor_id()+1));
     uint8_t res = 0;
     for (pcb_t* p = processes; p < processes + MAX_N_PROCESS; p++)
     {
         if(p->process_state == PROCESS_STATE_TERMINATED){
-            create_process(p, pid, ppid, cr3, ebp);
+            create_process(p, pid, ppid, cr3, ebp, memo_begin);
             queue_inque(queue, p);
             res = 1;
             break;

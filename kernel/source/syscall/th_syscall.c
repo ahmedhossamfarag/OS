@@ -2,6 +2,7 @@
 #include "info.h"
 #include "apic.h"
 #include "int_map.h"
+#include "pagging.h"
 
 void thread_create_handler(cpu_state_t* state){
     state->eax = add_new_thread(get_current_process(), state->eax, state->ebx, state->edx);
@@ -39,4 +40,11 @@ void thread_terminate_handler(cpu_state_t* state){
     }
     apic_send_ipi(thr->processor_id, THREAD_TERMINATED_INT);
     state->eax = 1;
+}
+
+void memory_init_handler(cpu_state_t* state)
+{
+    pcb_t* pcb = get_current_process();
+    state->ebx = pcb->memo_begin;
+    state->edx = PROCESS_N_PAGE_TABLES * PAGE_SIZE;
 }

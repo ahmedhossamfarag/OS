@@ -7,6 +7,14 @@ extern fcreate_handler
 extern fdelete_handler
 extern flist_handler
 
+extern process_create_handler
+extern thread_create_handler
+extern process_exit_handler
+extern thread_exit_handler
+extern process_terminate_handler
+extern thread_terminate_handler
+extern memory_init_handler
+
 extern prints_handler
 extern scans_handler
 extern scans_line_handler
@@ -22,17 +30,19 @@ syscall_map:
     dd fdelete_handler ;0x7
     dd flist_handler ;0x8
     dd 0 ;0x9
-    dd 0 ;0xA
-    dd 0 ;0xB
-    dd 0 ;0xC
-    dd 0 ;0xD
-    dd 0 ;0xE
-    dd 0 ;0xF
+    dd process_create_handler ;0xA
+    dd thread_create_handler ;0xB
+    dd process_exit_handler ;0xC
+    dd thread_exit_handler ;0xD
+    dd process_terminate_handler ;0xE
+    dd thread_terminate_handler ;0xF
     dd prints_handler ;0x10
     dd scans_handler ;0x11
     dd scans_line_handler ;0x12
-    dd 0
-
+    dd 0 ;0x13
+    dd memory_init_handler ;0x14
+    dd 0 ;0x15
+    
 global isr_syscall_handler
 isr_syscall_handler:
     pusha                  ; Save all general-purpose registers

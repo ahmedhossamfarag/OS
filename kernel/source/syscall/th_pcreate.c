@@ -39,7 +39,7 @@ static void pcreate_move_data(){
 static void pcreate_add(){
     cpu_state_t* state = &disk_queue->handler->cpu_state;
     pcb_t* parent = (pcb_t*) disk_queue->handler->parent;
-    add_new_process(parent->pid, state->eax, args.cr3, state->edx);
+    add_new_process(parent->pid, state->eax, args.cr3, state->edx, args.n_sectors * SectorSize);
 }
 
 static void pcreate_success(){
@@ -84,7 +84,7 @@ static void pcreate_proc(){
     file_read((file_entity_t*)op->fs, args.data, 0, args.n_sectors, pcreate_success, pcreate_error);
 }
 
-void pcreate_handler(cpu_state_t* state)
+void process_create_handler(cpu_state_t* state)
 {
     if(disk_queue->queue->size >= disk_queue->queue->capacity){
         state->eax = 0;

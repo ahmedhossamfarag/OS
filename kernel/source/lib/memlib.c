@@ -6,7 +6,7 @@ uint32_t MemoryEnd;
 
 void minit()
 {
-    asm("int %0" :: "i"(MEMORY_INIT_INT));
+   	asm("mov %0, %%esi\n\t""int $0x80":: "i"(MEMORY_INIT_INT));
     asm("mov %%ebx, %0" : "=b"(MemoryBeginAddress), "=d"(MemoryEnd));
 
 	mhead = MemoryBeginAddress;

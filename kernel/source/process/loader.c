@@ -19,6 +19,6 @@ void load_program()
         }
         
 
-        add_new_process(1, 0, (uint32_t)cr3, 0xFFF);
+        add_new_process(1, 0, (uint32_t)cr3, 0xFFF, 0x100);
     }
 }
