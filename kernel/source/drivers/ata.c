@@ -124,6 +124,9 @@ void ata_write_sync(uint16_t base, uint8_t drive, uint32_t lba, uint8_t sector_c
 
 
     ata_write_request(base, drive, lba, sector_count);
+
+    outsw(base, buffer, 256); // Write 256 words (512 bytes)
+
 }
 
 
@@ -136,17 +139,27 @@ static void ata_handler_proc()
             }
             return;
         }
-        if(!ata_busy(ata_args.base) && ata_drq(ata_args.base)){
-            if(ata_args.rw == ATA_READ){
+        if(ata_args.rw == ATA_READ){
+            if(!ata_busy(ata_args.base) && ata_drq(ata_args.base)){
                 insw(ata_args.base, ata_args.buffer, 256); // Read 256 words (512 bytes)
-            }else if(ata_args.rw = ATA_WRITE){
-                outsw(ata_args.base, ata_args.buffer, 256); // Write 256 words (512 bytes)
+                ata_args.sector_count --;
+                ata_args.buffer += 512;
+                if(!ata_args.sector_count){
+                    if(ata_args.success_proc){
+                        ata_args.success_proc();
+                    }
+                }
             }
+        }else if(ata_args.rw = ATA_WRITE){
             ata_args.sector_count --;
             ata_args.buffer += 512;
             if(!ata_args.sector_count){
                 if(ata_args.success_proc){
                     ata_args.success_proc();
+                }
+            }else{
+                if(!ata_busy(ata_args.base) && ata_drq(ata_args.base)){
+                    outsw(ata_args.base, ata_args.buffer, 256); // Write 256 words (512 bytes)
                 }
             }
         }
