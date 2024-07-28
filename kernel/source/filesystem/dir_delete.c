@@ -89,7 +89,7 @@ static void dir_delete_lba(){
 
     disk_free(dir->fs.lba, 1);
 
-    if(dir->fs.parent != dir->fs.parent != RootDirLBA){
+    if(dir->fs.parent != RootDirLBA){
         args.parent = (dir_entity_t*) alloc(SectorSize);
         if(!args.parent){
             dir_delete_error();
@@ -103,7 +103,7 @@ static void dir_delete_lba(){
 }
 
 void dir_delete(dir_entity_t* dir, SUCC_ERR){
-    if(dir->fs.type != DIR_TYPE){
+    if(dir->fs.type != DIR_TYPE || dir->fs.lba == RootDirLBA){
         if(error_proc)
             error_proc();
         return;

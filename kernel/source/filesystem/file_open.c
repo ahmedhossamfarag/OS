@@ -3,6 +3,7 @@
 #include "strlib.h"
 
 static struct{
+    uint8_t remove_parent;
     dir_entity_t* parent;
     fs_entity_t* fs;
     char* res;
@@ -11,7 +12,7 @@ static struct{
 }args;
 
 static void dir_open_free(){
-    if(args.parent->fs.lba == RootDirLBA){
+    if(args.remove_parent){
         free((char*)args.parent, SectorSize);
     }
 
@@ -66,12 +67,18 @@ void file_open(dir_entity_t* parent, char* name, fs_entity_t* res, SUCC_ERR){
     args.success_proc = success_proc;
     args.error_proc = error_proc;
     if(!parent){
+        if(!name){
+            ata_read_sync(PRIMARY_BASE, 0, RootDirLBA, 1, args.res, success_proc, error_proc);
+            return;
+        }
+
         args.parent = (dir_entity_t*) alloc(SectorSize);
         if(!args.parent){
             if(error_proc)
                 error_proc();
             return;
         }
+        args.remove_parent = 1;
         ata_read_sync(PRIMARY_BASE, 0, RootDirLBA, 1, args.parent, dir_open_read_head, dir_open_error);
     }else{
         if(parent->fs.type != DIR_TYPE){
@@ -80,6 +87,7 @@ void file_open(dir_entity_t* parent, char* name, fs_entity_t* res, SUCC_ERR){
             return;
         }
         args.parent = parent;
+        args.remove_parent = 0;
         dir_open_read_head();
     }
 }

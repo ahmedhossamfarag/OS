@@ -2,6 +2,7 @@
 #include "libc.h"
 
 static struct{
+    uint8_t remove_parent;
     dir_entity_t* parent;
     fs_entity_t* fs;
     char* res;
@@ -9,7 +10,7 @@ static struct{
 }args;
 
 static void dir_list_free(){
-    if(args.parent->fs.lba == RootDirLBA){
+    if(args.remove_parent){
         free((char*)args.parent, SectorSize);
     }
 
@@ -67,6 +68,7 @@ void dir_list(dir_entity_t* parent, fs_entity_t* res, SUCC_ERR){
                 error_proc();
             return;
         }
+        args.remove_parent = 0;
         ata_read_sync(PRIMARY_BASE, 0, RootDirLBA, 1, args.parent, dir_list_read_head, dir_list_error);
     }else{        
         if(parent->fs.type != DIR_TYPE){
@@ -75,6 +77,7 @@ void dir_list(dir_entity_t* parent, fs_entity_t* res, SUCC_ERR){
             return;
         }
         args.parent = parent;
+        args.remove_parent = 1;
         dir_list_read_head();
     }
 }

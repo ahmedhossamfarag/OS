@@ -1,6 +1,7 @@
 #include "file_system.h"
 
 static struct{
+    uint8_t remove_parent;
     dir_entity_t* parent;
     fs_entity_t* tail;
     fs_entity_t* fs;
@@ -9,7 +10,7 @@ static struct{
 }args;
 
 static void dir_append_free(){
-    if(args.parent->fs.lba == RootDirLBA){
+    if(args.remove_parent){
         free((char*)args.parent, SectorSize);
     }
     if(args.tail){
@@ -90,6 +91,7 @@ void dir_append(dir_entity_t* parent, fs_entity_t* fs, SUCC_ERR){
                 error_proc();
             return;
         }
+        args.remove_parent = 1;
         ata_read_sync(PRIMARY_BASE, 0, RootDirLBA, 1, args.parent, dir_append_read_tail, dir_append_error);
     }else{
         if(parent->fs.type != DIR_TYPE){
@@ -98,6 +100,7 @@ void dir_append(dir_entity_t* parent, fs_entity_t* fs, SUCC_ERR){
             return;
         }
         args.parent = parent;
+        args.remove_parent = 0;
         dir_append_read_tail();
     }
 }
