@@ -52,7 +52,6 @@ void setup()
     enable_gdt();
     enable_apic();
     enable_paging();
-    enable_scheduler();
 }
 
 void start()
@@ -80,32 +79,6 @@ void ap_setup()
     }
 }
 
-void succ(){
-    print("succ");
-}
-
-void error(){
-    print("error");
-}
-
-extern disk_args_t disk_args;
-
-void f2(){
-    println("closed");
-}
-
-void f1(){
-    println("open");
-    char s[10];
-    println(int_to_str(disk_alloc(1), s));
-    println(int_to_str(disk_alloc(1), s));
-    disk_free(102, 1);
-    disk_free(103, 1);
-    println(int_to_str(disk_alloc(2), s));
-    println(int_to_str(disk_alloc(1), s));
-    disk_close(f2, error);
-}
-
 int main()
 {
     kernel_load();
@@ -114,9 +87,8 @@ int main()
     setup();
     screen_clear();
     print("Welcome To Kernel\n");
-    // load_program();
-
-    disk_open(f1, error);
+    load_program();
+    enable_scheduler();
 
     while (1);
 

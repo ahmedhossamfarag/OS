@@ -3,12 +3,15 @@
 #include "pagging.h"
 #include "info.h"
 #include "dslib.h"
+#include "resources.h"
 
 pcb_t* default_process;
 
 pcb_t* processes;
 
 queue_t* queue;
+
+void* pstate_lock;
 
 static void default_process_init(){
     default_process = (pcb_t*) alloc(sizeof(pcb_t));
@@ -23,6 +26,8 @@ static void default_process_init(){
         t->thread_state = THREAD_STATE_RUNNING;
         t->parent = default_process;
     }
+
+    pstate_lock = 0;
 }
 
 void process_init(){
@@ -77,25 +82,33 @@ static void create_process(pcb_t* pcb, uint32_t pid, uint32_t ppid, uint32_t cr3
             t->thread_state = THREAD_STATE_TERMINATED;
     }
 
-    add_new_thread(pcb, 0, 0, ebp);
+    thread_t* main_thread = pcb->threads;
+    create_thread(main_thread, 0, 0, ebp);
+    pcb->n_active_threads ++;
+    main_thread->processor_id = 0;
 }
 
 uint8_t add_new_process(uint32_t pid, uint32_t ppid, uint32_t cr3, uint32_t ebp){
+    resource_lock_request(&pstate_lock, (void*)(info_get_processor_id()+1));
+    uint8_t res = 0;
     for (pcb_t* p = processes; p < processes + MAX_N_PROCESS; p++)
     {
         if(p->process_state == PROCESS_STATE_TERMINATED){
             create_process(p, pid, ppid, cr3, ebp);
-            process_inqueue(p);
-            return 1;
+            queue_inque(queue, p);
+            res = 1;
+            break;
         }
     }
     
+    resource_lock_free(&pstate_lock, (void*)(info_get_processor_id()+1));
 
-    return 0;
+    return res;
 }
 
 void remove_process(pcb_t *process)
 {
+    resource_lock_request(&pstate_lock, (void*)(info_get_processor_id()+1));
     for (pcb_t* p = processes; p < processes  + MAX_N_PROCESS; p++)
     {
         if(p == process){
@@ -103,6 +116,7 @@ void remove_process(pcb_t *process)
         }
     }
     queue_remove(queue, process);
+    resource_lock_free(&pstate_lock, (void*)(info_get_processor_id()+1));
     
 }
 
@@ -120,16 +134,22 @@ pcb_t* get_process_pid(uint32_t ppid, uint32_t pid)
 }
 
 void process_inqueue(pcb_t* process){
+    resource_lock_request(&pstate_lock, (void*)(info_get_processor_id()+1));
     queue_inque(queue, process);
+    resource_lock_free(&pstate_lock, (void*)(info_get_processor_id()+1));
 }
 
 pcb_t* process_dequeue(){
-
-    return (pcb_t*) queue_deque(queue);
+    resource_lock_request(&pstate_lock, (void*)(info_get_processor_id()+1));
+    pcb_t* pcb = (pcb_t*) queue_deque(queue);
+    resource_lock_free(&pstate_lock, (void*)(info_get_processor_id()+1));
+    return pcb;
 }
 
 uint8_t add_new_thread(pcb_t *process, uint32_t tid, uint32_t eip, uint32_t ebp)
 {
+    resource_lock_request(&pstate_lock, (void*)(info_get_processor_id()+1));
+    uint8_t res = 0;
     for (uint8_t i = 0; i < MAX_N_THREAD; i++)
     {
         thread_t* t = process->threads + i;
@@ -137,16 +157,18 @@ uint8_t add_new_thread(pcb_t *process, uint32_t tid, uint32_t eip, uint32_t ebp)
             create_thread(t, tid, eip, ebp);
             process->n_active_threads ++;
             t->processor_id = i;
-            return 1;
+            res = 1;
+            break;
         }
     }
+    resource_lock_free(&pstate_lock, (void*)(info_get_processor_id()+1));
     
-    
-    return 0;
+    return res;
 }
 
 void remove_thread(pcb_t *process, thread_t* thread)
 {
+    resource_lock_request(&pstate_lock, (void*)(info_get_processor_id()+1));
     for (thread_t* t = process->threads; t < process->threads + MAX_N_THREAD; t++)
     {
         if(t == thread){
@@ -155,6 +177,7 @@ void remove_thread(pcb_t *process, thread_t* thread)
             break;
         }
     }
+    resource_lock_free(&pstate_lock, (void*)(info_get_processor_id()+1));
 }
 
 thread_t* get_thread_tid(pcb_t *process, uint32_t tid)
@@ -179,13 +202,15 @@ thread_t* get_process_thread(pcb_t *process, uint8_t n)
 
 void process_awake(pcb_t *process)
 {
+    resource_lock_request(&pstate_lock, (void*)(info_get_processor_id()+1));
     if(process->process_state == PROCESS_STATE_WAITING){
         process->process_state = PROCESS_STATE_READY;
         process->n_active_threads ++;
         if(process != default_process){
-            process_inqueue(process);
+            queue_inque(queue ,process);
         }
     }
+    resource_lock_free(&pstate_lock, (void*)(info_get_processor_id()+1));
 }
 
 void thread_awake(thread_t *thread)
