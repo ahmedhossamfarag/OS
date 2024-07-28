@@ -23,6 +23,9 @@
         "disk.h": "c",
         "algorithm": "c",
         "libc.h": "c",
-        "resources.h": "c"
+        "resources.h": "c",
+        "th_syscall.h": "c",
+        "info.h": "c",
+        "scheduler.h": "c"
     }
 }

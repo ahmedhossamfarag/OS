@@ -39,7 +39,7 @@ static void fread_success(){
     if(args.data){
         free((char*)args.data, args.disk_count * SectorSize);
     }
-    disk_queue->handler->cpu_state.eax = 0;
+    disk_queue->handler->cpu_state.eax = 1;
     thread_awake(disk_queue->handler);
     resource_queue_deque(disk_queue);
 }

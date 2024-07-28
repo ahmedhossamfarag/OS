@@ -106,6 +106,19 @@ void remove_process(pcb_t *process)
     
 }
 
+pcb_t* get_process_pid(uint32_t ppid, uint32_t pid)
+{
+    pcb_t* process = 0;
+    for (pcb_t* p = processes; p < processes  + MAX_N_PROCESS; p++)
+    {
+        if(p->process_state != PROCESS_STATE_TERMINATED && p->pid == pid && p->ppid == ppid){
+            process = p;
+            break;
+        }
+    }
+    return process;
+}
+
 void process_inqueue(pcb_t* process){
     queue_inque(queue, process);
 }
@@ -142,6 +155,17 @@ void remove_thread(pcb_t *process, thread_t* thread)
             break;
         }
     }
+}
+
+thread_t* get_thread_tid(pcb_t *process, uint32_t tid)
+{
+    for (thread_t* t = process->threads; t < process->threads + MAX_N_THREAD; t++)
+    {
+        if(t->thread_state != THREAD_STATE_TERMINATED && t->tid == tid){
+            return t;
+        }
+    }
+    return 0;
 }
 
 thread_t* get_process_thread(pcb_t *process, uint8_t n)
