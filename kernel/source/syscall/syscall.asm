@@ -19,6 +19,8 @@ extern prints_handler
 extern scans_handler
 extern scans_line_handler
 
+global syscall_map
+
 syscall_map:
     dd 0
     dd fopen_handler ;0x1
@@ -42,30 +44,3 @@ syscall_map:
     dd 0 ;0x13
     dd memory_init_handler ;0x14
     dd 0 ;0x15
-    
-global isr_syscall_handler
-isr_syscall_handler:
-    pusha                  ; Save all general-purpose registers
-    push ds                ; Save data segment register
-    push es
-    push fs
-    push gs
-
-    push esp               ; Push the stack pointer to pass it to the C handler
-
-    mov eax, 0x10
-    mov ds, eax
-    mov es, eax
-    mov fs, eax
-    mov gs, eax
-
-    shl esi, 2
-    call [syscall_map+esi]
-
-    pop esp                ; Restore the stack pointer
-    pop gs                 ; Restore segment registers
-    pop fs
-    pop es
-    pop ds
-    popa                   ; Restore general-purpose registers
-    iret               

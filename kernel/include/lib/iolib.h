@@ -3,6 +3,8 @@
 
 #define FILE uint32_t
 
+#define FILE_NAME_LENGTH 100
+
 FILE* fopen(const char* name);
 
 uint8_t fsize(FILE* file, uint32_t* to);

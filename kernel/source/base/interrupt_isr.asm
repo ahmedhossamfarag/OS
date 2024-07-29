@@ -81,3 +81,5 @@ isr_state schedule_thread_waiting
 isr_state schedule_process_terminated
 
 isr_state schedule_thread_terminated
+
+isr_state syscall_handler

@@ -19,3 +19,5 @@
 #define SCAN_LINE_SYSCALL 0x12
 
 #define MEMORY_INIT_INT 0x14
+
+#define NUM_SYSCALL 0x15

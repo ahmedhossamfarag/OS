@@ -4,7 +4,7 @@
 #include "interrupt.h"
 #include "apic.h"
 #include "strlib.h"
-
+#include "syscall_map.h"
 
 void handler(){
     print("done");
@@ -44,4 +44,17 @@ void pic_handler(void) {
     screen_print_str("pic ");
     char s[10];
     screen_print_str(int_to_hex_str(isr, s));
+}
+
+extern void (*syscall_map[NUM_SYSCALL])(cpu_state_t*);
+
+void syscall_handler(cpu_state_t* state){
+    uint32_t n;
+    asm("mov %%esi, %0":"=m"(n));
+
+    if(n >= NUM_SYSCALL || !syscall_map[n]){
+        state->eax = 0;
+        return;
+    }
+    syscall_map[n](state);
 }

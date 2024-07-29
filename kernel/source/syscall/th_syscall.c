@@ -34,7 +34,7 @@ void process_terminate_handler(cpu_state_t* state){
 void thread_terminate_handler(cpu_state_t* state){
     pcb_t* curr_prcss = get_current_process();
     thread_t* thr = get_thread_tid(curr_prcss, state->eax);
-    if(!thr){
+    if(!thr || thr == get_current_thread()){
         state->eax = 0;
         return;
     }
@@ -46,5 +46,5 @@ void memory_init_handler(cpu_state_t* state)
 {
     pcb_t* pcb = get_current_process();
     state->ebx = pcb->memo_begin;
-    state->edx = PROCESS_N_PAGE_TABLES * PAGE_SIZE;
+    state->edx = PROCESS_N_PAGE_TABLES * PAGE_SIZE * NUM_PAGES;
 }
