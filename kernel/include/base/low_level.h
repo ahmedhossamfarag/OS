@@ -1,3 +1,5 @@
+#include <stdint.h>
+
  #define inb port_byte_in
  #define outb port_byte_out
  
@@ -13,4 +15,8 @@ void outsw(unsigned short port, const void *addr, int count);
 
 void insw(unsigned short port, void *addr, int count);
 
- void io_wait(void);
+void io_wait(void);
+
+void outl(uint16_t port, uint32_t value);
+
+uint32_t inl(uint16_t port);

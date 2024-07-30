@@ -41,3 +41,14 @@ inline void io_wait(){
     // The IO operation is basically a delay.
     asm volatile ( "outb %%al, $0x80" : : "a"(0) );
 }
+
+
+void outl(uint16_t port, uint32_t value) {
+    __asm__ __volatile__("outl %0, %1" : : "a"(value), "Nd"(port));
+}
+
+uint32_t inl(uint16_t port) {
+    uint32_t ret;
+    __asm__ __volatile__("inl %1, %0" : "=a"(ret) : "Nd"(port));
+    return ret;
+}

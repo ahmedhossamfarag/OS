@@ -26,6 +26,8 @@
         "resources.h": "c",
         "th_syscall.h": "c",
         "info.h": "c",
-        "scheduler.h": "c"
+        "scheduler.h": "c",
+        "compare": "c",
+        "cstdint": "c"
     }
 }

@@ -19,6 +19,7 @@
 #include "info.h"
 #include "ata.h"
 #include "syscall.h"
+#include "pci.h"
 
 void kernel_load()
 {
@@ -41,8 +42,8 @@ void init()
     apic_init();
     scheduler_init();
     syscall_init();
-    disk_init();
-    filesystem_init();
+    // disk_init();
+    // filesystem_init();
 }
 
 void setup()
@@ -87,8 +88,10 @@ int main()
     setup();
     screen_clear();
     print("Welcome To Kernel\n");
-    load_program();
-    enable_scheduler();
+    pci_init();
+
+    // load_program();
+    // enable_scheduler();
 
     while (1);
 
