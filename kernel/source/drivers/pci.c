@@ -1,5 +1,7 @@
 #include "pci.h"
 #include "low_level.h"
+#include "ethernet.h"
+#include "hda.h"
 
 uint32_t pci_config_address(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset)
 {
@@ -13,36 +15,37 @@ uint32_t pci_read_config(uint8_t bus, uint8_t device, uint8_t function, uint8_t 
     return inl(PCI_CONFIG_DATA) >> shift[offset & 0x3];
 }
 
-static uint32_t audio_io_bar;
-static uint32_t audio_memory_bar;
+uint16_t hda_vendorId;
+uint16_t hda_deviceId;
+uint32_t hda_memory_bar;
+uint8_t hda_irq;
 
-void pci_audio_device_init(uint8_t bus, uint8_t device, uint8_t function)
+void pci_hda_device_init(uint8_t bus, uint8_t device, uint8_t function)
 {
+    hda_vendorId = pci_read_config(bus, device, function, PCI_VENDOR_ID);
+    hda_deviceId = pci_read_config(bus, device, function, PCI_DEVICE_ID);
+
     uint32_t bar_value = pci_read_config(bus, device, function, PCI_BAR0);
-    if (bar_value & 0x01)
-    {
-        audio_io_bar = bar_value & ~0x03;
-    }
-    else
-    {
-        audio_memory_bar = bar_value & ~0x0F;
-    }
+    hda_memory_bar = bar_value & ~0x0F;
+
+    hda_irq = pci_read_config(bus, device, function, PCI_INTERRUPT_LINE);
 }
 
-static uint32_t ethernet_io_bar;
-static uint32_t ethernet_memory_bar;
+uint16_t ethernet_vendorId;
+uint16_t ethernet_deviseId;
+uint32_t ethernet_memory_bar;
+uint8_t ethernet_irq;
 
 void pci_ethernet_device_init(uint8_t bus, uint8_t device, uint8_t function)
 {
+    ethernet_vendorId = pci_read_config(bus, device, function, PCI_VENDOR_ID);
+    ethernet_deviseId = pci_read_config(bus, device, function, PCI_DEVICE_ID);
+
     uint32_t bar_value = pci_read_config(bus, device, function, PCI_BAR0);
-    if (bar_value & 0x01)
-    {
-        ethernet_io_bar = bar_value & ~0x03;
-    }
-    else
-    {
-        ethernet_memory_bar = bar_value & ~0x0F;
-    }
+    ethernet_memory_bar = bar_value & ~0x0F;
+
+    
+    ethernet_irq = pci_read_config(bus, device, function, PCI_INTERRUPT_LINE);
 }
 
 void pci_init()
@@ -61,7 +64,7 @@ void pci_init()
                     uint8_t sub_class = class_code & 0xFF;
                     if (base_class == PCI_CLASS_MULTIMEDIA && sub_class == PCI_SUBCLASS_AUDIO_DEVICE)
                     {
-                        pci_audio_device_init(bus, device, function);
+                        pci_hda_device_init(bus, device, function);
                     }
                     if (base_class == PCI_CLASS_NETWORK && sub_class == PCI_SUBCLASS_ETHERNET)
                     {
@@ -71,4 +74,6 @@ void pci_init()
             }
         }
     }
+    ethernet_init();
+    hda_init();
 }

@@ -39,7 +39,7 @@ void init()
     interrupt_handler_init();
     gdt_init();
     pagging_init();
-    apic_init();
+    // apic_init();
     scheduler_init();
     syscall_init();
     // disk_init();
@@ -51,7 +51,7 @@ void setup()
     enable_idt();
     enable_interrupt();
     enable_gdt();
-    enable_apic();
+    // enable_apic();
     enable_paging();
 }
 

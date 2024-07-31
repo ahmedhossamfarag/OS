@@ -28,6 +28,7 @@
         "info.h": "c",
         "scheduler.h": "c",
         "compare": "c",
-        "cstdint": "c"
+        "cstdint": "c",
+        "pci.h": "c"
     }
 }
