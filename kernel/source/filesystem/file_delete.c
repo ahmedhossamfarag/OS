@@ -31,23 +31,19 @@ static void file_delete_lba(){
     if(file->data && file->n_blocks){
         disk_free(file->data, file->n_blocks);
     }
+    file_close((fs_entity_t*)file, 0, 0);
     disk_free(file->fs.lba, 1);
 
-    if(file->fs.parent != file->fs.parent != RootDirLBA){
-        args.parent = (dir_entity_t*) alloc(SectorSize);
-        if(!args.parent){
-            file_delete_error();
-            return;
-        }
-        ata_read_sync(PRIMARY_BASE, 0, file->fs.parent, 1, args.parent, file_dir_remove, file_delete_error);
-    }else{
-        args.parent = 0;
-        file_dir_remove();
+    args.parent = (dir_entity_t*) alloc(SectorSize);
+    if(!args.parent){
+        file_delete_error();
+        return;
     }
+    ata_read_sync(PRIMARY_BASE, 0, file->fs.parent, 1, args.parent, file_dir_remove, file_delete_error);
 }
 
 void file_delete(file_entity_t* file, SUCC_ERR){
-    if(file->fs.type != FILE_TYPE){
+    if(!file_is_open((fs_entity_t*)file) || file->fs.type != FILE_TYPE){
         if(error_proc)
             error_proc();
         return;

@@ -3,7 +3,6 @@
 #include "file_system.h"
 
 extern resource_queue_t* disk_queue;
-extern open_file_t* get_open_file(uint32_t pntr);
 
 static struct
 {
@@ -60,9 +59,9 @@ static void fread_proc(){
     args.count = state->ecx;
     args.data = 0;
 
-    open_file_t* op = get_open_file(pntr);
+    fs_entity_t* fs = (fs_entity_t*)pntr;
 
-    if(!op || op->fs->type != FILE_TYPE){
+    if(!file_is_open(fs) || fs->type != FILE_TYPE){
         fread_error();
         return;
     }
@@ -77,7 +76,7 @@ static void fread_proc(){
     args.disk_seek = args.seek / SectorSize;
     args.disk_count = math_cielm(args.seek + args.count, SectorSize) - args.disk_seek;
 
-    file_read((file_entity_t*)op->fs, args.data, args.disk_seek, args.disk_count, fread_success, fread_error);
+    file_read((file_entity_t*)fs, args.data, args.disk_seek, args.disk_count, fread_success, fread_error);
 }
 
 void fread_handler(cpu_state_t* state)

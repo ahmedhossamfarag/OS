@@ -6,15 +6,15 @@
 
 resource_queue_t *disk_queue;
 
-array_t *open_files;
+extern array_t *open_files;
 
 static struct
 {
     uint32_t len;
     char *name_splited;
     char **splits;
+    fs_entity_t *parent;
     fs_entity_t *fs;
-    open_file_t *of;
 } args;
 
 static void fopen_free()
@@ -30,11 +30,7 @@ static void fopen_error()
     fopen_free();
     if (args.fs)
     {
-        free((char *)args.fs, SectorSize);
-    }
-    if(args.of)
-    {
-        free((char*)args.of, sizeof(open_file_t));
+        file_close(args.fs, 0, 0);
     }
     disk_queue->handler->cpu_state.eax = 0;
     thread_awake(disk_queue->handler);
@@ -44,23 +40,24 @@ static void fopen_error()
 static void fopen_success()
 {
     fopen_free();
-    open_file_t *of = args.of;
-    of->fs = args.fs;
-    of->handler = disk_queue->handler;
-    void **pntr = array_add(open_files, of);
-    disk_queue->handler->cpu_state.eax = (uint32_t)pntr;
+    disk_queue->handler->cpu_state.eax = (uint32_t)args.fs;
     thread_awake(disk_queue->handler);
     resource_queue_deque(disk_queue);
 }
 
 static void fopen_next()
 {
-    args.splits++;
+    if(args.parent){
+        file_close(args.parent, 0, 0);
+    }
     if (*args.splits)
     {
         if (args.fs->type == DIR_TYPE)
         {
-            file_open((dir_entity_t *)args.fs, *args.splits, args.fs, fopen_next, fopen_error);
+            args.parent = args.fs;
+            char* name = *args.splits;
+            args.splits ++;
+            file_open((dir_entity_t *)args.parent, name, &args.fs, fopen_next, fopen_error);
         }
         else
         {
@@ -80,30 +77,22 @@ static void fopen_proc()
     args.len = str_len(name);
     args.name_splited = alloc(args.len + 2);
     args.splits = (char **)alloc((args.len + 2) * sizeof(char *));
-    args.fs = (fs_entity_t *)alloc(SectorSize);
-    args.of = (open_file_t*)alloc(sizeof(open_file_t));
+    args.parent = 0;
+    args.fs = 0;
 
-    if (!args.splits || !args.name_splited || !args.fs || !args.of)
+    if (!args.splits || !args.name_splited)
     {
         fopen_error();
         return;
     }
 
     if(!name){
-        file_open(0, 0, args.fs, fopen_success, fopen_error);
+        file_open(0, 0, &args.fs, fopen_success, fopen_error);
         return;
     }
 
     str_split(name, '/', args.splits, args.name_splited);
-
-    if (*args.splits)
-    {
-        file_open(0, *args.splits, args.fs, fopen_next, fopen_error);
-    }
-    else
-    {
-        fopen_error();
-    }
+    file_open(0, 0, &args.fs, fopen_next, fopen_error);
 }
 
 void fopen_handler(cpu_state_t *state)

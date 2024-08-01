@@ -2,21 +2,24 @@
 #include "file_system.h"
 #include "dslib.h"
 
-extern array_t* open_files;
+static struct{
+    cpu_state_t* state;
+} args;
 
-extern open_file_t* get_open_file(uint32_t pntr);
+static void fclose_error(){
+    args.state->eax = 0;
+}
+
+static void fclose_success(){
+    args.state->eax = 1;
+}
 
 void fclose_handler(cpu_state_t* state)
 {
-    uint32_t pntr = state->eax;
-
-    open_file_t* op = get_open_file(pntr);
-
-    if(op){
-        array_remove(open_files, (void**)pntr);
-        free((char*)op->fs, SectorSize);
-        free((char*)op, sizeof(open_file_t));
-        state->eax = 1;
+    uint32_t fs = state->eax;
+    if(fs){
+        args.state = state;
+        file_close((fs_entity_t*)fs, fclose_success, fclose_error);
     }else{
         state->eax = 0;
     }

@@ -6,7 +6,7 @@
 #define NamePrefixLength 5 
 #define DirExEntity_N_Files 50
 #define DirEntityIdentifier 0x88AA
-
+#define MAX_N_OPEN_FILES 20 
 #include <stdint.h>
 #include "memory.h"
 #include "disk.h"
@@ -40,7 +40,7 @@ void filesystem_init();
 #define SUCC_ERR void (*success_proc)(), void (*error_proc)()
 #define SUCC_ERR_V void (*success_proc)(); void (*error_proc)();
 
-void dir_create(dir_entity_t* parent, char* name, fs_entity_t* res, SUCC_ERR);
+void dir_create(dir_entity_t* parent, char* name, fs_entity_t** res, SUCC_ERR);
 
 void dir_append(dir_entity_t* parent, fs_entity_t* fs, SUCC_ERR);
 
@@ -50,12 +50,16 @@ void dir_list(dir_entity_t* parent, fs_entity_t* res, SUCC_ERR);
 
 void dir_delete(dir_entity_t* parent, SUCC_ERR);
 
-void file_create(dir_entity_t* parent, char* name, fs_entity_t* res, SUCC_ERR);
+void file_create(dir_entity_t* parent, char* name, fs_entity_t** res, SUCC_ERR);
 
-void file_open(dir_entity_t* parent, char* name, fs_entity_t* res, SUCC_ERR);
+void file_open(dir_entity_t* parent, char* name, fs_entity_t** res, SUCC_ERR);
+
+void file_close(fs_entity_t* file, SUCC_ERR);
 
 void file_read(file_entity_t* file, char* buffer, uint32_t sector_seek, uint32_t sector_count, SUCC_ERR);
 
 void file_write(file_entity_t* file, char* buffer, uint32_t sector_count, uint32_t size, SUCC_ERR);
 
 void file_delete(file_entity_t* file, SUCC_ERR);
+
+uint8_t file_is_open(fs_entity_t* fs);

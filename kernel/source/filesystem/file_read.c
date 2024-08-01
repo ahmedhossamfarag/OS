@@ -1,7 +1,7 @@
 #include "file_system.h"
 
 void file_read(file_entity_t* file, char* buffer, uint32_t sector_seek, uint32_t sector_count, SUCC_ERR){
-    if(file->fs.type != FILE_TYPE){
+    if(!file_is_open((fs_entity_t*)file) || file->fs.type != FILE_TYPE){
         if(error_proc)
             error_proc();
         return;

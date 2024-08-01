@@ -5,7 +5,6 @@
 
 extern resource_queue_t *disk_queue;
 
-extern open_file_t* get_open_file(uint32_t pntr);
 
 
 static void fdelete_error()
@@ -17,7 +16,6 @@ static void fdelete_error()
 
 static void fdelete_success()
 {
-    fclose_handler(&disk_queue->handler->cpu_state);
     disk_queue->handler->cpu_state.eax = 1;
     thread_awake(disk_queue->handler);
     resource_queue_deque(disk_queue);
@@ -27,17 +25,17 @@ static void fdelete_success()
 static void fdelete_proc(){
     cpu_state_t* state = &disk_queue->handler->cpu_state;
 
-    open_file_t* op = get_open_file(state->eax);
+    fs_entity_t* fs = (fs_entity_t*)state->eax;
 
-    if(!op){
+    if(!file_is_open(fs)){
         fdelete_error();
         return;
     }
 
-    if(op->fs->type == FILE_TYPE){
-        file_delete((file_entity_t*)op->fs, fdelete_success, fdelete_error);
-    }else if(op->fs->type == DIR_TYPE){
-        dir_delete((dir_entity_t*)op->fs, fdelete_success, fdelete_error);
+    if(fs->type == FILE_TYPE){
+        file_delete((file_entity_t*)fs, fdelete_success, fdelete_error);
+    }else if(fs->type == DIR_TYPE){
+        dir_delete((dir_entity_t*)fs, fdelete_success, fdelete_error);
     }else{
         fdelete_error();
     }

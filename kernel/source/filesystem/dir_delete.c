@@ -33,11 +33,12 @@ static void dir_delete_file(file_entity_t* file){
     if(file->data && file->n_blocks){
         disk_free(file->data, file->n_blocks);
     }
+    file_close((fs_entity_t*)file, 0, 0);
     disk_free(file->fs.lba, 1);
-
 }
 
 static void dir_delete_dir(dir_entity_t* dir){
+    file_close((fs_entity_t*)dir, 0, 0);
     disk_free(dir->fs.lba, 1);
     if(dir->head){
         list_append(args.list, (void*) dir->head);
@@ -86,24 +87,19 @@ static void dir_dir_remove(){
 
 static void dir_delete_lba(){
     dir_entity_t* dir = args.dir;
-
+    file_close((fs_entity_t*)dir, 0, 0);
     disk_free(dir->fs.lba, 1);
 
-    if(dir->fs.parent != RootDirLBA){
-        args.parent = (dir_entity_t*) alloc(SectorSize);
-        if(!args.parent){
-            dir_delete_error();
-            return;
-        }
-        ata_read_sync(PRIMARY_BASE, 0, dir->fs.parent, 1, args.parent, dir_dir_remove, dir_delete_error);
-    }else{
-        args.parent = 0;
-        dir_dir_remove();
+    args.parent = (dir_entity_t*) alloc(SectorSize);
+    if(!args.parent){
+        dir_delete_error();
+        return;
     }
+    ata_read_sync(PRIMARY_BASE, 0, dir->fs.parent, 1, args.parent, dir_dir_remove, dir_delete_error);
 }
 
 void dir_delete(dir_entity_t* dir, SUCC_ERR){
-    if(dir->fs.type != DIR_TYPE || dir->fs.lba == RootDirLBA){
+    if(!file_is_open((fs_entity_t*)dir) || dir->fs.type != DIR_TYPE || dir->fs.lba == RootDirLBA){
         if(error_proc)
             error_proc();
         return;

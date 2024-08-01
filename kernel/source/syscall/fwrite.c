@@ -4,7 +4,6 @@
 #include "libc.h"
 
 extern resource_queue_t* disk_queue;
-extern open_file_t* get_open_file(uint32_t pntr);
 
 static struct
 {
@@ -52,9 +51,9 @@ static void fwrite_proc(){
     uint32_t count = state->ecx;
     args.data = 0;
 
-    open_file_t* op = get_open_file(pntr);
+    fs_entity_t* fs = (fs_entity_t*)(pntr);
 
-    if(!op || op->fs->type != FILE_TYPE){
+    if(!file_is_open(fs) || fs->type != FILE_TYPE){
         fwrite_error();
         return;
     }
@@ -68,7 +67,7 @@ static void fwrite_proc(){
 
     fwrite_copy_data(from, count);
 
-    file_write((file_entity_t*)op->fs, args.data, args.sector_cnt, count, fwrite_success, fwrite_error);
+    file_write((file_entity_t*)fs, args.data, args.sector_cnt, count, fwrite_success, fwrite_error);
 }
 
 void fwrite_handler(cpu_state_t* state)

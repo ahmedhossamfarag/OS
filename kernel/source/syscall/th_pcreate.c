@@ -6,7 +6,6 @@
 #include "pagging.h"
 
 extern resource_queue_t* disk_queue;
-extern open_file_t* get_open_file(uint32_t pntr);
 
 static struct
 {
@@ -59,9 +58,9 @@ static void pcreate_proc(){
 
     args.data = 0;
 
-    open_file_t* op = get_open_file(state->ebx);
+    fs_entity_t* fs = (fs_entity_t*) state->ebx;
 
-    if(!op || op->fs->type != FILE_TYPE){
+    if(!file_is_open(fs) || fs->type != FILE_TYPE){
         pcreate_error();
         return;
     }
@@ -73,7 +72,7 @@ static void pcreate_proc(){
         return;
     }
     args.to = 0;
-    args.n_sectors = ((file_entity_t*)op->fs)->n_blocks;
+    args.n_sectors = ((file_entity_t*)fs)->n_blocks;
     args.data = alloc(args.n_sectors * SectorSize);
 
     if(!args.data){
@@ -81,7 +80,7 @@ static void pcreate_proc(){
         return;
     }
     
-    file_read((file_entity_t*)op->fs, args.data, 0, args.n_sectors, pcreate_success, pcreate_error);
+    file_read((file_entity_t*)fs, args.data, 0, args.n_sectors, pcreate_success, pcreate_error);
 }
 
 void process_create_handler(cpu_state_t* state)

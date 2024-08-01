@@ -1,7 +1,6 @@
 #include "file_system.h"
 
 static struct{
-    uint8_t remove_parent;
     dir_entity_t* parent;
     fs_entity_t* fs;
     fs_entity_t* next;
@@ -10,9 +9,6 @@ static struct{
 }args;
 
 static void dir_remove_free(){
-    if(args.remove_parent){
-        free((char*)args.parent, SectorSize);
-    }
     if(args.next){
         free((char*)args.next, SectorSize);
     }
@@ -110,14 +106,9 @@ void dir_remove(dir_entity_t* parent, fs_entity_t* fs, SUCC_ERR){
     args.success_proc = success_proc;
     args.error_proc = error_proc;
     if(!parent){
-        args.parent = (dir_entity_t*) alloc(SectorSize);
-        if(!args.parent){
-            if(error_proc)
-                error_proc();
-                return;
-        }
-        args.remove_parent = 1;
-        ata_read_sync(PRIMARY_BASE, 0, RootDirLBA, 1, args.parent, dir_remove_read_next, dir_remove_error);
+        if(error_proc)
+            error_proc();
+        return;
     }else{
         if(parent->fs.type != DIR_TYPE){
             if(error_proc)
@@ -125,7 +116,6 @@ void dir_remove(dir_entity_t* parent, fs_entity_t* fs, SUCC_ERR){
             return;
         }
         args.parent = parent;
-        args.remove_parent = 0;
         dir_remove_read_next();
     }
 }

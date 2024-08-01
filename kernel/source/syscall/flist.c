@@ -6,7 +6,6 @@
 
 extern resource_queue_t *disk_queue;
 
-extern open_file_t* get_open_file(uint32_t pntr);
 
 static struct
 {
@@ -60,14 +59,14 @@ static void flist_success()
 static void flist_proc(){
     cpu_state_t* state = &disk_queue->handler->cpu_state;
 
-    open_file_t* op = get_open_file(state->eax);
+    fs_entity_t* fs = (fs_entity_t*)state->eax;
 
-    if(!op || op->fs->type != DIR_TYPE){
+    if(!file_is_open(fs) || fs->type != DIR_TYPE){
         flist_error();
         return;
     }
 
-    args.n_files = ((dir_entity_t*)op->fs)->n_childs;
+    args.n_files = ((dir_entity_t*)fs)->n_childs;
     args.list = alloc(args.n_files * NameLength);
 
     if(!args.list){
@@ -75,7 +74,7 @@ static void flist_proc(){
         return;
     }
 
-    dir_list((dir_entity_t*)op->fs, (fs_entity_t*)args.list, flist_success, flist_error);
+    dir_list((dir_entity_t*)fs, (fs_entity_t*)args.list, flist_success, flist_error);
 }
 
 void flist_handler(cpu_state_t* state){
