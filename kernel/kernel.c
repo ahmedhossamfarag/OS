@@ -39,7 +39,7 @@ void init()
     interrupt_handler_init();
     gdt_init();
     pagging_init();
-    // apic_init();
+    apic_init();
     scheduler_init();
     syscall_init();
     // disk_init();
@@ -51,7 +51,7 @@ void setup()
     enable_idt();
     enable_interrupt();
     enable_gdt();
-    // enable_apic();
+    enable_apic();
     enable_paging();
 }
 
@@ -84,14 +84,14 @@ int main()
 {
     kernel_load();
     init();
-    // ap_setup();
+    ap_setup();
     setup();
     screen_clear();
     print("Welcome To Kernel\n");
-    pci_init();
+    // pci_init();
 
-    // load_program();
-    // enable_scheduler();
+    load_program();
+    enable_scheduler();
 
     while (1);
 

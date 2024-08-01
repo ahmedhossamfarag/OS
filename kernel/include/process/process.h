@@ -61,9 +61,11 @@ void remove_process(pcb_t* process);
 
 pcb_t* get_process_pid(uint32_t ppid, uint32_t pid);
 
-void process_inqueue(pcb_t* process);
+void thread_inqueue(thread_t* thread);
 
-pcb_t* process_dequeue();
+thread_t* thread_dequeue();
+
+void thread_remove(thread_t* thread);
 
 uint8_t add_new_thread(pcb_t* process, uint32_t tid, uint32_t eip, uint32_t ebp);
 
@@ -72,6 +74,8 @@ void remove_thread(pcb_t* process, thread_t* thread);
 thread_t* get_thread_tid(pcb_t *process, uint32_t tid);
 
 thread_t* get_process_thread(pcb_t* process, uint8_t n);
+
+void thread_waiting(thread_t* thread);
 
 void process_awake(pcb_t* process);
 
