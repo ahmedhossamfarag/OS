@@ -20,6 +20,7 @@
 #include "ata.h"
 #include "syscall.h"
 #include "pci.h"
+#include "vga.h"
 
 void kernel_load()
 {
@@ -42,6 +43,7 @@ void init()
     apic_init();
     scheduler_init();
     syscall_init();
+    vga_init();
     // disk_init();
     // filesystem_init();
 }
@@ -90,8 +92,10 @@ int main()
     print("Welcome To Kernel\n");
     // pci_init();
 
-    load_program();
-    enable_scheduler();
+    vga_set_palette_entry(10, 0, 0, 0xFFFF);
+    vga_clear(10);
+    // load_program();
+    // enable_scheduler();
 
     while (1);
 

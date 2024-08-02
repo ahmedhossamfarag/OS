@@ -29,6 +29,8 @@ void info_init()
 
     // apic
     n_apic = 0;
+
+    vesa_init();
 }
 
 uint32_t info_get_processor_no()
@@ -71,3 +73,27 @@ uint8_t info_get_processor_id()
     unsigned int processor_id = (ebx >> 24) & 0xFF;
     return processor_id;
 }
+
+#pragma region VESA
+
+uint16_t vesa_mode;
+vbe_mode_info_t mode_info;
+
+void vesa_init(){
+    uint16_t* mode_pntr = (uint16_t*) VESA_MODE;
+    vesa_mode = *mode_pntr;
+    if(vesa_mode != 0xFFFF){
+        vbe_mode_info_t* info_pntr = (vbe_mode_info_t*) VESA_MODE_INFO;
+        mode_info = *info_pntr;
+    }
+}
+
+uint16_t vesa_get_mode(){
+    return vesa_mode;
+}
+
+vbe_mode_info_t* vesa_get_mode_info(){
+    return &mode_info;
+}
+
+#pragma endregion

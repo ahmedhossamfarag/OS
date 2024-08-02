@@ -9,6 +9,8 @@ mov sp , bp
 
 %include "boot/info.asm"
 
+%include "boot/vesa.asm"
+
 %include "boot/kernel_load.asm"
 
 %include "boot/switch_to_pm.asm"
