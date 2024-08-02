@@ -115,7 +115,7 @@ uint8_t add_new_process(uint32_t pid, uint32_t ppid, uint32_t cr3, uint32_t ebp,
     uint8_t res = 0;
     for (pcb_t* p = processes; p < processes + MAX_N_PROCESS; p++)
     {
-        if(p->process_state == PROCESS_STATE_TERMINATED){
+        if(p->process_state == PROCESS_STATE_TERMINATED && !p->n_active_threads){
             create_process(p, pid, ppid, cr3, ebp, memo_begin);
             thread_inqueue(p->threads);
             res = 1;
@@ -128,21 +128,24 @@ uint8_t add_new_process(uint32_t pid, uint32_t ppid, uint32_t cr3, uint32_t ebp,
     return res;
 }
 
+static void process_free_thread(pcb_t* process){
+    process->n_active_threads --;
+    if(!process->n_active_threads){
+        process->process_state = PROCESS_STATE_TERMINATED;
+        free_pagging_dir((uint32_t*)process->cr3);
+    }
+}
+
 void remove_process(pcb_t *process)
 {
     resource_lock_request(&pstate_lock, (void*)(info_get_processor_id()+1));
-    for (pcb_t* p = processes; p < processes  + MAX_N_PROCESS; p++)
+    process->process_state = PROCESS_STATE_TERMINATED;
+    for (thread_t* t = process->threads; t < process->threads + MAX_N_THREAD; t++)
     {
-        if(p == process){
-            p->process_state = PROCESS_STATE_TERMINATED;
-            for (thread_t* t = p->threads; t < p->threads + MAX_N_THREAD; t++)
-            {
-                if(t->thread_state == THREAD_STATE_READY){
-                    thread_remove(t);
-                }
-                t->thread_state = THREAD_STATE_TERMINATED;
+        if(t->thread_state != THREAD_STATE_RUNNING){
+            if(t->thread_state == THREAD_STATE_READY){
+                thread_remove(t);
             }
-            break;
         }
     }
     resource_lock_free(&pstate_lock, (void*)(info_get_processor_id()+1));
@@ -166,6 +169,7 @@ void thread_inqueue(thread_t* thread){
     uint8_t n = thread->processor_id;
     resource_lock_request(queues_lock + n, (void*)(n+1));
     queue_inque(queues[n], thread);
+    thread->thread_state = THREAD_STATE_READY;
     resource_lock_free(queues_lock + n, (void*)(n+1));
 }
 
@@ -180,7 +184,10 @@ thread_t* thread_dequeue(){
 void thread_remove(thread_t* thread){
     uint8_t n = thread->processor_id;
     resource_lock_request(queues_lock + n, (void*)(n+1));
-    queue_remove(queues[n], thread);
+    if(queue_remove(queues[n], thread)){
+        thread->thread_state = THREAD_STATE_TERMINATED;
+        process_free_thread((pcb_t*)thread->parent);
+    }
     resource_lock_free(queues_lock + n, (void*)(n+1));
 }
 
@@ -204,19 +211,13 @@ uint8_t add_new_thread(pcb_t *process, uint32_t tid, uint32_t eip, uint32_t ebp)
     return res;
 }
 
-void remove_thread(pcb_t *process, thread_t* thread)
+void remove_thread(thread_t* thread)
 {
     resource_lock_request(&pstate_lock, (void*)(info_get_processor_id()+1));
-    for (thread_t* t = process->threads; t < process->threads + MAX_N_THREAD; t++)
-    {
-        if(t == thread){
-            if(t->thread_state == THREAD_STATE_READY){
-                thread_remove(t);
-            }
-            t->thread_state = THREAD_STATE_TERMINATED;
-            process->n_active_threads--;
-            break;
-        }
+    if(thread->thread_state == THREAD_STATE_RUNNING){
+        thread->thread_state = THREAD_STATE_TERMINATED;
+        pcb_t* pcb = (pcb_t*)thread->parent;
+        process_free_thread(pcb);
     }
     resource_lock_free(&pstate_lock, (void*)(info_get_processor_id()+1));
 }
@@ -241,28 +242,12 @@ thread_t* get_process_thread(pcb_t *process, uint8_t n)
     return 0;
 }
 
-void process_waiting(pcb_t* pcb){
-    if(!pcb->n_active_threads){
-        pcb->process_state = PROCESS_STATE_WAITING;
-    }
-}
-
 void thread_waiting(thread_t* thread){
     resource_lock_request(&pstate_lock, (void*)(info_get_processor_id()+1));
     if(thread->thread_state == THREAD_STATE_RUNNING){
         thread->thread_state = THREAD_STATE_WAITING;
-        pcb_t* pcb = (pcb_t*) thread->parent;
-        pcb->n_active_threads --;
-        process_waiting(pcb);
     }    
     resource_lock_free(&pstate_lock, (void*)(info_get_processor_id()+1));
-}
-
-void process_awake(pcb_t *process)
-{
-    if(process->process_state == PROCESS_STATE_WAITING && process->n_active_threads){
-        process->process_state = PROCESS_STATE_READY;
-    }
 }
 
 void thread_awake(thread_t *thread)
@@ -270,11 +255,16 @@ void thread_awake(thread_t *thread)
     resource_lock_request(&pstate_lock, (void*)(info_get_processor_id()+1));
 
     if(thread->thread_state == THREAD_STATE_WAITING){
-        thread->thread_state = THREAD_STATE_READY;
-        ((pcb_t*)thread->parent)->n_active_threads ++;
-        process_awake((pcb_t*)thread->parent);
-        if(thread->parent != default_process){
+        pcb_t* pcb = (pcb_t*)thread->parent;
+        if(pcb->process_state == PROCESS_STATE_TERMINATED){
+            thread->thread_state = THREAD_STATE_TERMINATED;
+            process_free_thread(pcb);
+        }else{
+            if(thread->parent != default_process){
             thread_inqueue(thread);
+            }else{
+                thread->thread_state = THREAD_STATE_READY;
+            }
         }
     }
 

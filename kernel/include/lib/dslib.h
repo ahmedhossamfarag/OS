@@ -18,7 +18,7 @@ void queue_inque(queue_t* queue, void* item);
 
 void* queue_deque(queue_t* queue);
 
-void queue_remove(queue_t* queue, void* item);
+uint8_t queue_remove(queue_t* queue, void* item);
 
 void queue_delete(queue_t* queue, void (*free)(char*,uint32_t));
 

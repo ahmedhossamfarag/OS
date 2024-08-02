@@ -9,11 +9,7 @@ void thread_create_handler(cpu_state_t* state){
 }
 
 void process_exit_handler(cpu_state_t* state){
-    if(info_get_processor_id() == 0){
-        schedule_process_terminated(state);
-    }else{
-        apic_send_ipi(0, PROCESS_TERMINATED_INT);
-    }
+    schedule_process_terminated(state);
 }
 
 void thread_exit_handler(cpu_state_t* state){

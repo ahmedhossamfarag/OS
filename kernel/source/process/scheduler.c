@@ -67,18 +67,30 @@ void schedule(cpu_state_t* state)
 
 static void set_current_thread(thread_t* thread){
     current_thread[info_get_processor_id()] = thread;
+    thread->thread_state = THREAD_STATE_RUNNING;
 }
 
 void schedule_thread(cpu_state_t* state){
     thread_t* current = get_current_thread();
-    thread_t* next = thread_dequeue();
-    if(next){
-        current->thread_state = THREAD_STATE_READY;
-        if(current->parent != default_process){
-            thread_inqueue(current);
+    if(((pcb_t*)current->parent)->process_state == PROCESS_STATE_TERMINATED){
+        remove_thread(current);
+        thread_t* next = thread_dequeue();
+        if(!next){
+            next = get_process_thread(default_process, info_get_processor_id());
         }
-        context_switch(state, current,  next, ((pcb_t*)next->parent)->cr3);
+        context_switch(state, 0,  next, ((pcb_t*)next->parent)->cr3);
         set_current_thread(next);
+    }else{
+        thread_t* next = thread_dequeue();
+        if(next){
+            if(current->parent != default_process){
+                thread_inqueue(current);
+            }else{
+                current->thread_state = THREAD_STATE_READY;
+            }
+            context_switch(state, current,  next, ((pcb_t*)next->parent)->cr3);
+            set_current_thread(next);
+        }
     }
 }
 
@@ -88,38 +100,26 @@ void schedule_process_waiting(cpu_state_t* state){
 
 void schedule_thread_waiting(cpu_state_t* state){
     thread_t* current = get_current_thread();
-    thread_t* next = thread_dequeue();
-    if(!next){
-        next = get_process_thread(default_process ,info_get_processor_id());
-    }
+    thread_t* next = get_process_thread(default_process ,info_get_processor_id());
     thread_waiting(current);
     context_switch(state, current,  next, ((pcb_t*)next->parent)->cr3);
     set_current_thread(next);
 }
 
 void schedule_process_terminated(cpu_state_t* state){
-    if(info_get_processor_id() != 0) return;
-
     pcb_t* p = get_current_process();
 
-    for (thread_t* t = p->threads; t < p->threads + MAX_N_THREAD; t++)
-    {
-        if(t->thread_state == THREAD_STATE_RUNNING && t->processor_id != 0){
-            apic_send_ipi(t->processor_id, THREAD_TERMINATED_INT);
-        }
-    }
+    remove_process(p);
 
     schedule_thread_terminated(state);
 }
 
 void schedule_thread_terminated(cpu_state_t* state){
     thread_t* current = get_current_thread();
-    thread_t* next = thread_dequeue();
-    if(!next){
-        next = get_process_thread(default_process ,info_get_processor_id());
-    }
-    remove_thread((pcb_t*)current->parent, current);
-    context_switch(state, current,  next, ((pcb_t*)next->parent)->cr3);
+    thread_t* next = next = get_process_thread(default_process ,info_get_processor_id());
+
+    remove_thread(current);
+    context_switch(state, 0,  next, ((pcb_t*)next->parent)->cr3);
     set_current_thread(next);
 }
 

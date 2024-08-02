@@ -39,9 +39,9 @@ void *queue_deque(queue_t *queue)
     return 0;
 }
 
-void queue_remove(queue_t *queue, void *item)
+uint8_t queue_remove(queue_t *queue, void *item)
 {
-    if(!queue->size) return;
+    if(!queue->size) return 0;
 
     uint32_t queue_end = queue->tail >= queue->head ? queue->tail : queue->tail + queue->capacity;
     for (uint32_t i = queue->head; i <= queue_end; i++)
@@ -53,10 +53,10 @@ void queue_remove(queue_t *queue, void *item)
             }
             queue->size --;
             queue->tail = (queue_end - 1) % queue->capacity;
-            break;
+            return 1;
         }
     }
-    
+    return 0;
 }
 
 void queue_delete(queue_t *queue, void (*free)(char *, uint32_t))

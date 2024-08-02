@@ -69,7 +69,7 @@ void thread_remove(thread_t* thread);
 
 uint8_t add_new_thread(pcb_t* process, uint32_t tid, uint32_t eip, uint32_t ebp);
 
-void remove_thread(pcb_t* process, thread_t* thread);
+void remove_thread(thread_t* thread);
 
 thread_t* get_thread_tid(pcb_t *process, uint32_t tid);
 
