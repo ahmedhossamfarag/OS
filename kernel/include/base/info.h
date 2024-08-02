@@ -30,6 +30,7 @@ uint8_t info_get_processor_id();
 
 #define VESA_MODE 0xD000
 #define VESA_MODE_INFO 0xD100
+#define VESA_FONT_MAP 0xE000
 
 typedef struct  {
 	uint16_t attributes;		// deprecated, only bit 7 should be of interest to you, and it indicates the mode supports a linear frame buffer.

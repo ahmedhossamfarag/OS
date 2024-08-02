@@ -82,6 +82,11 @@ void ap_setup()
     }
 }
 
+void font(){
+    draw_char(0, 0, 'A', 10);
+    draw_char(10, 0, 'A', 10);
+}
+
 int main()
 {
     kernel_load();
@@ -92,8 +97,7 @@ int main()
     print("Welcome To Kernel\n");
     // pci_init();
 
-    vga_set_palette_entry(10, 0, 0, 0xFFFF);
-    vga_clear(10);
+    font();
     // load_program();
     // enable_scheduler();
 

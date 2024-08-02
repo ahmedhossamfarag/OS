@@ -29,6 +29,7 @@
         "scheduler.h": "c",
         "compare": "c",
         "cstdint": "c",
-        "pci.h": "c"
+        "pci.h": "c",
+        "vga.h": "c"
     }
 }

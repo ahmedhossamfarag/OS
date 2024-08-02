@@ -27,12 +27,7 @@ mov esp , ebp
 mov esi , KERNEL_LOAD_OFFSET
 mov edi , KERNEL_OFFSET
 mov ecx , KERNEL_N_SECTORS * 128
-kernel_shift:
-    mov eax , [esi]
-    mov [edi] , eax
-    add esi , 4
-    add edi , 4
-    loop kernel_shift
+rep movsd
     
 ; AP Setup Shift
 call ap_setup_shift

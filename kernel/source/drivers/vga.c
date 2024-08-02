@@ -1,11 +1,14 @@
 #include "vga.h"
 #include "low_level.h"
 #include "info.h"
+#include "memory.h"
+#include "libc.h"
 
 uint8_t* framebuffer;
 uint16_t pitch;
 uint16_t width;
 uint16_t height;
+uint8_t* font_map;
 
 void vga_init()
 {
@@ -14,6 +17,8 @@ void vga_init()
     pitch = mode->pitch;
     width = mode->width;
     height = mode->height;
+    font_map = (uint8_t*)alloc(0x1000);
+    mem_copy((char*)VESA_FONT_MAP, (char*)font_map, 0x1000);
 }
 
 uint8_t vga_available()
@@ -35,5 +40,20 @@ void vga_clear(uint8_t color)
     for (uint8_t* pixel = framebuffer; pixel < framebuffer + len; pixel++)
     {
         *pixel = color;
+    }
+}
+
+void draw_char(int x, int y, char c, unsigned char color) {
+    uint8_t *glyph = font_map + c * FONT_HEIGHT;
+    uint8_t *framepntr = framebuffer + y * pitch + x;
+    for (int i = 0; i < FONT_HEIGHT; i++) {
+        uint8_t line = glyph[i];
+        for (int j = 0; j < 8; j++) {
+            if (line & (0x80 >> j)) {
+                framepntr[j +  i * pitch] = color;
+            }else{
+                framepntr[j +  i * pitch] = 0;
+            }
+        }
     }
 }
