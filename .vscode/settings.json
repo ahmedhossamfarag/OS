@@ -30,6 +30,7 @@
         "compare": "c",
         "cstdint": "c",
         "pci.h": "c",
-        "vga.h": "c"
+        "vga.h": "c",
+        "vga_print.h": "c"
     }
 }

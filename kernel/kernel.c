@@ -21,6 +21,7 @@
 #include "syscall.h"
 #include "pci.h"
 #include "vga.h"
+#include "vga_print.h"
 
 void kernel_load()
 {
@@ -82,11 +83,6 @@ void ap_setup()
     }
 }
 
-void font(){
-    draw_char(0, 0, 'A', 10);
-    draw_char(10, 0, 'A', 10);
-}
-
 int main()
 {
     kernel_load();
@@ -97,7 +93,6 @@ int main()
     print("Welcome To Kernel\n");
     // pci_init();
 
-    font();
     // load_program();
     // enable_scheduler();
 

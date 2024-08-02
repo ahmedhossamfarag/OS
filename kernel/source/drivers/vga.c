@@ -43,7 +43,7 @@ void vga_clear(uint8_t color)
     }
 }
 
-void draw_char(int x, int y, char c, unsigned char color) {
+void vga_draw_char(int x, int y, char c, unsigned char color) {
     uint8_t *glyph = font_map + c * FONT_HEIGHT;
     uint8_t *framepntr = framebuffer + y * pitch + x;
     for (int i = 0; i < FONT_HEIGHT; i++) {
