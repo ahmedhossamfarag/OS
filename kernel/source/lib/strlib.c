@@ -29,50 +29,54 @@ int str_cmp_n(const char* str1, const char* str2, int n){
 	return 0;
 }
 
-const char* str_reverse(const char* str, char* rev_str) {
+const char* str_reverse(char* str) {
 	int len = str_len(str);
 	int j = len - 1;
-	for (int i = 0; i < len; i++)
+	for (int i = 0; i < len / 2; i++)
 	{
-		rev_str[j] = str[i];
+		char c = str[j];
+		str[j] = str[i];
+		str[i] = c;
 		j--;
 	}
-	rev_str[len] = '\0';
-	return rev_str;
+	return str;
 }
 
-static char str[10];
-
-const char* int_to_str(unsigned int val, char* out_str)
+const char* int_to_str(unsigned long val, char* str)
 {
-	for (int i = 0; i < 10; i++) str[i] = '\0';
-	for (int i = 0; i < 10; i++)
+	int i = 0;
+	while (val)
 	{
-		str[i] = (val % 10) + '0';
+		str[i++] = '0' + (val % 10);
 		val /= 10;
-		if (val == 0) {
-			break;
-		}
 	}
-	return str_reverse(str, out_str);
+	if(!i){
+		str[i++] = '0';
+	}
+	str[i] = '\0';
+	return str_reverse(str);
 }
 
-const char* int_to_hex_str(unsigned int val, char* out_str)
+const char* int_to_hex_str(unsigned long val, char* str)
 {
-	for (int i = 0; i < 10; i++) str[i] = '\0';
-	for (int i = 0; i < 10; i++)
+	int i = 0;
+	while (val)
 	{
 		int mod = val % 16;
 		if (mod < 10)
-			str[i] = mod + '0';
+			str[i++] = mod + '0';
 		else
-			str[i] = mod - 10 + 'A';
+			str[i++] = mod - 10 + 'A';
 		val /= 16;
-		if (val == 0) {
-			break;
-		}
 	}
-	return str_reverse(str, out_str);
+	if(!i){
+		str[i++] = '0';
+	}
+	str[i++] = 'x';
+	str[i++] = '0';
+	str[i] = '\0';
+	
+	return str_reverse(str);
 }
 
 unsigned char str_start_with(const char* str, const char* prefix){

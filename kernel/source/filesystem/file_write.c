@@ -25,13 +25,17 @@ static void file_write_data(){
     if(file->data && file->n_blocks){
         disk_free(file->data, file->n_blocks);
     }
+    file->n_blocks = args.sector_count;
+    file->size = args.size;
+    if(!args.sector_count){
+        file_write_update_file();
+        return;
+    }
     file->data = disk_alloc(args.sector_count);
     if(!file->data){
         file_write_error();
         return;
     }
-    file->n_blocks = args.sector_count;
-    file->size = args.size;
     ata_write_sync(PRIMARY_BASE, 0,  file->data, file->n_blocks, args.buffer, file_write_update_file, file_write_error);
 }
 
@@ -39,6 +43,11 @@ void file_write(file_entity_t* file, char* buffer, uint32_t sector_count, uint32
     if(!file_is_open((fs_entity_t*)file) || file->fs.type != FILE_TYPE){
         if(error_proc)
             error_proc();
+        return;
+    }
+    if(!file->n_blocks && !sector_count){
+        if(success_proc)
+            success_proc();
         return;
     }
     args.file = file;

@@ -6,7 +6,7 @@ void file_read(file_entity_t* file, char* buffer, uint32_t sector_seek, uint32_t
             error_proc();
         return;
     }
-    if(file->n_blocks >= sector_seek){
+    if(sector_seek >= file->n_blocks){
         if(error_proc)
             error_proc();
         return;

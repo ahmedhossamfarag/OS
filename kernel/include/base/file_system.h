@@ -3,9 +3,6 @@
 #define FILE_TYPE 0x33
 #define DIR_TYPE 0x55
 #define NameLength 100
-#define NamePrefixLength 5 
-#define DirExEntity_N_Files 50
-#define DirEntityIdentifier 0x88AA
 #define MAX_N_OPEN_FILES 20 
 #include <stdint.h>
 #include "memory.h"

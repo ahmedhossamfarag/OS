@@ -1,6 +1,8 @@
 #include "file_system.h"
 #include "dslib.h"
 
+extern fs_entity_t** file_get_open_lba(uint32_t lba);
+
 static struct{
     dir_entity_t* parent;
     dir_entity_t* dir;
@@ -10,7 +12,7 @@ static struct{
 }args;
 
 static void dir_delete_free(){
-    if(args.parent){
+    if(args.parent && !file_is_open((fs_entity_t*)args.parent)){
         free((char*)args.parent, SectorSize);
     }
     if(args.fs){
@@ -90,12 +92,18 @@ static void dir_delete_lba(){
     file_close((fs_entity_t*)dir, 0, 0);
     disk_free(dir->fs.lba, 1);
 
-    args.parent = (dir_entity_t*) alloc(SectorSize);
-    if(!args.parent){
-        dir_delete_error();
-        return;
+    fs_entity_t** parent_pntr = file_get_open_lba(dir->fs.parent);
+    if(parent_pntr){
+        args.parent = (dir_entity_t*) *parent_pntr;
+        dir_dir_remove();
+    }else{
+        args.parent = (dir_entity_t*) alloc(SectorSize);
+        if(!args.parent){
+            dir_delete_error();
+            return;
+        }
+        ata_read_sync(PRIMARY_BASE, 0, dir->fs.parent, 1, args.parent, dir_dir_remove, dir_delete_error);
     }
-    ata_read_sync(PRIMARY_BASE, 0, dir->fs.parent, 1, args.parent, dir_dir_remove, dir_delete_error);
 }
 
 void dir_delete(dir_entity_t* dir, SUCC_ERR){
@@ -110,7 +118,7 @@ void dir_delete(dir_entity_t* dir, SUCC_ERR){
     args.success_proc = success_proc;
     args.error_proc = error_proc;
     args.list = list_new(alloc, free);
-    if(args.list){
+    if(!args.list){
        if(error_proc)
             error_proc();
         return; 

@@ -5,11 +5,11 @@ int str_cmp(const char* str1, const char* str2);
 
 int str_cmp_n(const char* str1, const char* str2, int n);
 
-const char* str_reverse(const char* str, char* rev_str);
+const char* str_reverse(char* str);
 
-const char* int_to_str(unsigned int val, char* out_str);
+const char* int_to_str(unsigned long val, char* out_str);
 
-const char* int_to_hex_str(unsigned int val, char* out_str);
+const char* int_to_hex_str(unsigned long val, char* out_str);
 
 unsigned char str_start_with(const char* str, const char* prefix);
 

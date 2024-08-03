@@ -13,6 +13,16 @@ fs_entity_t** file_get_open(fs_entity_t* fs){
     return 0;
 }
 
+fs_entity_t** file_get_open_lba(uint32_t lba){
+    for (void** f = open_files->data; f < open_files->data + open_files->size; f++)
+    {
+        if(((fs_entity_t*) *f)->lba == lba){
+            return (fs_entity_t**) f;
+        }
+    }
+    return 0;
+}
+
 void file_close(fs_entity_t* file, SUCC_ERR){
     fs_entity_t** fs_pntr = file_get_open(file);
     if(fs_pntr){
