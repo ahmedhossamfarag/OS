@@ -1,5 +1,5 @@
 #define CHAR_WIDTH 8
-#define VGA_PRINT_COLOR 10
+#define VGA_PRINT_COLOR 15
 
 void vga_scroll_up();
 

@@ -14,3 +14,7 @@ void vga_set_palette_entry(uint8_t index, uint8_t red, uint8_t green, uint8_t bl
 void vga_clear(uint8_t color);
 
 void vga_draw_char(int x, int y, char c, unsigned char color);
+
+void vga_copy_buffer(uint8_t* buffer);
+
+void vga_copy_image(uint8_t* image, uint32_t x, uint32_t y, uint32_t img_width, uint32_t img_height);

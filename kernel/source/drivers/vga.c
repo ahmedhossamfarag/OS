@@ -57,3 +57,21 @@ void vga_draw_char(int x, int y, char c, unsigned char color) {
         }
     }
 }
+
+void vga_copy_buffer(uint8_t *buffer)
+{
+    mem_copy((char*)buffer, (char*)framebuffer, pitch*height);
+}
+
+void vga_copy_image(uint8_t *image, uint32_t x, uint32_t y, uint32_t img_width, uint32_t img_height)
+{
+    uint8_t *framepntr = framebuffer + y * pitch + x;
+    uint32_t line = img_width * pitch / width;
+    for (uint32_t i = 0; i < img_height; i++)
+    {
+        mem_copy((char*)image, (char*)framepntr, line);
+        framepntr += pitch;
+        image += line;
+    }
+    
+}

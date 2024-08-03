@@ -1,8 +1,8 @@
-C_SOURCES = $(wildcard kernel/*.c kernel/source/base/*.c kernel/source/drivers/*.c kernel/source/process/*.c kernel/source/lib/*.c kernel/source/syscall/*.c kernel/source/filesystem/*.c)
-HEADERS = $(wildcard kernel/include/base/*.h kernel/include/drivers/*.h kernel/include/process/*.h kernel/include/lib/*.h kernel/include/syscall/*.h)
+C_SOURCES = $(shell find kernel -name '*.c')
+HEADERS = $(shell find kernel -name '*.h')
 C_OBJ = ${C_SOURCES:.c=.o}
 
-ASM_SOURCES = $(wildcard kernel/source/base/*.asm kernel/source/drivers/*.asm kernel/source/process/*.asm kernel/source/lib/*.asm kernel/source/syscall/*.asm)
+ASM_SOURCES = $(shell find kernel -name '*.asm')
 ASM_OBJ = ${ASM_SOURCES:.asm=.o}
 
 GCC_INCLUDE := -Ikernel/include/base -Ikernel/include/drivers -Ikernel/include/process -Ikernel/include/lib -Ikernel/include/syscall
@@ -39,4 +39,5 @@ run: all
 	qemu-system-x86_64 -device intel-hda -device hda-duplex -smp 4 -m 2048 -drive file=os-image,format=raw
 
 clean:
-	rm -fr *.bin *.o kernel/*.o kernel/source/base/*.o kernel/source/drivers/*.o kernel/source/process/*.o kernel/source/lib/*.o kernel/source/syscall/*.o kernel/source/filesystem/*.o *.dis os-image
+	find . -name '*.o' -type f -delete
+	rm -fr *.bin *.dis os-image

@@ -1,4 +1,4 @@
-#include "screen_print.h"
+// #include "screen_print.h"
 #include "interrupt.h"
 #include "pic.h"
 #include "timer.h"
@@ -89,7 +89,6 @@ int main()
     init();
     ap_setup();
     setup();
-    screen_clear();
     print("Welcome To Kernel\n");
     // pci_init();
 
