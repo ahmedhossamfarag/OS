@@ -1,4 +1,4 @@
-C_SOURCES = $(shell find kernel -name '*.c')
+C_SOURCES = $(wildcard kernel/*.c kernel/source/base/*.c kernel/source/drivers/*.c kernel/source/process/*.c kernel/source/lib/*.c kernel/source/syscall/*.c kernel/source/filesystem/*.c)
 HEADERS = $(shell find kernel -name '*.h')
 C_OBJ = ${C_SOURCES:.c=.o}
 

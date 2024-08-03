@@ -15,8 +15,6 @@ void vga_print_clear();
 
 void vga_set_cursor(int offset);
 
-int vga_get_cursor();
-
 
 #define print(x) vga_print_str(x)
 #define println(x) print(x);vga_print_char('\n')
