@@ -6,3 +6,5 @@ qemu-system-x86_64 os-image
 
 objdump -d kernel.o
 ndisasm -b 32 kernel.bin > kernel.dis
+
+dd if=inputfile of=outputfile bs=512 seek=10 conv=notrunc

@@ -25,9 +25,11 @@
 
 void kernel_load()
 {
-    uint32_t src = 1 + 50;
-    uint32_t *des = (uint32_t *)(KERNEL_OFFSET + 50 * 512);
-    uint32_t n_sectors = 50;
+    #define LOADED 50
+    #define TO_LOAD 100
+    uint32_t src = 1 + LOADED;
+    uint32_t *des = (uint32_t *)(KERNEL_OFFSET + LOADED * 512);
+    uint32_t n_sectors = TO_LOAD;
     ata_read(PRIMARY_BASE, 0, src, n_sectors, des);
 }
 
@@ -45,8 +47,8 @@ void init()
     scheduler_init();
     syscall_init();
     vga_init();
-    // disk_init();
-    // filesystem_init();
+    disk_init();
+    filesystem_init();
 }
 
 void setup()
@@ -89,11 +91,11 @@ int main()
     init();
     ap_setup();
     setup();
-    print("Welcome To Kernel\n");
-    // pci_init();
+    println("Welcome To Kernel");
 
-    // load_program();
-    // enable_scheduler();
+    load_program();
+    println("Shell Started");
+    enable_scheduler();
 
     while (1);
 

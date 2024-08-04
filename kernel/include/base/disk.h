@@ -1,7 +1,7 @@
 #pragma once
 
-#define RootDirLBA 101
-#define FirstBlockLBA 102
+#define RootDirLBA 301
+#define FirstBlockLBA 302
 #define MapIdentefier 0xAF55
 #define SectorSize 512
 #define DiskSize 1000

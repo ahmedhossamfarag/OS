@@ -59,8 +59,10 @@ void scans_handler(cpu_state_t* state)
         return;
     }
 
+    thread_t* thread = get_current_thread();
+
     schedule_process_waiting(state);
 
-    resource_queue_inque(keyboard_queue, get_current_thread(), scans_proc);
+    resource_queue_inque(keyboard_queue, thread, scans_proc);
     
 }

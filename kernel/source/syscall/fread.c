@@ -90,6 +90,8 @@ void fread_handler(cpu_state_t* state)
         return;
     }
 
-   schedule_process_waiting(state);
-   resource_queue_inque(disk_queue, get_current_thread(), fread_proc);
+    thread_t* thread = get_current_thread();
+
+    schedule_process_waiting(state);
+    resource_queue_inque(disk_queue, thread, fread_proc);
 }

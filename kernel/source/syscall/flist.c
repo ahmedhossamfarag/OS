@@ -78,8 +78,9 @@ static void flist_proc(){
 }
 
 void flist_handler(cpu_state_t* state){
+    thread_t* thread = get_current_thread();
 
     schedule_process_waiting(state);
 
-    resource_queue_inque(disk_queue, get_current_thread(), flist_proc);
+    resource_queue_inque(disk_queue, thread, flist_proc);
 }
