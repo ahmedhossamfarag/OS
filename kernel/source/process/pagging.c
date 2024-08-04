@@ -1,5 +1,6 @@
 #include "pagging.h"
 #include "interrupt.h"
+#include "pages.h"
 
 uint32_t* default_dir;
 
@@ -9,6 +10,8 @@ uint8_t user_dir_available[N_DIRS];
 extern void isr_page_fault_handler();
 
 void pagging_init() {
+    pages_init();
+
     uint32_t align = FIRST_DIR_ALIGN;
 
     // default pagging directory
@@ -34,7 +37,7 @@ void pagging_init() {
     default_dir[0xF0000000 >> 22] = default_dir[0];
     
     // user pagging directories
-    uint32_t frame = FIRST_FRAME;
+    uint32_t frame = 0;
 
     for (uint8_t j = 0; j < N_DIRS; j++)
     {
@@ -51,6 +54,8 @@ void pagging_init() {
         {
             pagging_table = (uint32_t*) align;
             align += PAGE_SIZE;
+
+            frame = pages_alloc_next(frame);
 
             for (int k = 0; k < NUM_PAGES; k++)
             {

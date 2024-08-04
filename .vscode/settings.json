@@ -33,6 +33,7 @@
         "vga.h": "c",
         "vga_print.h": "c",
         "cstdlib": "c",
-        "thlib.h": "c"
+        "thlib.h": "c",
+        "pagging.h": "c"
     }
 }

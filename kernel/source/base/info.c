@@ -1,5 +1,12 @@
 #include "info.h"
 
+#define MEMORY_N_MAP 0x8000
+#define MEMORY_MAP 0x8004
+#define DISk_SIZE 0x8400
+
+#define MAX_N_APIC_IDS 10
+
+
 uint32_t processor_no;
 uint32_t memory_size;
 

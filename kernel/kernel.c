@@ -26,7 +26,7 @@
 void kernel_load()
 {
     uint32_t src = 1 + 50;
-    uint32_t *des = (uint32_t *)(0xA000000 + 50 * 512);
+    uint32_t *des = (uint32_t *)(KERNEL_OFFSET + 50 * 512);
     uint32_t n_sectors = 50;
     ata_read(PRIMARY_BASE, 0, src, n_sectors, des);
 }
