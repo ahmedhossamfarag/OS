@@ -1,9 +1,11 @@
 #include "memlib.h"
 #include "syscall_map.h"
+#include "rlock.h"
 
-uint32_t mhead;
-uint32_t MemoryBeginAddress;
-uint32_t MemoryEnd;
+static uint32_t mhead;
+static uint32_t MemoryBeginAddress;
+static uint32_t MemoryEnd;
+static void* lock;
 
 void minit()
 {
@@ -16,7 +18,7 @@ void minit()
 	*(headpntr+1) = MemoryEnd - MemoryBeginAddress;
 }
 
-char* malloc(uint32_t size)
+static char* alloc(uint32_t size)
 {
 	if(mhead == 0) return NULL;
 
@@ -63,7 +65,7 @@ char* malloc(uint32_t size)
 	return NULL;
 }
 
-void mfree(char* ptr, uint32_t size)
+static void free(char* ptr, uint32_t size)
 {
 	uint32_t* free_block = (uint32_t*)ptr;
 	
@@ -156,4 +158,26 @@ void mfree(char* ptr, uint32_t size)
 		}
 	}
 	
+}
+
+static uint32_t get_esp(){
+	uint32_t esp;
+	asm("mov %%esp, %0": "=d"(esp));
+	return esp;
+}
+
+#define mrlock() resource_lock_request(&lock, (void*)(get_esp()))
+#define mflock() resource_lock_free(&lock, (void*)(get_esp()))
+
+char* malloc(uint32_t size){
+	mrlock();
+	char* ofs = alloc(size);
+	mflock();
+	return ofs;
+}
+
+void mfree(char* ptr, uint32_t size){
+	mrlock();
+	free(ptr, size);
+	mflock();
 }

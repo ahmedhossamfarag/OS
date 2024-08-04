@@ -43,7 +43,7 @@ void dir_append(dir_entity_t* parent, fs_entity_t* fs, SUCC_ERR);
 
 void dir_remove(dir_entity_t* parent, fs_entity_t* fs, SUCC_ERR);
 
-void dir_list(dir_entity_t* parent, fs_entity_t* res, SUCC_ERR);
+void dir_list(dir_entity_t* parent, char* res, SUCC_ERR);
 
 void dir_delete(dir_entity_t* parent, SUCC_ERR);
 

@@ -26,8 +26,8 @@ fs_entity_t** file_get_open_lba(uint32_t lba){
 void file_close(fs_entity_t* file, SUCC_ERR){
     fs_entity_t** fs_pntr = file_get_open(file);
     if(fs_pntr){
-        array_remove(open_files, (void**)fs_pntr);
         free((char*) *fs_pntr, SectorSize);
+        array_remove(open_files, (void**)fs_pntr);
         if(success_proc){
             success_proc();
         }

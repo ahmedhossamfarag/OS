@@ -38,6 +38,17 @@ static void fcreate_success()
     resource_queue_deque(disk_queue);
 }
 
+static void fcreate_copy_name(char* src, char* des){
+    uint32_t current_cr3;
+    asm("mov %%cr3, %0":"=r"(current_cr3));
+    uint32_t th_cr3 = ((pcb_t*)disk_queue->handler->parent)->cr3;
+    asm volatile("mov %0, %%cr3" :: "r"(th_cr3));
+
+    str_copy_n(src, des, NameLength);
+
+    asm volatile("mov %0, %%cr3" :: "r"(current_cr3));
+}
+
 static void fcreate_proc(){
     cpu_state_t* state = &disk_queue->handler->cpu_state;
 
@@ -52,7 +63,7 @@ static void fcreate_proc(){
 
     dir_entity_t* dir = (dir_entity_t*) state->eax;
 
-    str_copy_n((char*)state->edx, args.name, NameLength);
+    fcreate_copy_name((char*)state->edx, args.name);
 
     if(state->ebx){
         dir_create(dir, args.name, &args.fs, fcreate_success, fcreate_error);

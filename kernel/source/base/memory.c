@@ -1,7 +1,12 @@
 #include "memory.h"
+#include "rlock.h"
+#include "info.h"
 
-uint32_t head;
+static uint32_t head;
+static void* lock;
 
+#define mrlock() resource_lock_request(&lock, (void*)(info_get_processor_id()+1))
+#define mflock() resource_lock_free(&lock, (void*)(info_get_processor_id()+1))
 
 void memory_init()
 {
@@ -11,7 +16,7 @@ void memory_init()
 	*(headpntr+1) = MemorySize;
 }
 
-char* alloc(uint32_t size)
+static char* malloc(uint32_t size)
 {
 	if(head == 0) return NULL;
 
@@ -58,7 +63,14 @@ char* alloc(uint32_t size)
 	return NULL;
 }
 
-void free(char* ptr, uint32_t size)
+char* alloc(uint32_t size){
+	mrlock();
+	char* ofs = malloc(size);
+	mflock();
+	return ofs;
+}
+
+static void mfree(char* ptr, uint32_t size)
 {
 	uint32_t* free_block = (uint32_t*)ptr;
 	
@@ -151,4 +163,10 @@ void free(char* ptr, uint32_t size)
 		}
 	}
 	
+}
+
+void free(char* ptr, uint32_t size){
+	mrlock();
+	mfree(ptr, size);
+	mflock();
 }

@@ -3,6 +3,7 @@
 #include "dslib.h"
 #include "file_system.h"
 #include "strlib.h"
+#include "libc.h"
 
 extern resource_queue_t *disk_queue;
 
@@ -16,7 +17,7 @@ static struct
 
 static void flist_free(){
     if(args.list){
-        free(args.list, args.n_files*SectorSize);
+        free(args.list, args.n_files*NameLength);
     }
 }
 
@@ -34,14 +35,7 @@ static void flist_copy_names(){
     uint32_t th_cr3 = ((pcb_t*)disk_queue->handler->parent)->cr3;
     asm volatile("mov %0, %%cr3" :: "r"(th_cr3));
 
-    char* pntr = args.list;
-    for (uint32_t i = 0; i < args.n_files; i++)
-    {
-        fs_entity_t* fs = (fs_entity_t*) pntr;
-        str_copy_n(fs->name, args.to, NameLength);
-        args.to += NameLength;
-        pntr += SectorSize;
-    }
+    mem_copy(args.list, args.to, args.n_files*NameLength);
 
     asm volatile("mov %0, %%cr3" :: "r"(current_cr3));
     
@@ -66,6 +60,7 @@ static void flist_proc(){
         return;
     }
 
+    args.to = (char*) state->edx;
     args.n_files = ((dir_entity_t*)fs)->n_childs;
     args.list = alloc(args.n_files * NameLength);
 
@@ -74,7 +69,7 @@ static void flist_proc(){
         return;
     }
 
-    dir_list((dir_entity_t*)fs, (fs_entity_t*)args.list, flist_success, flist_error);
+    dir_list((dir_entity_t*)fs, args.list, flist_success, flist_error);
 }
 
 void flist_handler(cpu_state_t* state){

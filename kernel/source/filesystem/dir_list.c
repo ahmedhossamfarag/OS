@@ -27,8 +27,8 @@ static void dir_list_success(){
 }
 
 static void dir_list_read_next(){
-    mem_copy((char*)args.fs, args.res, SectorSize);
-    args.res += SectorSize;
+    mem_copy(args.fs->name, args.res, NameLength);
+    args.res += NameLength;
     if(args.fs->next){
         ata_read_sync(PRIMARY_BASE, 0, args.fs->next, 1, args.fs, dir_list_read_next, dir_list_error);
     }else{
@@ -52,8 +52,8 @@ static void dir_list_read_head(){
 }
 
 
-void dir_list(dir_entity_t* parent, fs_entity_t* res, SUCC_ERR){
-    args.res =  (char*)res;
+void dir_list(dir_entity_t* parent, char* res, SUCC_ERR){
+    args.res =  res;
     args.success_proc = success_proc;
     args.error_proc = error_proc;
     if(!parent || !file_is_open((fs_entity_t*)parent)){

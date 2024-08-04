@@ -137,17 +137,3 @@ void resource_queue_deque(resource_queue_t *rq)
         resource_lock_free(&rq->lock, thread);
     }
 }
-
-void resource_lock_request(void **lock, void *handler)
-{
-    do{
-        while(*lock);
-        *lock = handler;
-    }while(*lock != handler);
-}
-
-void resource_lock_free(void** lock, void* handler){
-    if(*lock == handler){
-        *lock = 0;
-    }
-}

@@ -98,13 +98,6 @@ static void fopen_proc()
     char *name = (char*) disk_queue->handler->cpu_state.eax;
     fs_entity_t* parent = (fs_entity_t*) disk_queue->handler->cpu_state.ebx;
 
-    if(parent){
-        if(!file_is_open(parent) || parent->type != DIR_TYPE){
-            fopen_error();
-            return;
-        }
-    }
-
     args.len = str_len(name);
     args.name_splited = alloc(args.len + 2);
     args.splits = (char **)alloc((args.len + 2) * sizeof(char *));
@@ -119,6 +112,13 @@ static void fopen_proc()
         return;
     }
 
+    if(parent){
+        if(!file_is_open(parent) || parent->type != DIR_TYPE){
+            fopen_error();
+            return;
+        }
+    }
+    
     if(!parent && !name){
         file_open(0, 0, &args.fs, fopen_success, fopen_error);
         return;

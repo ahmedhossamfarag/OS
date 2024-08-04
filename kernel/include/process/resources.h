@@ -30,6 +30,4 @@ void resource_queue_inque(resource_queue_t* rq, thread_t* thread, void(*proc)())
 
 void resource_queue_deque(resource_queue_t* rq);
 
-void resource_lock_request(void** lock, void* handler);
-
-void resource_lock_free(void** lock, void* handler);
+#include "rlock.h"

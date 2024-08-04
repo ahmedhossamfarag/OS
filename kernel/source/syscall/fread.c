@@ -63,6 +63,12 @@ static void fread_proc(){
         return;
     }
 
+    file_entity_t* file = (file_entity_t*) fs;
+    if(args.seek >= file->size){
+        fread_error();
+        return;
+    }
+    if(args.seek + args.count > file->size) args.count = file->size - args.seek;
 
     args.disk_seek = args.seek / SectorSize;
     args.disk_count = math_cielm(args.seek + args.count, SectorSize) - args.disk_seek;
