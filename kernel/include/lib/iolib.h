@@ -5,7 +5,7 @@
 
 #define FILE_NAME_LENGTH 100
 
-FILE* fopen(const char* name);
+FILE* fopen(const char* name, FILE* parent);
 
 uint8_t fsize(FILE* file, uint32_t* to);
 

@@ -2,9 +2,9 @@
 #include "syscall_map.h"
 
 
-FILE *fopen(const char *name)
+FILE *fopen(const char *name, FILE* parent)
 {
-    asm("mov %0, %%esi\n\t""int $0x80":: "i"(FOPEN_SYSCALL), "a"((uint32_t)name));
+    asm("mov %0, %%esi\n\t""int $0x80":: "i"(FOPEN_SYSCALL), "a"((uint32_t)name), "b"((uint32_t)parent));
 
     uint32_t result;
     asm("mov %%eax, %0":"=m"(result));
