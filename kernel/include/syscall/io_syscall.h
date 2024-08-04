@@ -31,6 +31,4 @@ void prints_handler(cpu_state_t*);
 
 void scans_handler(cpu_state_t*);
 
-void scans_line_handler(cpu_state_t*);
-
 void io_syscall_init();

@@ -19,6 +19,10 @@ void vga_edit_init(uint32_t len, void (*end_proc)(char*))
         return;
     }
 
+    if(edit_des){
+        free(edit_des, des_len);
+    }
+
     edit_des = alloc(len);
     if(!edit_des){
         if(end_proc) end_proc(0);
@@ -40,6 +44,7 @@ static void vga_edit_end(){
         edit_end_proc(edit_des);
     }
     free(edit_des, des_len);
+    edit_des = 0;
 }
 
 static void vga_edit_left(){

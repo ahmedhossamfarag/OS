@@ -24,5 +24,3 @@ uint8_t flist(FILE* dir, char* to);
 uint8_t prints(const char* str);
 
 uint8_t scans(char* to, uint32_t count);
-
-uint8_t scans_line(char* to);

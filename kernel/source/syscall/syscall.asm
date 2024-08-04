@@ -17,7 +17,6 @@ extern memory_init_handler
 
 extern prints_handler
 extern scans_handler
-extern scans_line_handler
 
 global syscall_map
 
@@ -40,7 +39,7 @@ syscall_map:
     dd thread_terminate_handler ;0xF
     dd prints_handler ;0x10
     dd scans_handler ;0x11
-    dd scans_line_handler ;0x12
+    dd 0 ;0x12
     dd 0 ;0x13
     dd memory_init_handler ;0x14
     dd 0 ;0x15

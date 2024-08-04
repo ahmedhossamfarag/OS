@@ -101,13 +101,3 @@ uint8_t scans(char *to, uint32_t count)
     
     return (uint8_t)result;
 }
-
-uint8_t scans_line(char *to)
-{
-    asm("mov %0, %%esi\n\t""int $0x80"::"i"(SCAN_LINE_SYSCALL), "d"((uint32_t)to));
-
-    uint32_t result;
-    asm("mov %%eax, %0":"=m"(result));
-    
-    return (uint8_t)result;
-}
