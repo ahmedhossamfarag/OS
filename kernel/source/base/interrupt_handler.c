@@ -5,24 +5,19 @@
 #include "apic.h"
 #include "strlib.h"
 #include "syscall_map.h"
-
-void handler(){
-    print("done");
-    while (1);
-}
+#include "scheduler.h"
 
 extern void isr_syscall_handler();
 
 void interrupt_handler_init()
 {
     idt_set_user_entry(0x80, (uint32_t)isr_syscall_handler);
-
-    idt_set_user_entry(0, (uint32_t)handler);
 }
 
 void exception_handler(cpu_state_t* cpu)
 {
     print("\nException Handler");
+    schedule_thread_terminated(cpu);
 }
 
 void pic_handler(void) {

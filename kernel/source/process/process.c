@@ -112,6 +112,16 @@ static void create_process(pcb_t* pcb, uint32_t pid, uint32_t ppid, uint32_t cr3
 
 uint8_t add_new_process(uint32_t pid, uint32_t ppid, uint32_t cr3, uint32_t eip, uint32_t ebp, uint32_t memo_begin){
     resource_lock_request(&pstate_lock, (void*)(info_get_processor_id()+1));
+
+    for (pcb_t* p = processes; p < processes + MAX_N_PROCESS; p++)
+    {
+        if(p->n_active_threads){
+            if(p->pid == pid){
+                return 0;
+            }
+        }
+    }
+
     uint8_t res = 0;
     for (pcb_t* p = processes; p < processes + MAX_N_PROCESS; p++)
     {
@@ -194,6 +204,17 @@ void thread_remove(thread_t* thread){
 uint8_t add_new_thread(pcb_t *process, uint32_t tid, uint32_t eip, uint32_t ebp)
 {
     resource_lock_request(&pstate_lock, (void*)(info_get_processor_id()+1));
+
+    for (uint8_t i = 0; i < MAX_N_THREAD; i++)
+    {
+        thread_t* t = process->threads + i;
+        if(t->thread_state != THREAD_STATE_TERMINATED){
+            if(t->tid == tid){
+                return 0;
+            }
+        }
+    }
+
     uint8_t res = 0;
     for (uint8_t i = 0; i < MAX_N_THREAD; i++)
     {

@@ -1,4 +1,5 @@
 #include "memlib.h"
+#include "syscall_map.h"
 
 uint32_t mhead;
 uint32_t MemoryBeginAddress;

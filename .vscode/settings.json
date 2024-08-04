@@ -35,6 +35,7 @@
         "cstdlib": "c",
         "thlib.h": "c",
         "pagging.h": "c",
-        "interrupt.h": "c"
+        "interrupt.h": "c",
+        "apic.h": "c"
     }
 }

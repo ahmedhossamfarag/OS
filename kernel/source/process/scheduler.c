@@ -92,6 +92,7 @@ void schedule_thread(cpu_state_t* state){
             set_current_thread(next);
         }
     }
+    apic_sendEOI();
 }
 
 void schedule_process_waiting(cpu_state_t* state){
@@ -121,6 +122,7 @@ void schedule_thread_terminated(cpu_state_t* state){
     remove_thread(current);
     context_switch(state, 0,  next, ((pcb_t*)next->parent)->cr3);
     set_current_thread(next);
+    apic_sendEOI();
 }
 
 void context_switch(cpu_state_t* cpu, thread_t* current_thread, thread_t* next_thread, uint32_t cr3){

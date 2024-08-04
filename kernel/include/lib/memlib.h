@@ -1,5 +1,4 @@
 #define NULL 0
-#define MEMORY_INIT_INT 0xC0
 
 #include <stdint.h>
 
