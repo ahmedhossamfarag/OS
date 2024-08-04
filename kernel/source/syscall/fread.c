@@ -1,6 +1,7 @@
 #include "io_syscall.h"
 #include "resources.h"
 #include "file_system.h"
+#include "libc.h"
 
 extern resource_queue_t* disk_queue;
 
@@ -30,12 +31,8 @@ static void fread_move_data(){
     asm volatile("mov %0, %%cr3" :: "r"(th_cr3));
 
     uint32_t start = args.seek - args.disk_seek * SectorSize;
-    uint32_t end = start + args.count;
-    char* to = args.to;
-    for(char* c = args.data + start; c < end; c++){
-        *to = *c;
-        to++;
-    }
+    
+    mem_copy(args.data + start, args.to, args.count);
     
     asm volatile("mov %0, %%cr3" :: "r"(current_cr3));
 }
