@@ -1,8 +1,8 @@
 #include "thlib.h"
 #include "syscall_map.h"
 
-uint8_t process_create(uint32_t pid, FILE* file, uint32_t stack){
-    asm("mov %0, %%esi\n\t""int $0x80"::"i"(CREATE_PROCESS_SYSCALL), "a"(pid), "b"((uint32_t)file), "d"(stack));
+uint8_t process_create(uint32_t pid, FILE* file){
+    asm("mov %0, %%esi\n\t""int $0x80"::"i"(CREATE_PROCESS_SYSCALL), "a"(pid), "b"((uint32_t)file));
 
     uint32_t result;
     asm("mov %%eax, %0":"=m"(result));

@@ -4,7 +4,10 @@
 #include "io_syscall.h"
 #include "libc.h"
 #include "pagging.h"
+#include "elf.h"
 
+#define PROCESS_STACK_SIZE 0x1000
+#define MEMORY_PADDING 0x100
 extern resource_queue_t* disk_queue;
 
 static struct
@@ -12,42 +15,52 @@ static struct
     uint32_t cr3;
     char* data;   
     uint32_t n_sectors;
-    char* to;
 } args;
 
 static void pcreate_error(){
     if(args.data){
         free((char*)args.data, args.n_sectors * SectorSize);
     }
+    if(args.cr3){
+        free_pagging_dir((uint32_t*) args.cr3);
+    }
     disk_queue->handler->cpu_state.eax = 0;
     thread_awake(disk_queue->handler);
     resource_queue_deque(disk_queue);
 }
 
-static void pcreate_move_data(){
+static uint8_t pcreate_read_elf(uint32_t* eip){
     uint32_t current_cr3;
     asm("mov %%cr3, %0":"=r"(current_cr3));
     uint32_t th_cr3 = args.cr3;
     asm volatile("mov %0, %%cr3" :: "r"(th_cr3));
 
-    mem_copy(args.data, args.to, args.n_sectors*SectorSize);
+    uint8_t res = elf_load_file(args.data, eip);
 
     asm volatile("mov %0, %%cr3" :: "r"(current_cr3));
+
+    return res;
 }
 
-static void pcreate_add(){
+static void pcreate_add(uint32_t eip){
     cpu_state_t* state = &disk_queue->handler->cpu_state;
     pcb_t* parent = (pcb_t*) disk_queue->handler->parent;
-    add_new_process(parent->pid, state->eax, args.cr3, state->edx, args.n_sectors * SectorSize);
+    uint32_t ebp = args.n_sectors * SectorSize + PROCESS_STACK_SIZE;
+    add_new_process(parent->pid, state->eax, args.cr3, eip, ebp, ebp + MEMORY_PADDING);
 }
 
 static void pcreate_success(){
-    pcreate_move_data();
+    uint32_t eip;
+    uint8_t res = pcreate_read_elf(&eip);
     if(args.data){
         free((char*)args.data, args.n_sectors * SectorSize);
     }
-    pcreate_add();
-    disk_queue->handler->cpu_state.eax = 1;
+    if(res){
+        pcreate_add(eip);
+    }else{
+        free_pagging_dir((uint32_t*) args.cr3);
+    }
+    disk_queue->handler->cpu_state.eax = res;
     thread_awake(disk_queue->handler);
     resource_queue_deque(disk_queue);
 }
@@ -71,7 +84,6 @@ static void pcreate_proc(){
         pcreate_error();
         return;
     }
-    args.to = 0;
     args.n_sectors = ((file_entity_t*)fs)->n_blocks;
     args.data = alloc(args.n_sectors * SectorSize);
 

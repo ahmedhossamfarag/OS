@@ -55,7 +55,7 @@ void process_init();
 
 pcb_t* get_default_process();
 
-uint8_t add_new_process(uint32_t pid, uint32_t ppid, uint32_t cr3, uint32_t ebp, uint32_t memo_begin);
+uint8_t add_new_process(uint32_t pid, uint32_t ppid, uint32_t cr3, uint32_t eip, uint32_t ebp, uint32_t memo_begin);
 
 void remove_process(pcb_t* process);
 

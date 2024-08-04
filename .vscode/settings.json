@@ -31,6 +31,8 @@
         "cstdint": "c",
         "pci.h": "c",
         "vga.h": "c",
-        "vga_print.h": "c"
+        "vga_print.h": "c",
+        "cstdlib": "c",
+        "thlib.h": "c"
     }
 }
