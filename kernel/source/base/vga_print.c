@@ -7,7 +7,7 @@ extern uint16_t pitch;
 extern uint16_t width;
 extern uint16_t height;
 
-uint32_t vga_offset;
+static uint32_t vga_offset;
 
 #define VgaLineLn (width/CHAR_WIDTH)
 #define VgaNoLines (height/FONT_HEIGHT)

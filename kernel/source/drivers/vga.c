@@ -65,16 +65,19 @@ void vga_copy_buffer(uint8_t *buffer)
 
 void vga_copy_image(uint8_t *image, uint32_t x, uint32_t y, uint32_t img_width, uint32_t img_height)
 {
-    if(x+img_width > width) img_width = width - x;
-    if(y+img_height > height) img_height = height - y;
+    uint32_t length = img_width * pitch / width;
+    uint32_t copyw = img_width;
+    uint32_t copyh = img_height;
+    if(x+img_width > width) copyw = width - x;
+    if(y+img_height > height) copyh = height - y;
+    uint32_t copyl = copyw * pitch / width;
     
-    uint8_t *framepntr = framebuffer + y * pitch + x;
-    uint32_t line = img_width * pitch / width;
-    for (uint32_t i = 0; i < img_height; i++)
+    uint8_t *framepntr = framebuffer + y * pitch + x;    
+    for (uint32_t i = 0; i < copyh; i++)
     {
-        mem_copy((char*)image, (char*)framepntr, line);
+        mem_copy((char*)image, (char*)framepntr, copyl);
         framepntr += pitch;
-        image += line;
+        image += length;
     }
     
 }

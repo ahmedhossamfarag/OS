@@ -15,11 +15,10 @@ void mem_copy(char *from, char *to, unsigned int size)
    }else if(to > from){
         __asm__ __volatile__ (
             "std\n\t"                      // Set the direction flag to ensure backward copying
-            "rep movsd\n\t"                // Copy 32-bit chunks
-            "mov %3, %%ecx\n\t"            // Remaining bytes count
-            "rep movsb"                    // Copy remaining bytes
+            "rep movsb\n\t"                    // Copy remaining bytes
+            "cld"
             : /* No output operands */
-            : "D" (to + size - 1), "S" (from + size - 1), "c" (size / 4), "r" (size % 4)
+            : "D" (to + size - 1), "S" (from + size - 1), "c" (size)
             : "memory"
         );
    }

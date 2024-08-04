@@ -1,6 +1,7 @@
 #include "graphics.h"
 #include "vga.h"
 #include "math.h"
+#include "memory.h"
 
 extern uint16_t pitch;
 extern uint16_t width;
@@ -11,7 +12,7 @@ uint8_t* back_buffer;
 
 void graphics_init()
 {
-    back_buffer = (uint8_t*) BACk_BUFFER_OFFSET;
+    back_buffer = (uint8_t*) alloc(pitch*height);
     graphics_clear(0);
 }
 
