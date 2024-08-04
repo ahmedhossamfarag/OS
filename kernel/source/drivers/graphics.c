@@ -16,7 +16,9 @@ void graphics_init()
 }
 
 void set_pixel(int x, int y, uint8_t color) {
-    back_buffer[y * pitch + x] = color;
+    if(x < width && y < height){
+        back_buffer[y * pitch + x] = color;
+    }
 }
 
 /* Bresenham's Line Algorithm */

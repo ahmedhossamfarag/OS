@@ -1,6 +1,6 @@
 #include "io_syscall.h"
 #include "resources.h"
-#include "screen_print.h"
+#include "vga_print.h"
 
 void* prints_lock;
 
@@ -12,7 +12,7 @@ void prints_handler(cpu_state_t* state)
 
     resource_lock_request(&prints_lock, thread);
 
-    screen_print_str(str);
+    print(str);
 
     resource_lock_free(&prints_lock, thread); 
 

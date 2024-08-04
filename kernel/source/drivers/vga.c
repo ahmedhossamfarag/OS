@@ -43,16 +43,16 @@ void vga_clear(uint8_t color)
     }
 }
 
-void vga_draw_char(int x, int y, char c, unsigned char color) {
+void vga_draw_char(int x, int y, char c, uint8_t fg, uint8_t bg) {
     uint8_t *glyph = font_map + c * FONT_HEIGHT;
     uint8_t *framepntr = framebuffer + y * pitch + x;
     for (int i = 0; i < FONT_HEIGHT; i++) {
         uint8_t line = glyph[i];
         for (int j = 0; j < 8; j++) {
             if (line & (0x80 >> j)) {
-                framepntr[j +  i * pitch] = color;
+                framepntr[j +  i * pitch] = fg;
             }else{
-                framepntr[j +  i * pitch] = 0;
+                framepntr[j +  i * pitch] = bg;
             }
         }
     }
@@ -65,6 +65,9 @@ void vga_copy_buffer(uint8_t *buffer)
 
 void vga_copy_image(uint8_t *image, uint32_t x, uint32_t y, uint32_t img_width, uint32_t img_height)
 {
+    if(x+img_width > width) img_width = width - x;
+    if(y+img_height > height) img_height = height - y;
+    
     uint8_t *framepntr = framebuffer + y * pitch + x;
     uint32_t line = img_width * pitch / width;
     for (uint32_t i = 0; i < img_height; i++)

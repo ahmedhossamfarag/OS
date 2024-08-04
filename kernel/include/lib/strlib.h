@@ -18,3 +18,6 @@ void str_copy(const char* from, char* to);
 void str_copy_n(const char* from, char* to, unsigned int n);
 
 void str_split(const char* str, char sep, char** splits, char* out_str);
+
+#define sint(x) int_to_str(x, 0)
+#define sxint(x) int_to_hex_str(x, 0)

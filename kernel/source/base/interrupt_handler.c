@@ -1,5 +1,5 @@
 #include "interrupt_handler.h"
-#include "screen_print.h"
+#include "vga_print.h"
 #include "pic.h"
 #include "interrupt.h"
 #include "apic.h"
@@ -22,7 +22,7 @@ void interrupt_handler_init()
 
 void exception_handler(cpu_state_t* cpu)
 {
-    screen_print_str("\nException Handler");
+    print("\nException Handler");
 }
 
 void pic_handler(void) {
@@ -41,9 +41,9 @@ void pic_handler(void) {
         pic_sendEOI(8);
     }
 
-    screen_print_str("pic ");
+    print("pic ");
     char s[10];
-    screen_print_str(int_to_hex_str(isr, s));
+    print(int_to_hex_str(isr, s));
 }
 
 extern void (*syscall_map[NUM_SYSCALL])(cpu_state_t*);
