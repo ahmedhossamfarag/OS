@@ -32,7 +32,7 @@ static void fread_move_data(){
     uint32_t start = args.seek - args.disk_seek * SectorSize;
     uint32_t end = start + args.count;
     char* to = args.to;
-    for(char* c = args.data + start; c < c + end; c++){
+    for(char* c = args.data + start; c < end; c++){
         *to = *c;
         to++;
     }
@@ -66,16 +66,16 @@ static void fread_proc(){
         return;
     }
 
+
+    args.disk_seek = args.seek / SectorSize;
+    args.disk_count = math_cielm(args.seek + args.count, SectorSize) - args.disk_seek;
+
     args.data = alloc(args.disk_count * SectorSize);
 
     if(!args.data){
         fread_error();
         return;
     }
-
-    args.disk_seek = args.seek / SectorSize;
-    args.disk_count = math_cielm(args.seek + args.count, SectorSize) - args.disk_seek;
-
     file_read((file_entity_t*)fs, args.data, args.disk_seek, args.disk_count, fread_success, fread_error);
 }
 
