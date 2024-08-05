@@ -68,7 +68,7 @@ typedef struct
     uint32_t sh_name;      // Section name (string tbl index)
     uint32_t sh_type;      // Section type
     uint32_t sh_flags;     // Section flags
-    uint32_t sh_addr;      // Section virtual addr at execution
+    uint32_t sh_vaddr;      // Section virtual addr at execution
     uint32_t sh_offset;    // Section file offset
     uint32_t sh_size;      // Section size in bytes
     uint32_t sh_link;      // Link to another section
@@ -77,15 +77,41 @@ typedef struct
     uint32_t sh_entsize;   // Entry size if section holds table
 } elf32_shdr_t;
 
-typedef enum
-{
-    SHT_NULL = 0,     // Null section
-    SHT_PROGBITS = 1, // Program information
-    SHT_SYMTAB = 2,   // Symbol table
-    SHT_STRTAB = 3,   // String table
-    SHT_RELA = 4,     // Relocation (w/ addend)
-    SHT_NOBITS = 8,   // Not present in file
-    SHT_REL = 9,      // Relocation (no addend)
+typedef enum {
+    SHT_NULL = 0x0,                // Marks an unused section header
+    SHT_PROGBITS = 0x1,            // Contains information defined by the program
+    SHT_SYMTAB = 0x2,              // Contains a linker symbol table
+    SHT_STRTAB = 0x3,              // Contains a string table
+    SHT_RELA = 0x4,                // Contains "Rela" type relocation entries
+    SHT_HASH = 0x5,                // Contains a symbol hash table
+    SHT_DYNAMIC = 0x6,             // Contains information for dynamic linking
+    SHT_NOTE = 0x7,                // Contains information that marks files
+    SHT_NOBITS = 0x8,              // Contains uninitialized data
+    SHT_REL = 0x9,                 // Contains "Rel" type relocation entries
+    SHT_SHLIB = 0x0A,              // Reserved for future use
+    SHT_DYNSYM = 0x0B,             // Contains a dynamic linker symbol table
+    SHT_INIT_ARRAY = 0x0E,         // Contains pointers to initialization functions
+    SHT_FINI_ARRAY = 0x0F,         // Contains pointers to termination functions
+    SHT_PREINIT_ARRAY = 0x10,      // Contains pointers to pre-initialization functions
+    SHT_GROUP = 0x11,              // Identifies a section group
+    SHT_SYMTAB_SHNDX = 0x12,       // Contains extended section indices
+    SHT_NUM = 0x13,                // Number of defined types
+    SHT_LOOS = 0x60000000,         // Start of OS-specific
+    SHT_GNU_ATTRIBUTES = 0x6ffffff5, // Object attributes
+    SHT_GNU_HASH = 0x6ffffff6,     // GNU-style hash table
+    SHT_GNU_LIBLIST = 0x6ffffff7,  // Prelink library list
+    SHT_CHECKSUM = 0x6ffffff8,     // Checksum for ELF file content
+    SHT_LOSUNW = 0x6ffffffa,       // Sun-specific low boundary
+    SHT_SUNW_COMDAT = 0x6ffffffb,  // Sun-specific COMDAT section
+    SHT_SUNW_syminfo = 0x6ffffffc, // Sun-specific symbol information
+    SHT_GNU_verdef = 0x6ffffffd,   // Version definition section
+    SHT_GNU_verneed = 0x6ffffffe,  // Version needs section
+    SHT_GNU_versym = 0x6fffffff,   // Version symbol table
+    SHT_HIOS = 0x6fffffff,         // End of OS-specific
+    SHT_LOPROC = 0x70000000,       // Start of processor-specific
+    SHT_HIPROC = 0x7fffffff,       // End of processor-specific
+    SHT_LOUSER = 0x80000000,       // Start of application-specific
+    SHT_HIUSER = 0x8fffffff        // End of application-specific
 } sht_types_t;
 
 typedef enum
@@ -104,8 +130,8 @@ typedef struct
     uint16_t st_shndx;      // Section index
 } elf32_sym_t;
 
-#define ELF32_ST_BIND(INFO) ((INFO) >> 4)
-#define ELF32_ST_TYPE(INFO) ((INFO) & 0x0F)
+#define ELF32_ST_BIND(INFO) ((INFO) >> 4) // Symbol binding
+#define ELF32_ST_TYPE(INFO) ((INFO) & 0x0F) // Symbol type
 
 typedef enum
 {
@@ -141,7 +167,8 @@ typedef enum
 {
     R_386_NONE = 0, // No relocation
     R_386_32 = 1,   // Symbol + Offset
-    R_386_PC32 = 2  // Symbol + Offset - Section Offset
+    R_386_PC32 = 2,  // Symbol + Offset - Section Offset
+    R_386_GOT32 = 6 //  Address of the symbol in the GOT.
 } rtT_types_t;
 
 uint32_t elf_load_file(void *file, uint32_t *eip);

@@ -23,7 +23,7 @@ GCC_INCLUDE := ${IUSER_LIBS} -Ishell/include
 	nasm $< -f elf -o $@
 
 # Build the kernel binary
-shell.bin: shell_entry.o ${C_OBJ} ${ASM_OBJ} ${KERNEL_LIBS_OBJ} ${USER_LIBS_OBJ}
+shell.bin: shell_entry.o ${C_OBJ} ${ASM_OBJ} ${USER_LIBS_OBJ}
 	g++ -m32 -o $@ $^ -z noexecstack
 
 all: shell.bin

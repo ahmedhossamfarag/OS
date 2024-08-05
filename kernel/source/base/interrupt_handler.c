@@ -16,12 +16,18 @@ void interrupt_handler_init()
 
 static void track_exception(cpu_state_t* cpu){
     char s[20];
+    print("PID: ")
+    println(int_to_hex_str(get_current_process()->pid, s))
+    print("TID: ")
+    println(int_to_hex_str(get_current_thread()->tid, s))
+    print("CR3: ")
+    println(int_to_hex_str(get_current_process()->cr3, s))
     print("CS: ")
     println(int_to_hex_str(cpu->cs, s))
     print("EIP: ")
     println(int_to_hex_str(cpu->eip, s))
     print("ESP: ")
-    println(int_to_hex_str(cpu->esp, s))
+    println(int_to_hex_str(cpu->user_esp, s))
 }
 
 void exception_handler(cpu_state_t* cpu)
