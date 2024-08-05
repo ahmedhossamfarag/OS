@@ -7,7 +7,9 @@
                 "${workspaceFolder}/kernel/include/drivers",
                 "${workspaceFolder}/kernel/include/lib",
                 "${workspaceFolder}/kernel/include/process",
-                "${workspaceFolder}/kernel/include/syscall"
+                "${workspaceFolder}/kernel/include/syscall",
+                "${workspaceFolder}/user/lib/include",
+                "${workspaceFolder}/user/shell/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

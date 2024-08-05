@@ -22,7 +22,9 @@ typedef enum
 {
     ET_NONE = 0, // Unkown Type
     ET_REL = 1,  // Relocatable File
-    ET_EXEC = 2  // Executable File
+    ET_EXEC = 2,  // Executable File
+    ET_DYN = 3, // Dynamic Shared Lib
+    ET_CORE = 4 // Core File
 } elf_type_t;
 
 typedef struct
@@ -142,4 +144,4 @@ typedef enum
     R_386_PC32 = 2  // Symbol + Offset - Section Offset
 } rtT_types_t;
 
-uint8_t elf_load_file(void *file, uint32_t *eip);
+uint32_t elf_load_file(void *file, uint32_t *eip);

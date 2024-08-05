@@ -1,6 +1,7 @@
 #include "elf.h"
 #include "libc.h"
 #include "info.h"
+#include "math.h"
 
 /* Check the file is elf */
 static inline uint8_t elf_check_file(elf32_ehdr_t *hdr) {
@@ -28,7 +29,7 @@ static inline uint8_t elf_check_supported(elf32_ehdr_t *hdr) {
 
 /* Check elf is executable */
 static inline uint8_t elf_check_executable(elf32_ehdr_t *hdr) {
-    return hdr->e_type == ET_EXEC;
+    return hdr->e_type == ET_EXEC || hdr->e_type == ET_DYN;
 }
 
 static inline uint8_t elf_check_mregion(uint32_t offset, uint32_t size){
@@ -45,33 +46,37 @@ static inline elf32_phdr_t *elf_pheader(elf32_ehdr_t *hdr) {
 }
 
 /* Load program segment into memory*/
-static inline uint8_t elf_load_psegment(elf32_phdr_t *phdr, char* file) {
+static inline uint32_t elf_load_psegment(elf32_phdr_t *phdr, char* file) {
     if(!elf_check_mregion(phdr->p_vaddr, phdr->p_memsz)) return 0;
 
     char* sagment = mem_set((char*)phdr->p_vaddr, 0, phdr->p_memsz);
-    mem_copy((char*)phdr->p_vaddr, file + phdr->p_offset, phdr->p_filesz);
+    uint32_t sz = math_min(phdr->p_memsz, phdr->p_filesz);
+    mem_copy(file + phdr->p_offset, (char*)phdr->p_vaddr, sz);
 
-    return 1;
+    return phdr->p_vaddr + phdr->p_memsz;
 }
 
 /* Read all program headers */
-static inline uint8_t elf_read_program_headers(elf32_ehdr_t *ehdr) {
+static inline uint32_t elf_read_program_headers(elf32_ehdr_t *ehdr) {
     elf32_phdr_t* phdr = elf_pheader(ehdr);
+    uint32_t textend = 0;
     for (int i = 0; i < ehdr->e_phnum; i++) {
         if (phdr->p_type == PT_LOAD) {
-            if(!elf_load_psegment(phdr, (char*)ehdr)) return 0;
+            uint32_t end = elf_load_psegment(phdr, (char*)ehdr);
+            if(!end) return 0;
+            textend = math_max(textend, end);
         }
         phdr ++;
     }
-    return 1;
+    return textend;
 }
 
-uint8_t elf_load_file(void* file, uint32_t* eip){
+uint32_t elf_load_file(void* file, uint32_t* eip){
     elf32_ehdr_t* ehdr = (elf32_ehdr_t*) file;
     if(!elf_check_file(ehdr) || !elf_check_supported(ehdr) || !elf_check_executable(ehdr)){
         return 0;
     }
-    if(!elf_read_program_headers(ehdr)) return 0;
+
     *eip = ehdr->e_entry;
-    return 1;
+    return elf_read_program_headers(ehdr);
 }

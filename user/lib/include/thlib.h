@@ -5,7 +5,7 @@ uint8_t process_create(uint32_t pid, FILE* file);
 
 uint8_t thread_create(uint32_t tid, void* start, uint32_t stack);
 
-void process_exit();
+extern "C" void process_exit();
 
 void thread_exit();
 

@@ -14,9 +14,20 @@ void interrupt_handler_init()
     idt_set_user_entry(0x80, (uint32_t)isr_syscall_handler);
 }
 
+static void track_exception(cpu_state_t* cpu){
+    char s[20];
+    print("CS: ")
+    println(int_to_hex_str(cpu->cs, s))
+    print("EIP: ")
+    println(int_to_hex_str(cpu->eip, s))
+    print("ESP: ")
+    println(int_to_hex_str(cpu->esp, s))
+}
+
 void exception_handler(cpu_state_t* cpu)
 {
-    print("\nException Handler");
+    print("\nException Handler\n");
+    track_exception(cpu);
     schedule_thread_terminated(cpu);
 }
 

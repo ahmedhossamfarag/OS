@@ -18,7 +18,7 @@ void minit()
 	*(headpntr+1) = MemoryEnd - MemoryBeginAddress;
 }
 
-static char* alloc(uint32_t size)
+static void* alloc(uint32_t size)
 {
 	if(mhead == 0) return NULL;
 
@@ -65,7 +65,7 @@ static char* alloc(uint32_t size)
 	return NULL;
 }
 
-static void free(char* ptr, uint32_t size)
+static void free(void* ptr, uint32_t size)
 {
 	uint32_t* free_block = (uint32_t*)ptr;
 	
@@ -182,14 +182,14 @@ static uint32_t get_esp(){
 #define mrlock() resource_lock_request(&lock, (void*)(get_esp()))
 #define mflock() resource_lock_free(&lock, (void*)(get_esp()))
 
-char* malloc(uint32_t size){
+void* malloc(uint32_t size){
 	mrlock();
-	char* ofs = alloc(size);
+	void* ofs = alloc(size);
 	mflock();
 	return ofs;
 }
 
-void mfree(char* ptr, uint32_t size){
+void mfree(void* ptr, uint32_t size){
 	mrlock();
 	free(ptr, size);
 	mflock();

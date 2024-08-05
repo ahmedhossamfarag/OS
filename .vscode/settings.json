@@ -36,6 +36,9 @@
         "thlib.h": "c",
         "pagging.h": "c",
         "interrupt.h": "c",
-        "apic.h": "c"
+        "apic.h": "c",
+        "elf.h": "c",
+        "random": "c",
+        "numbers": "c"
     }
 }
