@@ -82,6 +82,10 @@ static void mfree(char* ptr, uint32_t size)
 	if((uint32_t)free_block < MemoryBeginAddress || (uint32_t)free_block >= MemoryEnd)
 		return;
 
+	if((uint32_t)free_block + (uint64_t)size >= MemoryEnd){
+		return;
+	}
+
 	// define pntr
 	uint32_t* current_block;
 	uint32_t current_block_size;
@@ -106,9 +110,12 @@ static void mfree(char* ptr, uint32_t size)
 		// head points to the end
 		if(head == MemoryEnd)
 		{
-			*free_block  = *current_block;
-			*(free_block+1) = size;
-			*current_block = (uint32_t)free_block;
+			// free block not exceed memory end
+			if((uint32_t)free_block + size <= MemoryEnd){
+				*free_block  = *current_block;
+				*(free_block+1) = size;
+				*current_block = (uint32_t)free_block;
+			}
 		}
 		// head points to a block
 		else
@@ -121,7 +128,8 @@ static void mfree(char* ptr, uint32_t size)
 				*(free_block+1) = size + *(next_block+1);
 				*current_block = (uint32_t)free_block;
 			}
-			else
+			// free block not interset next block
+			else if((uint32_t)free_block + size < (uint32_t)next_block)
 			{
 				*free_block  = *current_block;
 				*(free_block+1) = size;
@@ -143,23 +151,28 @@ static void mfree(char* ptr, uint32_t size)
 				*current_block = *next_block;
 				*(current_block+1) = current_block_size + size + *(next_block+1);
 			}
-			else
+			// free block not interset next block
+			else if((uint32_t)free_block + size < (uint32_t)next_block)
 			{
 				*(current_block+1) = current_block_size + size;
 			}
 		}
-		else if((uint32_t)free_block + size == (uint32_t)next_block)
-		{
-			// merge with next block
-			*free_block  = *next_block;
-			*(free_block+1) = size + *(next_block+1);
-			*current_block = (uint32_t)free_block;
-		}
-		else
-		{
-			*free_block  = *current_block;
-			*(free_block+1) = size;
-			*current_block = (uint32_t)free_block;
+		// free block not interset with current block
+		else if((uint32_t)current_block + current_block_size < (uint32_t)free_block){
+			if((uint32_t)free_block + size == (uint32_t)next_block)
+			{
+				// merge with next block
+				*free_block  = *next_block;
+				*(free_block+1) = size + *(next_block+1);
+				*current_block = (uint32_t)free_block;
+			}
+			// free block not interset next block
+			else if((uint32_t)free_block + size < (uint32_t)next_block)
+			{
+				*free_block  = *current_block;
+				*(free_block+1) = size;
+				*current_block = (uint32_t)free_block;
+			}
 		}
 	}
 	
