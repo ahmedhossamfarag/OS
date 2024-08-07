@@ -14,7 +14,8 @@ os-image: boot.bin kernel.bin disk.bin
 
 shell: os-image
 	$(MAKE) -C user
-	dd if=user/shell.bin of=os-image bs=512 seek=$(SHELL_OFFSET) conv=notrunc
+	dd if=user/shell.o of=os-image bs=512 seek=$(SHELL_OFFSET) conv=notrunc
+	dd if=user/libmylib.so of=os-image bs=512 seek=251 conv=notrunc
 
 
 all: os-image shell
@@ -25,4 +26,5 @@ run: all
 clean:
 	$(MAKE) -C user clean
 	find . -name '*.o' -type f -delete
+	find . -name '*.so' -type f -delete
 	rm -fr *.bin *.dis os-image

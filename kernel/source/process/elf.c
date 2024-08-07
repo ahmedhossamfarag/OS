@@ -2,36 +2,106 @@
 #include "libc.h"
 #include "info.h"
 #include "math.h"
+#include "strlib.h"
 
-/* Check the file is elf */
-static inline uint8_t elf_check_file(elf32_ehdr_t *hdr) {
-    // Check the magic number
-    if (hdr->e_ident[0] != 0x7f || hdr->e_ident[1] != 'E' || 
-        hdr->e_ident[2] != 'L' || hdr->e_ident[3] != 'F') {
-        return 0;
-    }
-
-    return 1;
+static inline uint8_t elf_check_file(Elf32_Ehdr* ehdr){
+    return ehdr->e_ident[0] == EI_MAG0 && ehdr->e_ident[1] == EI_MAG1 && 
+        ehdr->e_ident[2] == EI_MAG2 && ehdr->e_ident[3] == EI_MAG3;
 }
 
-/* Check elf is supported */
-static inline uint8_t elf_check_supported(elf32_ehdr_t *hdr) {
-    if (hdr->e_ident[4] != 1) { // Check if it's a 32-bit ELF file
-        return 0;
-    }
-
-    if (hdr->e_ident[5] != 1) { // Check if it's using little endian
-        return 0;
-    }
-
-    return 1;
+uint8_t elf_check_supported(Elf32_Ehdr* ehdr){
+    return ehdr->e_machine == EM_386 && ehdr->e_ident[EI_CLASS] == ELFCLASS32 &&
+        ehdr->e_ident[EI_DATA] == ELFDATA2LSB && ehdr->e_version >= EV_CURRENT;
 }
 
-/* Check elf is executable */
-static inline uint8_t elf_check_executable(elf32_ehdr_t *hdr) {
-    return hdr->e_type == ET_EXEC || hdr->e_type == ET_DYN;
+uint8_t elf_check_executable(Elf32_Ehdr* ehdr){
+    return ehdr->e_type == ET_EXEC || ehdr->e_type == ET_DYN;
 }
 
+static inline void elf_get_ehdr(Elf32_Map *map, char *file)
+{
+    Elf32_Ehdr* ehdr = (Elf32_Ehdr*) file;
+    if(elf_check_file(ehdr)){
+        map->ehdr = ehdr;
+    }else{
+        map->ehdr = 0;
+    }
+}
+
+static inline void elf_get_shdr(Elf32_Map *map, char *file)
+{
+    if(map->ehdr->e_shoff){
+        map->shdr = (Elf32_Shdr*)(file + map->ehdr->e_shoff);
+        if(map->ehdr->e_shnum){
+            map->nshdr = map->ehdr->e_shnum;
+        }else{
+            map->nshdr = map->shdr->sh_size;
+        }
+    }else{
+        map->shdr = 0;
+        map->nshdr = 0;
+    }
+}
+
+static inline void elf_get_phdr(Elf32_Map *map, char *file)
+{
+    if(map->ehdr->e_phoff){
+        map->phdr = (Elf32_Phdr*)(file + map->ehdr->e_phoff);
+        if(map->ehdr->e_phnum != PN_XNUM){
+            map->nphdr = map->ehdr->e_phnum;
+        }else{
+            map->nphdr = map->shdr->sh_info;
+        }
+    }else{
+        map->phdr = 0;
+        map->nphdr = 0;
+    }
+}
+
+static inline void elf_get_str(Elf32_Map *map, char *file)
+{
+    if(map->ehdr->e_shstrndx != SHN_UNDEF){
+        if(map->ehdr->e_shstrndx != SHN_XINDEX){
+            map->str = file + map->shdr[map->ehdr->e_shstrndx].sh_offset;
+        }else{
+            map->str = file + map->shdr[map->shdr->sh_link].sh_offset;
+        }
+    }else{
+        map->str = 0;
+    }
+}
+
+void elf_get_map(Elf32_Map *map, char *file)
+{
+    elf_get_ehdr(map, file);
+    if(map->ehdr){
+        elf_get_shdr(map, file);
+        if(map->shdr){
+            elf_get_phdr(map, file);
+            elf_get_str(map, file);
+        }
+    }
+}
+
+char* elf_get_str_section(Elf32_Map* map, uint32_t shindx){
+    char* file = (char*) map->ehdr;
+    return file + map->shdr[shindx].sh_offset;
+}
+
+void* elf_get_table(Elf32_Map* map, Elf32_Shdr* shdr){
+    char* file = (char*) map->ehdr;
+    return (Elf32_Sym*) (file + shdr->sh_offset);
+}
+
+Elf32_Shdr* elf_get_sheader(Elf32_Map* map, uint32_t shindx){
+    return &map->shdr[shindx];
+}
+
+uint32_t elf_get_num_entries(Elf32_Shdr* shdr){
+    return shdr->sh_size / shdr->sh_entsize;
+}
+
+/* Check memory region does not intersect with kernel region and drivers region */
 static inline uint8_t elf_check_mregion(uint32_t offset, uint32_t size){
     #define between(x, a, b) ((x) >= (a) && (x) <= (b))
     #define intersect(x,y,a,b) (between(x, a, b) || between(y, a, b) || between(a, x, y)) 
@@ -40,166 +110,191 @@ static inline uint8_t elf_check_mregion(uint32_t offset, uint32_t size){
     return 1;
 }
 
-/* Get program header start */
-static inline elf32_phdr_t *elf_pheader(elf32_ehdr_t *hdr) {
-	return (elf32_phdr_t *)((uint32_t)hdr + hdr->e_phoff);
-}
+uint8_t elf_load_file(Elf32_Map* map, uint32_t* offset){
+    uint32_t org = *offset;
+    map->org = org;
 
-/* Load program segment into memory*/
-static inline uint32_t elf_load_psegment(elf32_phdr_t *phdr, char* file) {
-    if(!elf_check_mregion(phdr->p_vaddr, phdr->p_memsz)) return 0;
+    char* file = (char*) map->ehdr;
 
-    char* sagment = mem_set((char*)phdr->p_vaddr, 0, phdr->p_memsz);
-    uint32_t sz = math_min(phdr->p_memsz, phdr->p_filesz);
-    mem_copy(file + phdr->p_offset, (char*)phdr->p_vaddr, sz);
+    uint32_t max_offset = 0; 
 
-    return phdr->p_vaddr + phdr->p_memsz;
-}
+    // copy program sections
+    Elf32_Phdr* phdr = map->phdr;
+    for (uint32_t i = 0; i < map->nphdr; i++)
+    {
+        if(phdr->p_type == PT_LOAD){
+            // check memory region
+            if(!elf_check_mregion(org + phdr->p_vaddr , phdr->p_memsz)) return 0;
 
-/* Read all program headers */
-static inline uint32_t elf_read_program_headers(elf32_ehdr_t *ehdr) {
-    elf32_phdr_t* phdr = elf_pheader(ehdr);
-    uint32_t textend = 0;
-    for (int i = 0; i < ehdr->e_phnum; i++) {
-        if (phdr->p_type == PT_LOAD) {
-            uint32_t end = elf_load_psegment(phdr, (char*)ehdr);
-            if(!end) return 0;
-            textend = math_max(textend, end);
+            // copy data
+            mem_copy(file + phdr->p_offset, (char*)org + phdr->p_vaddr, math_min(phdr->p_memsz, phdr->p_filesz));
+            if(phdr->p_memsz > phdr->p_filesz){
+                mem_set((char*)org + phdr->p_filesz, 0, phdr->p_memsz - phdr->p_filesz);
+            }
+
+            // updata max offset in memory
+            max_offset = math_max(max_offset, org + phdr->p_vaddr + phdr->p_memsz);
         }
-        phdr ++;
+        phdr ++ ;
     }
-    return textend;
+
+    // set bss sections to zero
+    Elf32_Shdr* shdr = map->shdr;
+    for (uint32_t i = 0; i < map->nshdr; i++)
+    {
+        if(shdr->sh_type == SHT_NOBITS){
+            // check memory region
+            if(!elf_check_mregion(org + shdr->sh_addr, shdr->sh_size)) return 0;
+
+            // set region to 0
+            mem_set((char*)org + shdr->sh_addr, 0, shdr->sh_size);
+
+            // updata max offset int memory
+            max_offset = math_max(max_offset, org + shdr->sh_addr + shdr->sh_size);
+        }
+
+        shdr ++;
+    }
+
+    // make offset multiple of 4k
+    *offset = math_cielm(org + max_offset, 0x1000);
+
+    return 1;
 }
 
-static inline elf32_shdr_t *elf_sheader(elf32_ehdr_t *ehdr) {
-	return (elf32_shdr_t *)((int)ehdr + ehdr->e_shoff);
-}
+static void elf_get_dyn_dependecies(Elf32_Map* map, Elf32_Shdr* shdr, array_t* arr){
+    Elf32_Dyn* dyn = elf_get_table(map, shdr);
+    int n = elf_get_num_entries(shdr);
 
-static inline elf32_shdr_t *elf_section(elf32_ehdr_t *ehdr, int idx) {
-	return &elf_sheader(ehdr)[idx];
-}
-
-static inline char *elf_str_table(elf32_ehdr_t *ehdr) {
-	if(ehdr->e_shstrndx == 0) return 0;
-	return (char *)ehdr + elf_section(ehdr, ehdr->e_shstrndx)->sh_offset;
-}
-
-static inline char *elf_lookup_string(elf32_ehdr_t *ehdr, int offset) {
-	char *strtab = elf_str_table(ehdr);
-	if(strtab == 0) return 0;
-	return strtab + offset;
-}
-
-static inline void elf_read_symbol_table(elf32_shdr_t* shdr, elf32_ehdr_t* ehdr){
-    int n = shdr->sh_size / shdr->sh_entsize;
-    elf32_sym_t* sym = (elf32_sym_t*)((uint32_t)ehdr + shdr->sh_offset);
+    char *str = 0;
     for (int i = 0; i < n; i++)
     {
-        sym ++;
+        if(dyn[i].d_tag == DT_STRTAB){
+            str = ((char*)map->ehdr) + dyn[i].d_un.d_val;
+            break;
+        }
     }
-}
 
-static inline void elf_read_bss_section(elf32_shdr_t* shdr, elf32_ehdr_t* ehdr){
-    if (!shdr->sh_size)
+    if(!str){
         return;
+    }
 
-    if (shdr->sh_flags & SHF_ALLOC)
+    for (int i = 0; i < n; i++)
     {
-        if(!elf_check_mregion(shdr->sh_vaddr, shdr->sh_size)) return;
-        mem_set((char*)shdr->sh_vaddr, shdr->sh_size, 0);
+        if(dyn->d_tag == DT_NEEDED){
+            array_add(arr, str + dyn->d_un.d_val);
+        }
+        dyn ++;
     }
 }
 
-static inline uint32_t elf_lookup_symval(elf32_shdr_t* shdr, elf32_ehdr_t* ehdr, uint8_t indx){
-    if(shdr->sh_type != SHT_SYMTAB && shdr->sh_type != SHT_DYNSYM) return 0;
+void elf_get_dependecies(Elf32_Map* map, array_t* arr){
+    for (int i = 0; i < map->nshdr; i++)
+    {
+        Elf32_Shdr* shdr = map->shdr + i;
+        if(shdr->sh_type == SHT_DYNAMIC){
+            elf_get_dyn_dependecies(map, shdr, arr);
+        }
+    }
+}
 
-    int n = shdr->sh_size / shdr->sh_entsize;
-    elf32_sym_t* sym = (elf32_sym_t*)((uint32_t)ehdr + shdr->sh_offset);
-    
-    if(indx < n){
-        return sym[indx].st_value;
+static uint32_t elf_st_lookup_sym(Elf32_Map* map, Elf32_Shdr* shdr, char* name){
+    char* str = elf_get_str_section(map, shdr->sh_link);
+    int n = elf_get_num_entries(shdr);
+
+    Elf32_Sym* sym = (Elf32_Sym*)elf_get_table(map, shdr);
+    for (int i = 0; i < n; i++)
+    {
+        if(str_cmp(name, str + sym->st_name) == 0) return sym->st_value;
+
+        sym ++;
     }
     return 0;
 }
 
-static inline void elf_read_relocation_section(elf32_shdr_t* shdr, elf32_ehdr_t* ehdr){
-    elf32_shdr_t* sym_table = elf_section(ehdr, shdr->sh_link);
-    elf32_rel_t* rel = (elf32_rel_t*)((uint32_t) ehdr + shdr->sh_offset);
-    int n = shdr->sh_size / shdr->sh_entsize;
+uint32_t elf_lookup_sym(Elf32_Map* map, char* name){
+    Elf32_Shdr* shdr = map->shdr;
+
+    for (uint32_t i = 0; i < map->nshdr; i++)
+    {
+        if(shdr->sh_type == SHT_SYMTAB){
+            uint32_t value = elf_st_lookup_sym(map, shdr, name);
+            if(value) return value;
+
+        }
+        shdr ++;
+    }
+    
+    return 0;
+}
+
+static uint8_t elf_get_st_value(Elf32_Map* map, Elf32_Shdr* shdr, uint32_t indx, Elf32_Dependecies deps, uint32_t* st_value){
+
+    int n = elf_get_num_entries(shdr);
+    if(indx >= n) return 0;
+
+    Elf32_Sym* sym = (Elf32_Sym*)elf_get_table(map, shdr) + indx;
+    if(sym->st_shndx == SHN_UNDEF && deps.libs){
+        char* str = elf_get_str_section(map, shdr->sh_link);
+        *st_value = 0;
+        for (uint32_t i = 0; i < deps.nlibs; i++)
+        {
+            Elf32_Map* lib = deps.libs + i;
+            uint32_t value = elf_lookup_sym(lib, str + sym->st_name);
+            if(value){
+                *st_value = value + lib->org;
+                break;
+            }
+        }
+    }else{
+        *st_value = sym->st_value;
+    }
+
+    return 1;
+}
+
+static uint8_t elf_do_section_rel(Elf32_Map* map, Elf32_Shdr* shdr, Elf32_Dependecies deps){
+    Elf32_Shdr* st = map->shdr + shdr->sh_link;
+    Elf32_Rel* rel = elf_get_table(map, shdr);
+    int n = elf_get_num_entries(shdr);
+
     for (int i = 0; i < n; i++)
     {
-        uint32_t sym_index = ELF32_R_SYM(rel->r_info);
-        uint32_t type = ELF32_R_TYPE(rel->r_info);
-        uint32_t* ref = (uint32_t*)((uint32_t)ehdr + shdr->sh_offset+ rel->r_offset);
-        uint32_t symval = elf_lookup_symval(sym_table, ehdr, sym_index);
-        switch (type)
+        uint32_t sindx = ELF32_R_SYM(rel->r_info);
+        uint32_t rtype = ELF32_R_TYPE(rel->r_info);
+        uint32_t* target_address = (uint32_t*) (map->org + rel->r_offset);
+        uint32_t st_value = 0;
+        if(sindx){
+            elf_get_st_value(map, st, sindx, deps, &st_value);
+        }
+        switch (rtype)
         {
-        case R_386_32:
-            *ref = symval;
+        case R_386_GLOB_DAT: {
+            *target_address = map->org + st_value;
             break;
+        }
+        case R_386_JMP_SLOT: {
+            *target_address = st_value;
+        }
+        case R_386_RELATIVE: {
+            *target_address = map->org + *target_address;
+            break;
+        }
         default:
             break;
         }
         rel ++;
     }
-    
 }
 
-static inline void elf_read_relocationa_section(elf32_shdr_t* shdr, elf32_ehdr_t* ehdr){
-    elf32_shdr_t* sym_table = elf_section(ehdr, shdr->sh_link);
-    elf32_rela_t* rela = (elf32_rela_t*)((uint32_t) ehdr + shdr->sh_offset);
-    int n = shdr->sh_size / shdr->sh_entsize;
-    for (int i = 0; i < n; i++)
+uint8_t elf_do_rel(Elf32_Map* map, Elf32_Dependecies deps){
+    Elf32_Shdr* shdr = map->shdr;
+    for (uint32_t i = 0; i < map->nshdr; i++)
     {
-        uint32_t sym_index = ELF32_R_SYM(rela->r_info);
-        uint32_t type = ELF32_R_TYPE(rela->r_info);
-        uint32_t* ref = (uint32_t*)((uint32_t)ehdr + shdr->sh_offset+ rela->r_offset);
-        uint32_t symval = elf_lookup_symval(sym_table, ehdr, sym_index);
-        switch (type)
-        {
-        case R_386_32:
-            *ref = symval + rela->r_addend;
-            break;
-        default:
-            break;
+        if(shdr->sh_type == SHT_REL){
+            if(!elf_do_section_rel(map, shdr, deps)) return 0;
         }
-        rela ++;
-    }
-    
-}
-
-static inline void elf_read_section_headers(elf32_ehdr_t* ehdr){
-    elf32_shdr_t* shdr = elf_sheader(ehdr);
-    for (int i = 0; i < ehdr->e_shnum; i++)
-    {
-        switch (shdr->sh_type)
-        {
-        case SHT_NOBITS:
-            elf_read_bss_section(shdr, ehdr);
-            break;
-        case SHT_REL:
-            elf_read_relocation_section(shdr, ehdr);
-            break;
-        case SHT_RELA:
-            elf_read_relocationa_section(shdr, ehdr);
-            break;
-        default:
-            break;
-        }       
         shdr ++;
     }
-    
-}
-
-
-uint32_t elf_load_file(void* file, uint32_t* eip){
-    elf32_ehdr_t* ehdr = (elf32_ehdr_t*) file;
-    if(!elf_check_file(ehdr) || !elf_check_supported(ehdr) || !elf_check_executable(ehdr)){
-        return 0;
-    }
-
-    elf_read_section_headers(ehdr);
-
-    *eip = ehdr->e_entry;
-    return elf_read_program_headers(ehdr);
+    return 1;
 }

@@ -1,5 +1,5 @@
-#include "iolib.h"
-
+// #include "iolib.h"
+#include "mylib.h"
 
 int main(){
     prints("Shell..\n");

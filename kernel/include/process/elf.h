@@ -1,22 +1,102 @@
 #include <stdint.h>
+#include "dslib.h"
 
-typedef struct
-{
-    unsigned char e_ident[16]; // Magic number and other info
-    uint16_t e_type;           // Object file type
-    uint16_t e_machine;        // Architecture
-    uint32_t e_version;        // Object file version
-    uint32_t e_entry;          // Entry point virtual address
-    uint32_t e_phoff;          // Program header table file offset
-    uint32_t e_shoff;          // Section header table file offset
-    uint32_t e_flags;          // Processor-specific flags
-    uint16_t e_ehsize;         // ELF header size in bytes
-    uint16_t e_phentsize;      // Program header table entry size
-    uint16_t e_phnum;          // Program header table entry count
-    uint16_t e_shentsize;      // Section header table entry size
-    uint16_t e_shnum;          // Section header table entry count
-    uint16_t e_shstrndx;       // Section header string table index
-} elf32_ehdr_t;
+// ELF Header Magic Number
+#define EI_MAG0 0x7f
+#define EI_MAG1 'E'
+#define EI_MAG2 'L'
+#define EI_MAG3 'F'
+
+// ELF Header Size
+#define EI_NIDENT 16
+
+
+// ELF Identification Indexes
+#define EI_CLASS     4   // File class
+#define EI_DATA      5   // Data encoding
+#define EI_VERSION   6   // File version
+#define EI_OSABI     7   // OS/ABI identification
+#define EI_ABIVERSION 8  // ABI version
+
+// Phdr X num
+#define PN_XNUM 0xffff
+// Shdr X index
+#define SHN_XINDEX 0xffff 
+// Special Section Indexes
+#define SHN_UNDEF 0      // Undefined section
+
+// ELF32 Data Types
+typedef uint32_t Elf32_Addr;
+typedef uint16_t Elf32_Half;
+typedef uint32_t Elf32_Off;
+typedef int32_t  Elf32_Sword;
+typedef uint32_t Elf32_Word;
+
+// ELF Header
+typedef struct {
+    unsigned char e_ident[EI_NIDENT]; // Magic number and other info
+    Elf32_Half    e_type;             // Object file type
+    Elf32_Half    e_machine;          // Architecture
+    Elf32_Word    e_version;          // Object file version
+    Elf32_Addr    e_entry;            // Entry point virtual address
+    Elf32_Off     e_phoff;            // Program header table file offset
+    Elf32_Off     e_shoff;            // Section header table file offset
+    Elf32_Word    e_flags;            // Processor-specific flags
+    Elf32_Half    e_ehsize;           // ELF header size in bytes
+    Elf32_Half    e_phentsize;        // Program header table entry size
+    Elf32_Half    e_phnum;            // Program header table entry count
+    Elf32_Half    e_shentsize;        // Section header table entry size
+    Elf32_Half    e_shnum;            // Section header table entry count
+    Elf32_Half    e_shstrndx;         // Section header string table index
+} Elf32_Ehdr;
+
+// Section Header
+typedef struct {
+    Elf32_Word sh_name;      // Section name (string table index)
+    Elf32_Word sh_type;      // Section type
+    Elf32_Word sh_flags;     // Section flags
+    Elf32_Addr sh_addr;      // Section virtual addr at execution
+    Elf32_Off  sh_offset;    // Section file offset
+    Elf32_Word sh_size;      // Section size in bytes
+    Elf32_Word sh_link;      // Link to another section
+    Elf32_Word sh_info;      // Additional section information
+    Elf32_Word sh_addralign; // Section alignment
+    Elf32_Word sh_entsize;   // Entry size if section holds table
+} Elf32_Shdr;
+
+// Program Header
+typedef struct {
+    Elf32_Word p_type;    // Segment type
+    Elf32_Off  p_offset;  // Segment file offset
+    Elf32_Addr p_vaddr;   // Segment virtual address
+    Elf32_Addr p_paddr;   // Segment physical address
+    Elf32_Word p_filesz;  // Segment size in file
+    Elf32_Word p_memsz;   // Segment size in memory
+    Elf32_Word p_flags;   // Segment flags
+    Elf32_Word p_align;   // Segment alignment
+} Elf32_Phdr;
+
+typedef enum{
+    EM_NONE = 0,       // No machine
+    EM_386  = 3       // Intel 80386
+} Elf32_e_machine;
+
+typedef enum{
+    EV_NONE =   0,     // Invalid version
+    EV_CURRENT = 1     // Current version
+} Elf32_e_version;
+
+typedef enum{
+    ELFCLASSNONE = 0,   // Invalid class
+    ELFCLASS32  = 1,   // 32-bit objects
+    ELFCLASS64  = 2   // 64-bit objects
+} Elf32_file_class;
+
+typedef enum{
+    ELFDATANONE = 0,    // Invalid data encoding
+    ELFDATA2LSB = 1,    // 2's complement, little endian
+    ELFDATA2MSB = 2    // 2's complement, big endian
+} Elf32_data_ecoding;
 
 typedef enum
 {
@@ -25,19 +105,7 @@ typedef enum
     ET_EXEC = 2,  // Executable File
     ET_DYN = 3, // Dynamic Shared Lib
     ET_CORE = 4 // Core File
-} elf_type_t;
-
-typedef struct
-{
-    uint32_t p_type;   // Segment type
-    uint32_t p_offset; // Segment file offset
-    uint32_t p_vaddr;  // Segment virtual address
-    uint32_t p_paddr;  // Segment physical address
-    uint32_t p_filesz; // Segment size in file
-    uint32_t p_memsz;  // Segment size in memory
-    uint32_t p_flags;  // Segment flags
-    uint32_t p_align;  // Segment alignment
-} elf32_phdr_t;
+} Elf32_e_type;
 
 typedef enum
 {
@@ -61,21 +129,7 @@ typedef enum
     PT_HIOS = 0x6fffffff,         // End of OS-specific
     PT_LOPROC = 0x70000000,       // Start of processor-specific
     PT_HIPROC = 0x7fffffff        // End of processor-specific
-} elf32_ptype_t;
-
-typedef struct
-{
-    uint32_t sh_name;      // Section name (string tbl index)
-    uint32_t sh_type;      // Section type
-    uint32_t sh_flags;     // Section flags
-    uint32_t sh_vaddr;      // Section virtual addr at execution
-    uint32_t sh_offset;    // Section file offset
-    uint32_t sh_size;      // Section size in bytes
-    uint32_t sh_link;      // Link to another section
-    uint32_t sh_info;      // Additional section information
-    uint32_t sh_addralign; // Section alignment
-    uint32_t sh_entsize;   // Entry size if section holds table
-} elf32_shdr_t;
+} Elf32_p_type;
 
 typedef enum {
     SHT_NULL = 0x0,                // Marks an unused section header
@@ -112,23 +166,23 @@ typedef enum {
     SHT_HIPROC = 0x7fffffff,       // End of processor-specific
     SHT_LOUSER = 0x80000000,       // Start of application-specific
     SHT_HIUSER = 0x8fffffff        // End of application-specific
-} sht_types_t;
+} Elf32_sh_type;
 
 typedef enum
 {
     SHF_WRITE = 0x01, // Writable section
     SHF_ALLOC = 0x02  // Exists in memory
-} sht_attributes_t;
+} ELf32_sh_flag;
 
 typedef struct
 {
-    uint32_t st_name;       // Symbol name (string table index)
-    uint32_t st_value;      // Symbol value
-    uint32_t st_size;       // Symbol size
+    Elf32_Word st_name;       // Symbol name (string table index)
+    Elf32_Word st_value;      // Symbol value
+    Elf32_Word st_size;       // Symbol size
     unsigned char st_info;  // Symbol type and binding
     unsigned char st_other; // No meaning, 0
-    uint16_t st_shndx;      // Section index
-} elf32_sym_t;
+    Elf32_Half st_shndx;      // Section index
+} Elf32_Sym;
 
 #define ELF32_ST_BIND(INFO) ((INFO) >> 4) // Symbol binding
 #define ELF32_ST_TYPE(INFO) ((INFO) & 0x0F) // Symbol type
@@ -138,37 +192,129 @@ typedef enum
     STB_LOCAL = 0,  // Local scope
     STB_GLOBAL = 1, // Global scope
     STB_WEAK = 2    // Weak, (ie. __attribute__((weak)))
-} stT_bindings_t;
+} Elf32_st_binding;
 
 typedef enum
 {
     STT_NOTYPE = 0, // No type
     STT_OBJECT = 1, // Variables, arrays, etc.
     STT_FUNC = 2    // Methods or functions
-} stT_types_t;
+} Elf32_st_type;
 
 typedef struct
 {
     uint32_t r_offset;
     uint32_t r_info;
-} elf32_rel_t;
+} Elf32_Rel;
 
 typedef struct
 {
     uint32_t r_offset;
     uint32_t r_info;
     int32_t r_addend;
-} elf32_rela_t;
+} Elf32_Rela;
 
 #define ELF32_R_SYM(INFO) ((INFO) >> 8)
 #define ELF32_R_TYPE(INFO) ((uint8_t)(INFO))
 
-typedef enum
-{
-    R_386_NONE = 0, // No relocation
-    R_386_32 = 1,   // Symbol + Offset
-    R_386_PC32 = 2,  // Symbol + Offset - Section Offset
-    R_386_GOT32 = 6 //  Address of the symbol in the GOT.
-} rtT_types_t;
+typedef enum {
+    R_386_NONE = 0,        // No relocation
+    R_386_32 = 1,          // Direct 32-bit
+    R_386_PC32 = 2,        // PC relative 32-bit
+    R_386_GOT32 = 3,       // 32-bit GOT entry
+    R_386_PLT32 = 4,       // 32-bit PLT address
+    R_386_COPY = 5,        // Copy symbol at runtime
+    R_386_GLOB_DAT = 6,    // Create GOT entry
+    R_386_JMP_SLOT = 7,    // Create PLT entry
+    R_386_RELATIVE = 8,    // Adjust by program base
+    R_386_GOTOFF = 9,      // 32-bit offset to GOT
+    R_386_GOTPC = 10       // 32-bit PC relative offset to GOT
+} Elf32_rel_type;
 
-uint32_t elf_load_file(void *file, uint32_t *eip);
+typedef struct {
+    Elf32_Sword d_tag;  // Type of dynamic entry
+    union {
+        Elf32_Word d_val;  // Integer value
+        Elf32_Addr d_ptr;  // Address value
+        Elf32_Off d_off;
+    } d_un;
+} Elf32_Dyn;
+
+typedef enum {
+    DT_NULL = 0,         // Marks end of dynamic section
+    DT_NEEDED = 1,       // Name of needed library
+    DT_PLTRELSZ = 2,     // Size in bytes of PLT relocs
+    DT_PLTGOT = 3,       // Address of PLT and/or GOT
+    DT_HASH = 4,         // Address of symbol hash table
+    DT_STRTAB = 5,       // Address of string table
+    DT_SYMTAB = 6,       // Address of symbol table
+    DT_RELA = 7,         // Address of Rela relocs
+    DT_RELASZ = 8,       // Total size of Rela relocs
+    DT_RELAENT = 9,      // Size of one Rela reloc
+    DT_STRSZ = 10,       // Size of string table
+    DT_SYMENT = 11,      // Size of one symbol table entry
+    DT_INIT = 12,        // Address of init function
+    DT_FINI = 13,        // Address of termination function
+    DT_SONAME = 14,      // Name of shared object
+    DT_RPATH = 15,       // Library search path (deprecated)
+    DT_SYMBOLIC = 16,    // Start symbol search within local object
+    DT_REL = 17,         // Address of Rel relocs
+    DT_RELSZ = 18,       // Total size of Rel relocs
+    DT_RELENT = 19,      // Size of one Rel reloc
+    DT_PLTREL = 20,      // Type of reloc in PLT
+    DT_DEBUG = 21,       // For debugging; unspecified
+    DT_TEXTREL = 22,     // Reloc might modify .text
+    DT_JMPREL = 23,      // Address of PLT relocs
+    DT_BIND_NOW = 24,    // Process relocations of object now
+    DT_INIT_ARRAY = 25,  // Array with addresses of init functions
+    DT_FINI_ARRAY = 26,  // Array with addresses of fini functions
+    DT_INIT_ARRAYSZ = 27,// Size in bytes of DT_INIT_ARRAY
+    DT_FINI_ARRAYSZ = 28,// Size in bytes of DT_FINI_ARRAY
+    DT_RUNPATH = 29,     // Library search path
+    DT_FLAGS = 30,       // Flags for the object being loaded
+    DT_ENCODING = 32,    // Start of encoded range
+    DT_PREINIT_ARRAY = 32, // Array with addresses of preinit functions
+    DT_PREINIT_ARRAYSZ = 33,// Size in bytes of DT_PREINIT_ARRAY
+    DT_MAXPOSTAGS = 34,  // Number of positive tags
+    DT_LOOS = 0x60000000,// Start of OS-specific
+    DT_HIOS = 0x6fffffff,// End of OS-specific
+    DT_LOPROC = 0x70000000, // Start of processor-specific
+    DT_HIPROC = 0x7fffffff  // End of processor-specific
+} Elf32_d_tag;
+
+typedef struct
+{
+    Elf32_Ehdr* ehdr;
+    Elf32_Shdr* shdr;
+    uint32_t nshdr;
+    Elf32_Phdr* phdr;
+    uint32_t nphdr;
+    char* str;
+    uint32_t org;
+} Elf32_Map;
+
+typedef struct
+{
+    Elf32_Map* libs;
+    uint32_t nlibs;
+} Elf32_Dependecies;
+
+uint8_t elf_check_supported(Elf32_Ehdr* ehdr);
+
+uint8_t elf_check_executable(Elf32_Ehdr* ehdr);
+
+void elf_get_map(Elf32_Map* map, char* file);
+
+char* elf_get_str_section(Elf32_Map* map, uint32_t shindx);
+
+void* elf_get_table(Elf32_Map* map, Elf32_Shdr* shdr);
+
+Elf32_Shdr* elf_get_sheader(Elf32_Map* map, uint32_t shindx);
+
+uint8_t elf_load_file(Elf32_Map* map, uint32_t* offset);
+
+void elf_get_dependecies(Elf32_Map* map, array_t* arr);
+
+uint32_t elf_lookup_sym(Elf32_Map* map, char* name);
+
+uint8_t elf_do_rel(Elf32_Map* map, Elf32_Dependecies deps);
