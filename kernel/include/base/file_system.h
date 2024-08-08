@@ -16,21 +16,21 @@ typedef struct{
     uint32_t prev;
     uint32_t next;
     char name[NameLength];
-} fs_entity_t;
+} __attribute__((packed)) fs_entity_t;
 
 typedef struct{
     fs_entity_t fs;
     uint32_t data;
     uint32_t n_blocks;
     uint32_t size;
-} file_entity_t;
+}  __attribute__((packed)) file_entity_t;
 
 typedef struct{
     fs_entity_t fs;
     uint32_t head;
     uint32_t tail;
     uint32_t n_childs;
-} dir_entity_t;
+}  __attribute__((packed)) dir_entity_t;
 
 void filesystem_init();
 

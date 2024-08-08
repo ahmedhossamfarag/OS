@@ -1,12 +1,14 @@
 
-BOOT_DIR = $(wildcard boot/*.asm)
+BOOT_DIR = $(wildcard *.asm)
 
 
 %.o : %.asm
 	nasm $< -f elf -o $@
 
+all: boot.bin
+
+
 # Build the boot binary file
-boot.bin: boot/boot.asm ${BOOT_DIR}
+boot.bin: boot.asm ${BOOT_DIR}
 	nasm $< -f bin -o $@
 
-all: boot.bin

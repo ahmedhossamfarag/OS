@@ -1,28 +1,28 @@
 [ org 0x7c00 ]
 
-%include "boot/define.asm"
+%include "define.asm"
 
 mov [ BOOT_DRIVE ] , dl ; BIOS stores our boot drive in DL
 
 mov bp , REAL_MODE_SP ; Set - up the stack.
 mov sp , bp
 
-%include "boot/info.asm"
+%include "info.asm"
 
-%include "boot/vesa.asm"
+%include "vesa.asm"
 
-%include "boot/kernel_load.asm"
+%include "kernel_load.asm"
 
-%include "boot/switch_to_pm.asm"
+%include "switch_to_pm.asm"
 
 halt:
 jmp $
 
 ; data
 BOOT_DRIVE db 0
-%include "boot/gdt.asm"
+%include "gdt.asm"
 
-%include "boot/ap_setup.asm"
+%include "ap_setup.asm"
 
 ; Bootsector padding
 times 510 -( $ - $$ ) db 0

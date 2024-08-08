@@ -9,3 +9,13 @@ ndisasm -b 32 kernel.bin > kernel.dis
 
 dd if=inputfile of=outputfile bs=512 seek=10 conv=notrunc
 readelf -h shell.bin | grep Type
+
+g++ -m32 -o $@ $^ -z noexecstack
+g++ -m32 -shared -fpic -Ishell/include -o libmylib.so shell/mylib.c++
+nasm shell/start.asm -f elf -o start.o
+g++ -m32 -c -Ishell/include shell/main.c++ -o main.o
+g++ -m32 -nostartfiles -o shell.o $^
+g++ -m32 -nostdlib -nodefaultlibs -nostartfiles -o $@ $^ -z noexecstack
+g++ -m32 -nostdlib -nodefaultlibs -c ${GCC_INCLUDE} $< -o $@
+
+ldd shell/shell.o

@@ -1,7 +1,10 @@
 extern main
+extern minit ; Initialize memory
+extern process_exit ; Exit process
+
 global _start
 _start:
+    call minit
     call main
-    mov esi, 0xD
-    int 0x80
+    call process_exit
     jmp $
