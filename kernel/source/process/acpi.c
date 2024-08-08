@@ -32,6 +32,7 @@ void* find_sdt(acpi_sdt_header_t *rsdt, const char* signature) {
             return (void*) header;
         }
     }
+    return 0;
 }
 
 void parse_madt(madt_t *madt) {

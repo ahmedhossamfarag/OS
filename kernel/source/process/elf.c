@@ -285,6 +285,7 @@ static uint8_t elf_do_section_rel(Elf32_Map* map, Elf32_Shdr* shdr, Elf32_Depend
         }
         rel ++;
     }
+    return 1;
 }
 
 uint8_t elf_do_rel(Elf32_Map* map, Elf32_Dependecies deps){
