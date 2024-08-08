@@ -9,4 +9,6 @@ void memory_init();
 
 char* alloc(uint32_t size);
 
+char* alloc_align(uint32_t size, uint32_t align);
+
 void free(char* ptr, uint32_t size);

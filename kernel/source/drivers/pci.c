@@ -74,6 +74,6 @@ void pci_init()
             }
         }
     }
-    ethernet_init();
+    // ethernet_init();
     hda_init();
 }

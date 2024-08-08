@@ -39,6 +39,7 @@
         "apic.h": "c",
         "elf.h": "c",
         "random": "c",
-        "numbers": "c"
+        "numbers": "c",
+        "hda.h": "c"
     }
 }

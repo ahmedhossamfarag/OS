@@ -4,12 +4,12 @@ run: all
 	qemu-system-x86_64 -device intel-hda -device hda-duplex -smp 4 -m 2048 -drive file=os-image,format=raw
 
 # Boot binary
-boot/boot.bin:
+boot/boot:
 	$(MAKE) -C boot
 
 
 # Kenel binary	
-kernel/kernel.bin:
+kernel/kernel:
 	$(MAKE) -C kernel
 
 # Disk binary
@@ -18,8 +18,8 @@ disk.bin:
 
 
 # Build the os image
-os-image: boot/boot.bin kernel/kernel.bin disk.bin
-	cat $^ > os-image
+os-image: boot/boot kernel/kernel disk.bin
+	cat boot/boot.bin kernel/kernel.bin disk.bin > os-image
 
 # Attach file system
 filesystem: os-image
@@ -27,7 +27,7 @@ filesystem: os-image
 	dd if=user/filesystem of=os-image bs=512 seek=${ROOT_DIR} conv=notrunc
 
 
-all: os-image filesystem
+all: os-image #filesystem
 
 
 clean:
