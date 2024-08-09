@@ -16,7 +16,7 @@ static uint32_t vga_offset;
 void vga_scroll_up()
 {
     uint32_t length = pitch * FONT_HEIGHT;
-    mem_copy(framebuffer + length, framebuffer, length*VgaNoLines);
+    mem_copy((char*)framebuffer + length, (char*)framebuffer, length*VgaNoLines);
     vga_offset -= VgaLineLn;
 }
 

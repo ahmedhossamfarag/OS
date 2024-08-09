@@ -189,7 +189,7 @@ static void elf_get_dyn_dependecies(Elf32_Map* map, Elf32_Shdr* shdr, array_t* a
 }
 
 void elf_get_dependecies(Elf32_Map* map, array_t* arr){
-    for (int i = 0; i < map->nshdr; i++)
+    for (uint32_t i = 0; i < map->nshdr; i++)
     {
         Elf32_Shdr* shdr = map->shdr + i;
         if(shdr->sh_type == SHT_DYNAMIC){
@@ -230,7 +230,7 @@ uint32_t elf_lookup_sym(Elf32_Map* map, char* name){
 
 static uint8_t elf_get_st_value(Elf32_Map* map, Elf32_Shdr* shdr, uint32_t indx, Elf32_Dependecies deps, uint32_t* st_value){
 
-    int n = elf_get_num_entries(shdr);
+    uint32_t n = elf_get_num_entries(shdr);
     if(indx >= n) return 0;
 
     Elf32_Sym* sym = (Elf32_Sym*)elf_get_table(map, shdr) + indx;
@@ -275,6 +275,7 @@ static uint8_t elf_do_section_rel(Elf32_Map* map, Elf32_Shdr* shdr, Elf32_Depend
         }
         case R_386_JMP_SLOT: {
             *target_address = st_value;
+            break;
         }
         case R_386_RELATIVE: {
             *target_address = map->org + *target_address;

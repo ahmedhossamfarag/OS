@@ -1,45 +1,25 @@
-extern fopen_handler
-extern fsize_handler
-extern fclose_handler
-extern fread_handler
-extern fwrite_handler
-extern fcreate_handler
-extern fdelete_handler
-extern flist_handler
-
-extern process_create_handler
-extern thread_create_handler
-extern process_exit_handler
-extern thread_exit_handler
-extern process_terminate_handler
-extern thread_terminate_handler
-extern memory_init_handler
-
-extern prints_handler
-extern scans_handler
-
-global syscall_map
+.global syscall_map
 
 syscall_map:
-    dd 0
-    dd fopen_handler ;0x1
-    dd fsize_handler ;0x2
-    dd fclose_handler ;0x3
-    dd fread_handler ;0x4
-    dd fwrite_handler ;0x5
-    dd fcreate_handler ;0x6
-    dd fdelete_handler ;0x7
-    dd flist_handler ;0x8
-    dd 0 ;0x9
-    dd process_create_handler ;0xA
-    dd thread_create_handler ;0xB
-    dd process_exit_handler ;0xC
-    dd thread_exit_handler ;0xD
-    dd process_terminate_handler ;0xE
-    dd thread_terminate_handler ;0xF
-    dd prints_handler ;0x10
-    dd scans_handler ;0x11
-    dd 0 ;0x12
-    dd 0 ;0x13
-    dd memory_init_handler ;0x14
-    dd 0 ;0x15
+    .long 0
+    .long fopen_handler #0x1
+    .long fsize_handler #0x2
+    .long fclose_handler #0x3
+    .long fread_handler #0x4
+    .long fwrite_handler #0x5
+    .long fcreate_handler #0x6
+    .long fdelete_handler #0x7
+    .long flist_handler #0x8
+    .long 0 #0x9
+    .long process_create_handler #0xA
+    .long thread_create_handler #0xB
+    .long process_exit_handler #0xC
+    .long thread_exit_handler #0xD
+    .long process_terminate_handler #0xE
+    .long thread_terminate_handler #0xF
+    .long prints_handler #0x10
+    .long scans_handler #0x11
+    .long 0 #0x12
+    .long 0 #0x13
+    .long memory_init_handler #0x14
+    .long 0 #0x15

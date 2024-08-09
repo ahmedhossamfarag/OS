@@ -59,7 +59,7 @@ uint32_t disk_alloc(uint32_t size){
         return lba;
     }
 
-    if(free_block->size = size){
+    if(free_block->size == size){
         lba = free_block->lba;
         disk_remove_free_block(free_block);
         return lba;

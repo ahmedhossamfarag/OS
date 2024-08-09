@@ -9,14 +9,18 @@ GCC_INCLUDE := -Iinclude/base -Iinclude/drivers -Iinclude/process -Iinclude/lib 
 
 
 %.o : %.c ${HEADERS}
-	gcc -m32 -ffreestanding -nostdlib -nostartfiles -fPIC -c ${GCC_INCLUDE} $< -o $@ -z noexecstack
+	i686-elf-gcc $(GCC_INCLUDE) -c $< -o $@ -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
 %.o : %.asm
-	nasm $< -f elf -o $@
+	i686-elf-as $< -o $@
 
 all: kernel.o
 
 # Build the kernel binary
 kernel.o: kernel_entry.o ${C_OBJ} ${ASM_OBJ}
-	ld -m elf_i386 -o $@ -T link.ld $^
+	i686-elf-gcc -T link.ld -o $@ -ffreestanding -O2 -nostdlib $^ -lgcc
+
+
+clean:
+	find . -name '*.o' -type f -delete
 

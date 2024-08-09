@@ -101,7 +101,7 @@ void str_copy(const char* from, char* to){
 }
 
 void str_copy_n(const char* from, char* to, unsigned int n){
-	for (int i = 0; i < n-1; i++)
+	for (unsigned int i = 0; i < n-1; i++)
 	{
 		*to = *from;
 		if(!*from) return;

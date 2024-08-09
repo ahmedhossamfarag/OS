@@ -1,298 +1,299 @@
-global key_char_map
-global key_shift_char_map
-global key_extended_char_map
-global key_code_map
-global key_shift_code_map
-global key_extended_code_map
+.section rodata
 
-NONE equ 0
-ESC_ equ 1
-CHAR equ 2
-BACKSPACE equ 3
-TAB equ 4
-ENTER_ equ 5
-CONTROL_LEFT equ 6
-SHIFT_RIGHT equ 7
-NUM_PAD_CHAR equ 8
-ALT_LEFT equ 9
-SPACE equ 10
-CAPS_LOCK equ 11
-F1 equ 12
-F2 equ 13
-F3 equ 14
-F4 equ 15
-F5 equ 16
-F6 equ 17
-F7 equ 18
-F8 equ 19
-F9 equ 20
-F10 equ 21
-F11 equ 22
-F12 equ 23
-NUM_LOCK equ 24
-NUM_PAD_HOME equ 25
-NUM_PAD_UP equ 26
-NUM_PAD_PAGE_UP equ 27
-NUM_PAD_LEFT equ 28
-NUM_PAD_RIGHT equ 29
-NUM_PAD_END equ 30
-NUM_PAD_DOWN equ 31
-NUM_PAD_PAGE_DOWN equ 32
-NUM_PAD_INS equ 33
-NUM_PAD_DEL equ 34
-NUM_PAD_ENTER equ 35
-ALT_RIGHT equ 36
-HOME equ 37
-UP equ 38
-PAGE_UP equ 39
-LEFT equ 40
-RIGHT equ 41
-END equ 42
-DOWN equ 43
-PAGE_DOWN equ 44
-DEL equ 45
+.global key_char_map
+.global key_shift_char_map
+.global key_extended_char_map
+.global key_code_map
+.global key_shift_code_map
+.global key_extended_code_map
+
+.set NONE,  0
+.set ESC_,  1
+.set CHAR,  2
+.set BACKSPACE,  3
+.set TAB,  4
+.set ENTER_,  5
+.set CONTROL_LEFT,  6
+.set SHIFT_RIGHT,  7
+.set NUM_PAD_CHAR,  8
+.set ALT_LEFT,  9
+.set SPACE,  10
+.set CAPS_LOCK,  11
+.set F1,  12
+.set F2,  13
+.set F3,  14
+.set F4,  15
+.set F5,  16
+.set F6,  17
+.set F7,  18
+.set F8,  19
+.set F9,  20
+.set F10,  21
+.set F11,  22
+.set F12,  23
+.set NUM_LOCK,  24
+.set NUM_PAD_HOME,  25
+.set NUM_PAD_UP,  26
+.set NUM_PAD_PAGE_UP,  27
+.set NUM_PAD_LEFT,  28
+.set NUM_PAD_RIGHT,  29
+.set NUM_PAD_END,  30
+.set NUM_PAD_DOWN,  31
+.set NUM_PAD_PAGE_DOWN,  32
+.set NUM_PAD_INS,  33
+.set NUM_PAD_DEL,  34
+.set NUM_PAD_ENTER,  35
+.set ALT_RIGHT,  36
+.set HOME,  37
+.set UP,  38
+.set PAGE_UP,  39
+.set LEFT,  40
+.set RIGHT,  41
+.set END,  42
+.set DOWN,  43
+.set PAGE_DOWN,  44
+.set DEL,  45
 
 
 key_char_map:
-    times 2 db 0
-    db '1'
-    db '2'
-    db '3'
-    db '4'
-    db '5'
-    db '6'
-    db '7'
-    db '8'
-    db '9'
-    db '0'
-    db '-'
-    db '='
-    times 2 db 0
-    db 'q'
-    db 'w'
-    db 'e'
-    db 'r'
-    db 't'
-    db 'y'
-    db 'u'
-    db 'i'
-    db 'o'
-    db 'p'
-    db '['
-    db ']'
-    times 2 db 0
-    db 'a'
-    db 's'
-    db 'd'
-    db 'f'
-    db 'g'
-    db 'h'
-    db 'j'
-    db 'k'
-    db 'l'
-    db ';'
-    db '''
-    db '`'
-    db 0
-    db '\'
-    db 'z'
-    db 'x'
-    db 'c'
-    db 'v'
-    db 'b'
-    db 'n'
-    db 'm'
-    db ','
-    db '.'
-    db '/'
-    db 0
-    db '*'
-    times 15 db 0
-    db '7'
-    db '8'
-    db '9'
-    db '-'
-    db '4'
-    db '5'
-    db '6'
-    db '+'
-    db '1'
-    db '2'
-    db '3'
-    db '0'
-    db '.'
-    times 44 db 0
+    .skip 2
+    .byte '1'
+    .byte '2'
+    .byte '3'
+    .byte '4'
+    .byte '5'
+    .byte '6'
+    .byte '7'
+    .byte '8'
+    .byte '9'
+    .byte '0'
+    .byte '-'
+    .byte '='
+    .skip 2
+    .byte 'q'
+    .byte 'w'
+    .byte 'e'
+    .byte 'r'
+    .byte 't'
+    .byte 'y'
+    .byte 'u'
+    .byte 'i'
+    .byte 'o'
+    .byte 'p'
+    .byte '['
+    .byte ']'
+    .skip 2
+    .byte 'a'
+    .byte 's'
+    .byte 'd'
+    .byte 'f'
+    .byte 'g'
+    .byte 'h'
+    .byte 'j'
+    .byte 'k'
+    .byte 'l'
+    .byte ';'
+    .byte '''
+    .byte '`'
+    .byte 0
+    .byte '\'
+    .byte 'z'
+    .byte 'x'
+    .byte 'c'
+    .byte 'v'
+    .byte 'b'
+    .byte 'n'
+    .byte 'm'
+    .byte ','
+    .byte '.'
+    .byte '/'
+    .byte 0
+    .byte '*'
+    .skip 15
+    .byte '7'
+    .byte '8'
+    .byte '9'
+    .byte '-'
+    .byte '4'
+    .byte '5'
+    .byte '6'
+    .byte '+'
+    .byte '1'
+    .byte '2'
+    .byte '3'
+    .byte '0'
+    .byte '.'
+    .skip 44
     
 key_shift_char_map:
-    times 2 db 0
-    db '!'
-    db '@'
-    db '#'
-    db '$'
-    db '%'
-    db '^'
-    db '&'
-    db '*'
-    db '('
-    db ')'
-    db '_'
-    db '+'
-    times 2 db 0
-    db 'Q'
-    db 'W'
-    db 'E'
-    db 'R'
-    db 'T'
-    db 'Y'
-    db 'U'
-    db 'I'
-    db 'O'
-    db 'P'
-    db '{'
-    db '}'
-    times 2 db 0
-    db 'A'
-    db 'S'
-    db 'D'
-    db 'F'
-    db 'G'
-    db 'H'
-    db 'J'
-    db 'K'
-    db 'L'
-    db ':'
-    db '"'
-    db '~'
-    db 0
-    db '|'
-    db 'Z'
-    db 'X'
-    db 'C'
-    db 'V'
-    db 'B'
-    db 'N'
-    db 'M'
-    db '<'
-    db '>'
-    db '?'
-    db 0
-    db '*'
-    times 18 db 0
-    db '-'
-    times 3 db 0
-    db '+'
-    times 49 db 0
+    .skip 2
+    .byte '!'
+    .byte '@'
+    .byte '#'
+    .byte '$'
+    .byte '%'
+    .byte '^'
+    .byte '&'
+    .byte '*'
+    .byte '('
+    .byte ')'
+    .byte '_'
+    .byte '+'
+    .skip 2
+    .byte 'Q'
+    .byte 'W'
+    .byte 'E'
+    .byte 'R'
+    .byte 'T'
+    .byte 'Y'
+    .byte 'U'
+    .byte 'I'
+    .byte 'O'
+    .byte 'P'
+    .byte '{'
+    .byte '}'
+    .skip 2
+    .byte 'A'
+    .byte 'S'
+    .byte 'D'
+    .byte 'F'
+    .byte 'G'
+    .byte 'H'
+    .byte 'J'
+    .byte 'K'
+    .byte 'L'
+    .byte ':'
+    .byte '"'
+    .byte '~'
+    .byte 0
+    .byte '|'
+    .byte 'Z'
+    .byte 'X'
+    .byte 'C'
+    .byte 'V'
+    .byte 'B'
+    .byte 'N'
+    .byte 'M'
+    .byte '<'
+    .byte '>'
+    .byte '?'
+    .byte 0
+    .byte '*'
+    .skip 18
+    .byte '-'
+    .skip 3
+    .byte '+'
+    .skip 49
     
 key_extended_char_map:
-    times 53 db 0
-    db '/'
-    times 74 db 0
+    .skip 53
+    .byte '/'
+    .skip 74
 
 
 key_code_map:
-    db NONE
-    db ESC_
-    times 12 db CHAR
-    db BACKSPACE
-    db TAB
-    times 12 db CHAR
-    db ENTER_
-    db CONTROL_LEFT
-    times 12 db CHAR
-    db NONE
-    times 11 db CHAR
-    db SHIFT_RIGHT
-    db NUM_PAD_CHAR
-    db ALT_LEFT
-    db SPACE
-    db CAPS_LOCK
-    db F1
-    db F2
-    db F3
-    db F4
-    db F5
-    db F6
-    db F7
-    db F8
-    db F9
-    db F10
-    db NUM_LOCK
-    db NONE
-    times 13 db NUM_PAD_CHAR
-    times 3 db NONE
-    db F11
-    db F12
-    times 39 db NONE
+    .byte NONE
+    .byte ESC_
+    .skip 12 , CHAR
+    .byte BACKSPACE
+    .byte TAB
+    .skip 12 , CHAR
+    .byte ENTER_
+    .byte CONTROL_LEFT
+    .skip 12 , CHAR
+    .byte NONE
+    .skip 11 , CHAR
+    .byte SHIFT_RIGHT
+    .byte NUM_PAD_CHAR
+    .byte ALT_LEFT
+    .byte SPACE
+    .byte CAPS_LOCK
+    .byte F1
+    .byte F2
+    .byte F3
+    .byte F4
+    .byte F5
+    .byte F6
+    .byte F7
+    .byte F8
+    .byte F9
+    .byte F10
+    .byte NUM_LOCK
+    .byte NONE
+    .skip 13 , NUM_PAD_CHAR
+    .skip 3 , NONE
+    .byte F11
+    .byte F12
+    .skip 39 , NONE
 
 
 key_shift_code_map:
-    db NONE
-    db ESC_
-    times 12 db CHAR
-    db BACKSPACE
-    db TAB
-    times 12 db CHAR
-    db ENTER_
-    db CONTROL_LEFT
-    times 12 db CHAR
-    db NONE
-    times 11 db CHAR
-    db SHIFT_RIGHT
-    db NUM_PAD_CHAR
-    db ALT_LEFT
-    db SPACE
-    db CAPS_LOCK
-    db F1
-    db F2
-    db F3
-    db F4
-    db F5
-    db F6
-    db F7
-    db F8
-    db F9
-    db F10
-    db NUM_LOCK
-    db NONE
-    db NUM_PAD_HOME
-    db NUM_PAD_UP
-    db NUM_PAD_PAGE_UP
-    db NUM_PAD_CHAR
-    db NUM_PAD_LEFT
-    db NONE
-    db NUM_PAD_RIGHT
-    db NUM_PAD_CHAR
-    db NUM_PAD_END
-    db NUM_PAD_DOWN
-    db NUM_PAD_PAGE_DOWN
-    db NUM_PAD_INS
-    db NUM_PAD_DEL
-    times 3 db NONE
-    db F11
-    db F12
-    times 39 db NONE
+    .byte NONE
+    .byte ESC_
+    .skip 12 , CHAR
+    .byte BACKSPACE
+    .byte TAB
+    .skip 12 , CHAR
+    .byte ENTER_
+    .byte CONTROL_LEFT
+    .skip 12 , CHAR
+    .byte NONE
+    .skip 11 , CHAR
+    .byte SHIFT_RIGHT
+    .byte NUM_PAD_CHAR
+    .byte ALT_LEFT
+    .byte SPACE
+    .byte CAPS_LOCK
+    .byte F1
+    .byte F2
+    .byte F3
+    .byte F4
+    .byte F5
+    .byte F6
+    .byte F7
+    .byte F8
+    .byte F9
+    .byte F10
+    .byte NUM_LOCK
+    .byte NONE
+    .byte NUM_PAD_HOME
+    .byte NUM_PAD_UP
+    .byte NUM_PAD_PAGE_UP
+    .byte NUM_PAD_CHAR
+    .byte NUM_PAD_LEFT
+    .byte NONE
+    .byte NUM_PAD_RIGHT
+    .byte NUM_PAD_CHAR
+    .byte NUM_PAD_END
+    .byte NUM_PAD_DOWN
+    .byte NUM_PAD_PAGE_DOWN
+    .byte NUM_PAD_INS
+    .byte NUM_PAD_DEL
+    .skip 3 , NONE
+    .byte F11
+    .byte F12
+    .skip 39 , NONE
     
 
 key_extended_code_map:
-    times 28 db NONE
-    db NUM_PAD_ENTER
-    times 24 db NONE
-    db NUM_PAD_CHAR
-    times 2 db NONE
-    db ALT_RIGHT
-    times 14 db NONE
-    db HOME
-    db UP
-    db PAGE_UP
-    db NONE
-    db LEFT
-    db NONE
-    db RIGHT
-    db NONE
-    db END
-    db DOWN
-    db PAGE_DOWN
-    db NONE
-    db DEL
-    times 44 db NONE
-    
+    .skip 28 , NONE
+    .byte NUM_PAD_ENTER
+    .skip 24 , NONE
+    .byte NUM_PAD_CHAR
+    .skip 2 , NONE
+    .byte ALT_RIGHT
+    .skip 14 , NONE
+    .byte HOME
+    .byte UP
+    .byte PAGE_UP
+    .byte NONE
+    .byte LEFT
+    .byte NONE
+    .byte RIGHT
+    .byte NONE
+    .byte END
+    .byte DOWN
+    .byte PAGE_DOWN
+    .byte NONE
+    .byte DEL
+    .skip 44 , NONE

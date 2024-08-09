@@ -40,6 +40,7 @@
         "elf.h": "c",
         "random": "c",
         "numbers": "c",
-        "hda.h": "c"
+        "hda.h": "c",
+        "syscall.h": "c"
     }
 }

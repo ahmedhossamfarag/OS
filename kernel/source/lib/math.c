@@ -18,7 +18,7 @@ uint32_t math_floorm(uint32_t x, uint32_t m)
     return x - x%m;
 }
 
-uint32_t math_abs(uint32_t x)
+uint32_t math_abs(int x)
 {
     return x < 0 ? -x : x;
 }

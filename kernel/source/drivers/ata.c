@@ -150,7 +150,7 @@ static void ata_handler_proc()
                     }
                 }
             }
-        }else if(ata_args.rw = ATA_WRITE){
+        }else if(ata_args.rw == ATA_WRITE){
             ata_args.sector_count --;
             ata_args.buffer += 512;
             if(!ata_args.sector_count){

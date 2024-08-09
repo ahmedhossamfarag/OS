@@ -1,43 +1,42 @@
-%macro isr 1
-    global isr_%+%1
-    extern %1
-    isr_%+%1:
-        call %1
+.macro isr fname
+    .global isr_\fname
+    isr_\fname:
+        call \fname
         iret 
-%endmacro
+.endm
 
-%macro isr_state 1  
-    global isr_%+%1
-    extern %1
-    isr_%+%1:
-        pusha                  ; Save all general-purpose registers
-        push ds                ; Save data segment register
-        push es
-        push fs
-        push gs
-        push esp               ; Push the stack pointer to pass it to the C handler
+.macro isr_state fname 
+    .global isr_\fname
+    isr_\fname:
+        pusha                  # Save all general-purpose registers
+        push %ds                # Save data segment register
+        push %es
+        push %fs
+        push %gs
+        push %esp               # Push the stack pointer to pass it to the C handler
 
-        mov eax, 0x10
-        mov ds, eax
-        mov es, eax
-        mov fs, eax
-        mov gs, eax
+        mov $0x10, %eax 
+        mov %eax, %ds
+        mov %eax, %es
+        mov %eax, %fs
+        mov %eax, %gs
 
-        call %1     ; Call the C handler
+        call \fname    # Call the C handler
 
-        pop esp                ; Restore the stack pointer
-        pop gs                 ; Restore segment registers
-        pop fs
-        pop es
-        pop ds
-        popa                   ; Restore general-purpose registers
-        iret                   ; Return from interrupt
-%endmacro
+        pop %esp                # Restore the stack pointer
+        pop %gs                 # Restore segment registers
+        pop %fs
+        pop %es
+        pop %ds
+        popa                   # Restore general-purpose registers
+        iret                   # Return from interrupt
+.endm
 
-global isr_default
+.global isr_default
 isr_default:
     nop
     iret
+
 
 isr_state exception_handler
 

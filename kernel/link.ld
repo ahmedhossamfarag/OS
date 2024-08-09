@@ -1,4 +1,4 @@
- OUTPUT_FORMAT(elf32-i386)
+ ENTRY(_start)
 
  SECTIONS {
      . = 2M; /* Set the base address for the executable */
@@ -6,6 +6,7 @@
     .text BLOCK(4K) : ALIGN(4K)
 	{
 		*(.multiboot)
+		 _kernel_start = .;
 		*(.text)
 	}
 
@@ -24,4 +25,6 @@
 		*(COMMON)
 		*(.bss)
 	}
+
+	 _kernel_end = .;
  }

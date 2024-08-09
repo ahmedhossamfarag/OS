@@ -37,37 +37,15 @@
 # 	find . -name '*.bin' -type f -delete
 # 	rm -fr *.bin *.dis os-image
 
-OS_NAME := os-image
-ISO := $(OS_NAME).iso
-VM_NAME := $(OS_NAME)_VM
 
 run: all
-	# qemu-system-x86_64 -device intel-hda -device hda-duplex -smp 4 -m 2048 -drive file=os-image -bios /usr/share/ovmf/OVMF.fd
-	# Check if the VM exists, if not create it
-	VBoxManage showvminfo $(VM_NAME) || VBoxManage createvm --name $(VM_NAME) --ostype Other --register
-	# Modify VM settings
-	VBoxManage modifyvm $(VM_NAME) --memory 2024 --boot1 dvd --cpus 4
-	# Attach the ISO to the VM
-	VBoxManage storagectl $(VM_NAME) --name "IDE Controller" --add ide
-	VBoxManage storageattach $(VM_NAME) --storagectl "IDE Controller" --port 0 --device 0 --type dvddrive --medium $(ISO)
-	# Start the VM
-	VBoxManage startvm $(VM_NAME)
+	qemu-system-i386 -kernel kernel/kernel.o -m 2048
 
-kernel/kernel:
+kernek.o:
 	$(MAKE) -C kernel
 
-kernel-image: kernel/kernel
-	cp kernel/kernel.o iso/boot/$@
-
-os-image: kernel-image
-	rm -fr $@
-	grub-mkrescue -o $@.iso iso
-
-all: os-image
+all: kernek.o
 
 clean:
 	$(MAKE) -C user clean
 	find . -name '*.o' -type f -delete
-	find . -name '*.so' -type f -delete
-	find . -name '*.bin' -type f -delete
-	rm -fr *.bin *.dis os-image iso/boot/kernel-image

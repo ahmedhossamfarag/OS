@@ -23,13 +23,3 @@ done:
 
 ms_error:
     nop
-
-; get disk size
-; mov ax, 0x4800
-; mov dl, [ BOOT_DRIVE ]  ; Drive number (0x80 for first hard disk)
-; int 0x13 ; If successful, CX:DX will contain the total number of sectors
-; jc ds_error
-; mov [DISk_SIZE] , dx
-; mov [DISk_SIZE+2] , cx
-; ds_error:
-;     nop

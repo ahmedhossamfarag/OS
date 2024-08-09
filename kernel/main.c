@@ -1,4 +1,4 @@
-// #include "screen_print.h"
+#include "screen_print.h"
 #include "interrupt.h"
 #include "pic.h"
 #include "timer.h"
@@ -21,16 +21,21 @@
 #include "syscall.h"
 #include "pci.h"
 #include "vga.h"
-#include "vga_print.h"
+// #include "vga_print.h"
 
-void kernel_load()
-{
-    #define LOADED 50
-    #define TO_LOAD 100
-    uint32_t src = 1 + LOADED;
-    uint32_t *des = (uint32_t *)(KERNEL_OFFSET + LOADED * 512);
-    uint32_t n_sectors = TO_LOAD;
-    ata_read(PRIMARY_BASE, 0, src, n_sectors, des);
+
+extern char _kernel_start[];
+extern char _kernel_end[];
+static uint8_t flag = 0;
+
+void kernel_shift(){
+    if(!flag){
+        uint32_t kernel_size = _kernel_end - _kernel_start;
+        mem_copy(_kernel_start, (char*)KERNEL_OFFSET, kernel_size);
+        flag ++;
+        // update esp
+        asm("jmp %0"::"r"(KERNEL_OFFSET));
+    }
 }
 
 void init()
@@ -46,9 +51,9 @@ void init()
     apic_init();
     scheduler_init();
     syscall_init();
-    vga_init();
-    disk_init();
-    filesystem_init();
+    // vga_init();
+    // disk_init();
+    // filesystem_init();
 }
 
 void setup()
@@ -87,15 +92,16 @@ void ap_setup()
 
 int main()
 {
-    kernel_load();
+    kernel_shift();
     init();
-    disable_timer();
-    ap_setup();
+    // ap_setup();
     setup();
+    screen_clear();
     println("Welcome To Kernel");
 
-    load_program();
-    enable_scheduler();
+
+    // load_program();
+    // enable_scheduler();
 
     while (1);
 

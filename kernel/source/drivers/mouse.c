@@ -33,12 +33,12 @@ static void handle_mouse_info(){
 
     // Process Data
 
-    info.left_button = status & LeftButton  != 0;
-    info.right_button = status & RightButton != 0;
-    info.middle_button = status & MiddleButton != 0;
+    info.left_button = (status & LeftButton)  != 0;
+    info.right_button = (status & RightButton) != 0;
+    info.middle_button = (status & MiddleButton) != 0;
 
-    info.delta_x = status & XMoveSign == 0 ? delta_x : -delta_x;
-    info.delta_y = status & YMoveSign == 0 ? delta_y : -delta_y;
+    info.delta_x = (status & XMoveSign) == 0 ? delta_x : -delta_x;
+    info.delta_y = (status & YMoveSign) == 0 ? delta_y : -delta_y;
 
     update_mouse_location(info.delta_x, info.delta_y);
 

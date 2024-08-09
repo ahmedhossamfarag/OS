@@ -108,7 +108,7 @@ static void hda_init_corb_rirb(){
 
 hda_rirb_entry_t hda_send_corb_verb(hda_corb_entry_t cmd){
     uint16_t corbwp = hda_read_word(HDA_CORBWP) & 0xFF;
-    uint16_t corbrp = hda_read_word(HDA_CORBRP) & 0xFF;
+    // uint16_t corbrp = hda_read_word(HDA_CORBRP) & 0xFF;
     uint16_t rirbrp = hda_read_word(HDA_RIRBWP) & 0xFF;
 
     corbwp = (corbwp + 1) % corb_sz;
@@ -116,7 +116,7 @@ hda_rirb_entry_t hda_send_corb_verb(hda_corb_entry_t cmd){
     hda_write_word(HDA_CORBWP, corbwp);
 
     do{
-    while (rirbrp == hda_read_word(HDA_RIRBWP) & 0xFF) wait(1000);
+    while (rirbrp == (hda_read_word(HDA_RIRBWP) & 0xFF)) wait(1000);
     rirbrp = (rirbrp + 1) % rirb_sz;
     }while(rirb[rirbrp].solicited);
 
@@ -254,6 +254,8 @@ void hda_init()
     hda_write_dword(HDA_INTCTL, 0x3FFFFFFF);
 
     hda_get_params();
+
+    hda_init_corb_rirb();
 
     hda_init_bdl();
 }
