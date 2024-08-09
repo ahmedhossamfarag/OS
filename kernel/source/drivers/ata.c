@@ -179,3 +179,18 @@ void apic_ata_handler()
     ata_handler_proc();
     apic_sendEOI();
 }
+
+
+void ata_identify_drive(uint16_t base, uint8_t drive,  void *buffer){
+    if(drive != 0 && drive != 1) return;
+
+    if(base != PRIMARY_BASE && base != SECONDARY_BASE) return;
+
+    ata_select_drive(base, drive);
+
+    outb(base + 7, ATA_IDENTIFY_DRIVE); // Command
+
+    ata_wait_busy(base);
+
+    insw(base, buffer, 256); // Read 256 words (512 bytes)
+}

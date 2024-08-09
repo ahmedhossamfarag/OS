@@ -40,24 +40,24 @@ void init()
     memory_init();
     idt_init();
     pic_init();
-    // interrupt_handler_init();
-    // gdt_init();
-    // pagging_init();
-    // // apic_init();
-    // scheduler_init();
-    // syscall_init();
+    interrupt_handler_init();
+    gdt_init();
+    pagging_init();
+    apic_init();
+    scheduler_init();
+    syscall_init();
     vga_init();
-    // disk_init();
-    // filesystem_init();
+    disk_init();
+    filesystem_init();
 }
 
 void setup()
 {
     enable_idt();
     enable_interrupt();
-    // enable_gdt();
-    // // enable_apic();
-    // enable_paging();
+    enable_gdt();
+    enable_apic();
+    enable_paging();
 }
 
 void start()
@@ -90,11 +90,10 @@ int main()
     kernel_load();
     init();
     disable_timer();
-    // ap_setup();
+    ap_setup();
     setup();
     println("Welcome To Kernel");
-    pci_init();
-    
+
     // load_program();
     // enable_scheduler();
 

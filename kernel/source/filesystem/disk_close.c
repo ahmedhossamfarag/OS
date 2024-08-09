@@ -2,6 +2,9 @@
 #include "ata.h"
 #include "memory.h"
 
+extern uint32_t DiskSize;
+
+
 extern disk_args_t disk_args;
 
 

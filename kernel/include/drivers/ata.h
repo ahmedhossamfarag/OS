@@ -7,6 +7,7 @@
 
 #define ATA_READ  0x20
 #define ATA_WRITE 0x30
+#define ATA_IDENTIFY_DRIVE 0xEC
 
 /* ATA Status Register Bits */
 #define ATA_STATUS_BSY  0x80  /* Busy */
@@ -31,3 +32,5 @@ void ata_write_sync(uint16_t base, uint8_t drive, uint32_t lba, uint8_t sector_c
 void ata_handler();
 
 void apic_ata_handler();
+
+void ata_identify_drive(uint16_t base, uint8_t drive,  void *buffer);

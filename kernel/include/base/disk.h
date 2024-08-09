@@ -4,7 +4,6 @@
 #define FirstBlockLBA 300
 #define MapIdentefier 0xAF55
 #define SectorSize 512
-#define DiskSize 1000
 #define DiskMapLBA (DiskSize - 1)
 
 #include <stdint.h>

@@ -3,6 +3,9 @@
 #include "ata.h"
 #include "libc.h"
 
+extern uint32_t DiskSize;
+
+
 extern disk_args_t disk_args;
 
 extern void disk_remove_free_block(disk_freeblock_t* free_block);

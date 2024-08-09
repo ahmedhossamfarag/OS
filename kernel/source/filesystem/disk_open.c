@@ -2,6 +2,8 @@
 #include "ata.h"
 #include "memory.h"
 
+extern uint32_t DiskSize;
+
 disk_args_t disk_args;
 
 static struct{
