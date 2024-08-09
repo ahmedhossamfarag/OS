@@ -2,9 +2,6 @@
 BOOT_DIR = $(wildcard *.asm)
 
 
-%.o : %.asm
-	nasm $< -f elf -o $@
-
 all: boot.bin
 
 

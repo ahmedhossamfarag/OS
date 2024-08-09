@@ -94,8 +94,8 @@ int main()
     setup();
     println("Welcome To Kernel");
 
-    // load_program();
-    // enable_scheduler();
+    load_program();
+    enable_scheduler();
 
     while (1);
 

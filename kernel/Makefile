@@ -9,14 +9,14 @@ GCC_INCLUDE := -Iinclude/base -Iinclude/drivers -Iinclude/process -Iinclude/lib 
 
 
 %.o : %.c ${HEADERS}
-	gcc -m32 -ffreestanding -c -fno-pie ${GCC_INCLUDE} $< -o $@
+	gcc -m32 -ffreestanding -nostdlib -nostartfiles -fPIC -c ${GCC_INCLUDE} $< -o $@ -z noexecstack
 
 %.o : %.asm
 	nasm $< -f elf -o $@
 
-all: kernel.bin
+all: kernel.o
 
 # Build the kernel binary
-kernel.bin: kernel_entry.o ${C_OBJ} ${ASM_OBJ}
-	ld -m elf_i386 -o $@ -T link.ld $^ --oformat binary
+kernel.o: kernel_entry.o ${C_OBJ} ${ASM_OBJ}
+	ld -m elf_i386 -o $@ -T link.ld $^
 
