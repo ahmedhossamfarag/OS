@@ -75,7 +75,7 @@ static char* malloc_align(uint32_t size, uint32_t align)
 {
 	if(head == 0) return NULL;
 
-	if(align % 8 != 0) return 0;
+	if(!align || align % 8 != 0) return 0;
 
 	// make size a multiple of 8
 	size += (8 - size % 8)%8;

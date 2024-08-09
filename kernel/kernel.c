@@ -93,7 +93,7 @@ int main()
     // ap_setup();
     setup();
     println("Welcome To Kernel");
-    // pci_init();
+    pci_init();
     
     // load_program();
     // enable_scheduler();
