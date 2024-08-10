@@ -57,15 +57,17 @@ void ap_start()
     while (1);
 }
 
-extern char _ap_setup_start[];
-extern char _ap_setup_end[];
+extern uint8_t _ap_setup_start[];
+extern uint8_t _ap_setup_end[];
 
 void ap_setup()
 {
-    char* code_offset = (char*)0xE000;
-    uint32_t* stack_size_pntr = (uint32_t*)0xA0000;
-    uint32_t* start_pntr = (uint32_t*)0xB0000;
-    mem_copy(_ap_setup_start, code_offset, _ap_setup_end - _ap_setup_start);
+    uint8_t* code_offset = (uint8_t*)0xA000;
+    uint32_t* stack_size_pntr = (uint32_t*)0xA100;
+    uint32_t* start_pntr = (uint32_t*)0xA200;
+
+    mem_copy((char*)_ap_setup_start, (char*)code_offset, _ap_setup_end - _ap_setup_start);
+
     *start_pntr = (uint32_t) ap_start;
 
     for (uint8_t apic_id = 1; apic_id < info_get_processor_no(); apic_id++)
@@ -79,7 +81,7 @@ void ap_setup()
     }
 }
 
-int main()
+int kernel_main()
 {
     init();
     setup();

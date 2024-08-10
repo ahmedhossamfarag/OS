@@ -20,7 +20,7 @@ _start:
 	mov %eax, grub_magic
 	mov %ebx, boot_info
 	mov $0xB000000, %esp
-	call main
+	call kernel_main
 	cli
 1:	hlt
 	jmp 1b

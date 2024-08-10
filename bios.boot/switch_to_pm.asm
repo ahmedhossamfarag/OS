@@ -28,9 +28,9 @@ mov esi , KERNEL_LOAD_OFFSET
 mov edi , KERNEL_OFFSET
 mov ecx , KERNEL_N_SECTORS * 128
 rep movsd
-    
+
 ; AP Setup Shift
-call ap_setup_shift
+; call ap_setup_shift
 
 call KERNEL_OFFSET ; Finally , call the kernel
 jmp $

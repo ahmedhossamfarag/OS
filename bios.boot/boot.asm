@@ -9,7 +9,7 @@ mov sp , bp
 
 %include "info.asm"
 
-%include "vesa.asm"
+; %include "vesa.asm"
 
 %include "kernel_load.asm"
 

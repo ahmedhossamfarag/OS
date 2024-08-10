@@ -1,6 +1,8 @@
 [bits 16]
-
-mov bx , KERNEL_LOAD_OFFSET
+push es
+mov ax , KERNEL_LOAD_OFFSET / 16
+mov es , ax
+mov bx , KERNEL_LOAD_OFFSET & 0xF
 mov dh , KERNEL_N_SECTORS
 mov dl , [ BOOT_DRIVE ]
 
@@ -22,4 +24,5 @@ disk_error :
 jmp $
 
 load_end:
+pop es
 nop

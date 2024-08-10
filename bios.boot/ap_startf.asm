@@ -51,6 +51,6 @@ _gdt_data :
 _gdt_end :
 _gdt_descriptor :
     dw _gdt_end - _gdt_start - 1
-    dd _gdt_start - ap_setup_start + AP_SETUP_OFFSET
+    dd _gdt_start- ap_setup_start + AP_SETUP_OFFSET
 
 ap_setup_end:
