@@ -39,7 +39,7 @@
 
 
 run: all
-	qemu-system-i386 -kernel kernel/kernel.o -m 2048
+	qemu-system-i386 -kernel kernel/kernel.o -m 2048 -smp 4
 
 kernek.o:
 	$(MAKE) -C kernel
@@ -49,3 +49,5 @@ all: kernek.o
 clean:
 	$(MAKE) -C user clean
 	find . -name '*.o' -type f -delete
+	find . -name '*.dis' -type f -delete
+	find . -name '*.bin' -type f -delete

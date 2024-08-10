@@ -1,37 +1,29 @@
 #include "info.h"
 
-#define MEMORY_N_MAP 0x8000
-#define MEMORY_MAP 0x8004
-#define DISk_SIZE 0x8400
+// #define MEMORY_N_MAP 0x8000
+// #define MEMORY_MAP 0x8004
+// #define DISk_SIZE 0x8400
 
+#define MEMORY_DEFAULT_SIZE 0x100000000 // 4GiB
 #define MAX_N_APIC_IDS 10
 
+extern uint32_t grub_magic;
+extern uint32_t boot_info;
 
 uint32_t processor_no;
-uint32_t memory_size;
+uint64_t memory_size;
 
 
 uint32_t apic_ids[MAX_N_APIC_IDS];
 uint8_t n_apic;
 
-memory_region_t get_memory_region(uint32_t n)
-{
-    memory_region_t* pntr = (memory_region_t*) MEMORY_MAP + (n*sizeof(memory_region_t));
-    return *pntr;
-}
-
 void info_init()
 {
-
-    // memory size
-    uint32_t* pntr = (uint32_t*) MEMORY_N_MAP;
-    uint32_t maps_no = *pntr;
-    memory_size = 0;
-    memory_region_t mr;
-    for (uint32_t i = 0; i < maps_no; i++)
-    {
-        mr = get_memory_region(i);
-        memory_size += mr.length;
+    if(grub_magic == MULTIBOOT_MAGIC){
+        multiboot_info_t* m = (multiboot_info_t*) boot_info;
+        memory_size = (m->mem_lower + m->mem_upper + 1024) * 1024 ;
+    }else{
+        memory_size = MEMORY_DEFAULT_SIZE;
     }
 
     // apic

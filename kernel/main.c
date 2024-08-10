@@ -23,21 +23,6 @@
 #include "vga.h"
 // #include "vga_print.h"
 
-
-extern char _kernel_start[];
-extern char _kernel_end[];
-static uint8_t flag = 0;
-
-void kernel_shift(){
-    if(!flag){
-        uint32_t kernel_size = _kernel_end - _kernel_start;
-        mem_copy(_kernel_start, (char*)KERNEL_OFFSET, kernel_size);
-        flag ++;
-        // update esp
-        asm("jmp %0"::"r"(KERNEL_OFFSET));
-    }
-}
-
 void init()
 {
     info_init();
@@ -65,37 +50,40 @@ void setup()
     enable_paging();
 }
 
-void start()
+void ap_start()
 {
     setup();
 
     while (1);
 }
 
+extern char _ap_setup_start[];
+extern char _ap_setup_end[];
+
 void ap_setup()
 {
-    uint32_t *ap_ebp = (uint32_t *)0xA100;
-    uint32_t *ap_startup = (uint32_t *)0xA200;
-
-    *ap_startup = (uint32_t)start;
+    char* code_offset = (char*)0xE000;
+    uint32_t* stack_size_pntr = (uint32_t*)0xA0000;
+    uint32_t* start_pntr = (uint32_t*)0xB0000;
+    mem_copy(_ap_setup_start, code_offset, _ap_setup_end - _ap_setup_start);
+    *start_pntr = (uint32_t) ap_start;
 
     for (uint8_t apic_id = 1; apic_id < info_get_processor_no(); apic_id++)
     {
-        *ap_ebp = KERNEK_STACK_POINTER(apic_id);
+        *stack_size_pntr = KERNEK_STACK_POINTER(apic_id);
 
         apic_send_init_ipi(apic_id);
         apic_delay(1);
-        apic_send_startup_ipi(apic_id, 0xA);
+        apic_send_startup_ipi(apic_id, (uint32_t)code_offset/0x1000);
         apic_delay(1);
     }
 }
 
 int main()
 {
-    kernel_shift();
     init();
-    // ap_setup();
     setup();
+    ap_setup();
     screen_clear();
     println("Welcome To Kernel");
 

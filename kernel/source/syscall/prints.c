@@ -8,7 +8,7 @@ void prints_handler(cpu_state_t* state)
 {
     thread_t* thread = get_current_thread();
 
-    char* str = (char*)state->eax;
+    char* str = (char*)state->edx;
 
     resource_lock_request(&prints_lock, thread);
 

@@ -30,6 +30,8 @@ uint8_t info_get_processor_id();
 #define VESA_MODE_INFO 0xD100
 #define VESA_FONT_MAP 0xE000
 
+#define MULTIBOOT_MAGIC 0x2BADB002
+
 typedef struct  {
 	uint16_t attributes;		// deprecated, only bit 7 should be of interest to you, and it indicates the mode supports a linear frame buffer.
 	uint8_t window_a;			// deprecated
@@ -67,6 +69,58 @@ typedef struct  {
 	uint16_t off_screen_mem_size;	// size of memory in the framebuffer but not being displayed on the screen
 	uint8_t reserved1[206];
 } __attribute__ ((packed)) vbe_mode_info_t;
+
+typedef struct {
+    uint32_t flags;
+    uint32_t mem_lower;
+    uint32_t mem_upper;
+    uint32_t boot_device;
+    uint32_t cmdline;
+    uint32_t mods_count;
+    uint32_t mods_addr;
+    struct {
+        uint32_t tabsize;
+        uint32_t strsize;
+        uint32_t addr;
+        uint32_t reserved;
+    } syms;
+    uint32_t mmap_length;
+    uint32_t mmap_addr;
+    uint32_t drives_length;
+    uint32_t drives_addr;
+    uint32_t config_table;
+    uint32_t boot_loader_name;
+    uint32_t apm_table;
+    uint32_t vbe_control_info;
+    uint32_t vbe_mode_info;
+    uint16_t vbe_mode;
+    uint16_t vbe_interface_seg;
+    uint16_t vbe_interface_off;
+    uint16_t vbe_interface_len;
+
+    // Framebuffer information
+    uint64_t framebuffer_addr;
+    uint32_t framebuffer_pitch;
+    uint32_t framebuffer_width;
+    uint32_t framebuffer_height;
+    uint8_t framebuffer_bpp;       // Bits per pixel
+    uint8_t framebuffer_type;
+    union {
+        struct {
+            uint32_t framebuffer_red_field_position;
+            uint32_t framebuffer_red_mask_size;
+            uint32_t framebuffer_green_field_position;
+            uint32_t framebuffer_green_mask_size;
+            uint32_t framebuffer_blue_field_position;
+            uint32_t framebuffer_blue_mask_size;
+        };
+        struct {
+            uint32_t framebuffer_palette_addr;
+            uint32_t framebuffer_palette_num_colors;
+        };
+    };
+} __attribute__((packed)) multiboot_info_t;
+
 
 void vesa_init();
 

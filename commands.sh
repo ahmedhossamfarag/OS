@@ -34,3 +34,8 @@ qemu-system-x86_64 -device intel-hda -device hda-duplex -smp 4 -m 2048 -drive fi
 nasm $< -f bin -o $@
 
 grub-file --is-x86-multiboot os-image
+
+readelf -x .apsetup ap_setup.o
+i686-elf-as -o empty.o /dev/null
+objcopy --add-section=.apsetup=ap_setup.bin empty.o ap_setup.o
+readelf -x .section_name file.o
