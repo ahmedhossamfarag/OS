@@ -25,4 +25,5 @@ syscall_map:
     .long 0 #0x15
     .long register_event_handler #0x16
     .long wait_event_handler    #0x17
-    .long 0 #0x18
+    .long deregister_event_handler #0x18
+    .long 0 #0x19

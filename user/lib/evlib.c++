@@ -13,3 +13,12 @@ uint8_t event_register(uint8_t type, void (*handler)(), void* args){
 void event_wait(){
     asm("mov %0, %%esi\n\t""int $0x80"::"i"(EVENT_WAIT_INT));
 }
+
+uint8_t event_deregister(uint8_t type){
+    asm("mov %0, %%esi\n\t""int $0x80"::"i"(EVENT_DEREG_INT), "a"(type));
+
+    uint32_t result;
+    asm("mov %%eax, %0":"=m"(result));
+    
+    return (uint8_t)result;
+}

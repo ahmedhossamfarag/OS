@@ -50,3 +50,5 @@ typedef struct{
 uint8_t event_register(uint8_t type, void (*handler)(), void* args);
 
 void event_wait();
+
+uint8_t event_deregister(uint8_t type);

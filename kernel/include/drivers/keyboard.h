@@ -1,3 +1,5 @@
+#pragma once
+
 #define KEYBOARD_DATA_PORT 0x60
 
 #include <stdint.h>

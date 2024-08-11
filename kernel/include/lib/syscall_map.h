@@ -22,5 +22,6 @@
 
 #define EVENT_REG_INT 0x16
 #define EVENT_WAIT_INT 0x17
+#define EVENT_DEREG_INT 0x18
 
-#define NUM_SYSCALL 0x18
+#define NUM_SYSCALL 0x19
