@@ -28,11 +28,13 @@ void register_event_handler(cpu_state_t* cpu){
         ev->mouse_handler.handler = cpu->ebx;
         ev->mouse_handler.args = (void*) cpu->edx;
         ev->mouse_handler.thread = thread;
+        ev->mouse_handler.is_waiting = 0;
         break;
     case KEYBOARD_EVENT:
         ev->keyboard_handler.handler = cpu->ebx;
         ev->keyboard_handler.args = (void*) cpu->edx;
         ev->keyboard_handler.thread = thread;
+        ev->keyboard_handler.is_waiting = 0;
     default:
         break;
     }
@@ -50,10 +52,12 @@ void deregister_event_handler(cpu_state_t* cpu){
     case MOUSE_EVENT:
         ev->mouse_handler.handler = 0;
         ev->mouse_handler.args = 0;
+        ev->mouse_handler.is_waiting = 0;
         break;
     case KEYBOARD_EVENT:
         ev->keyboard_handler.handler = 0;
         ev->keyboard_handler.args = 0;
+        ev->keyboard_handler.is_waiting = 0;
     default:
         break;
     }
@@ -83,10 +87,12 @@ void clear_events_handler(pcb_t* pcb, thread_t* thread){
     if(ev->mouse_handler.thread == thread){
         ev->mouse_handler.args = 0;
         ev->mouse_handler.handler = 0;
+        ev->mouse_handler.is_waiting = 0;
     }
     if(ev->keyboard_handler.thread == thread){
         ev->keyboard_handler.args = 0;
         ev->keyboard_handler.handler = 0;
+        ev->keyboard_handler.is_waiting = 0;
     }
 }
 
