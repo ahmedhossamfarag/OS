@@ -19,16 +19,16 @@ GCC_INCLUDE := -Iinclude/base -Iinclude/drivers -Iinclude/process -Iinclude/lib 
 	i686-elf-as -o $@ /dev/null
 	objcopy --add-section=.$(basename $<)=$(basename $<).bin $@ $@
 
-all: kernel.o
+all: kernel_o
 
 # Build the kernel binary
-kernel.o: kernel_entry.o main.o ap_setup.o ${C_OBJ} ${ASM_OBJ}
-	i686-elf-gcc -T link.ld -o $@ -ffreestanding -O2 -nostdlib $^ -lgcc
+kernel_o: kernel_entry.o main.o ap_setup.o ${C_OBJ} ${ASM_OBJ}
+	i686-elf-gcc -T link.ld -o kernel.o -ffreestanding -O2 -nostdlib $^ -lgcc
 
 
 # Build the kernel binary
-kernel.bin: kernel_entry.o main.o ap_setup.o ${C_OBJ} ${ASM_OBJ}
-	i686-elf-ld -T bios_link.ld -e _start -o $@  $^ --oformat binary
+kernel_bin: kernel_entry.o main.o ap_setup.o ${C_OBJ} ${ASM_OBJ}
+	i686-elf-ld -T bios_link.ld -e _start -o kernel.bin $^ --oformat binary
 
 
 

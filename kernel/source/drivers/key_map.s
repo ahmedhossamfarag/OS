@@ -1,5 +1,3 @@
-.section rodata
-
 .global key_char_map
 .global key_shift_char_map
 .global key_extended_char_map
@@ -54,7 +52,7 @@
 .set PAGE_DOWN,  44
 .set DEL,  45
 
-
+.section .rodata
 key_char_map:
     .skip 2
     .byte '1'

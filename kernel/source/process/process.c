@@ -6,6 +6,7 @@
 #include "resources.h"
 #include "screen_print.h"
 #include "strlib.h"
+#include "ev_systcall.h"
 
 pcb_t* default_process;
 
@@ -197,6 +198,7 @@ void thread_remove(thread_t* thread){
     if(queue_remove(queues[n], thread)){
         thread->thread_state = THREAD_STATE_TERMINATED;
         process_free_thread((pcb_t*)thread->parent);
+        clear_events_handler((pcb_t*)thread->parent, thread);
     }
     resource_lock_free(queues_lock + n, (void*)(n+1));
 }
@@ -239,6 +241,7 @@ void remove_thread(thread_t* thread)
         thread->thread_state = THREAD_STATE_TERMINATED;
         pcb_t* pcb = (pcb_t*)thread->parent;
         process_free_thread(pcb);
+        clear_events_handler(pcb, thread);
     }
     resource_lock_free(&pstate_lock, (void*)(info_get_processor_id()+1));
 }
@@ -290,4 +293,9 @@ void thread_awake(thread_t *thread)
     }
 
     resource_lock_free(&pstate_lock, (void*)(info_get_processor_id()+1));
+}
+
+uint8_t get_process_index(pcb_t *pcb)
+{
+    return pcb - processes;
 }

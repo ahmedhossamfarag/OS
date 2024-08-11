@@ -3,10 +3,7 @@
 #include "scheduler.h"
 #include "ata.h"
 #include "memory.h"
-#include "file_system.h"
 
-#include "vga_print.h"
-#include "strlib.h"
 
 static struct 
 {
@@ -16,6 +13,7 @@ static struct
     uint32_t cr3;
     uint32_t entry;
     uint32_t membegin;
+    SUCC_ERR_V
 } args;
 
 
@@ -42,19 +40,24 @@ static void loader_error(){
     if(args.cr3){
         free_pagging_dir((uint32_t*)args.cr3);
     }
-    println("Loader error")
+    if(args.error_proc){
+        args.error_proc();
+    }
 }
 
 static void loader_succ(){
     loader_free();
-    println("Loader Success")
 
     uint32_t eip = args.entry;
     uint32_t membegin = args.membegin;
     uint32_t ebp = membegin + SHELL_STACK_SZ;
     membegin += SHELL_STACK_SZ + MEMORY_PADDING;
 
-    add_new_process(1, 0, args.cr3, eip, ebp, membegin);            
+    add_new_process(1, 0, args.cr3, eip, ebp, membegin);
+
+    if(args.success_proc){
+        args.success_proc();
+    }            
 }
 
 static void link_file(){
@@ -75,8 +78,10 @@ static void open_file(){
     file_open((dir_entity_t*)args.root_dir, "shell", &args.filefs, read_file, loader_error);
 }
 
-void load_program()
+void load_program(SUCC_ERR)
 {
+    args.success_proc = success_proc;
+    args.error_proc = error_proc;
     args.root_dir = args.filefs = 0;
     args.file = 0;
     args.cr3 = (uint32_t)get_available_pagging_dir();

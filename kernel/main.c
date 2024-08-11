@@ -81,6 +81,15 @@ void ap_setup()
     }
 }
 
+// static void loader_success(){
+//     println("Loader Success");
+//     enable_scheduler();
+// }
+
+// static void loader_error(){
+//     println("Failed To Load Program");
+// } 
+
 int kernel_main()
 {
     init();
@@ -90,8 +99,7 @@ int kernel_main()
     println("Welcome To Kernel");
 
 
-    // load_program();
-    // enable_scheduler();
+    // load_program(loader_success, loader_error);
 
     while (1);
 

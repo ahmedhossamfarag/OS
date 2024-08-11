@@ -80,3 +80,5 @@ void thread_waiting(thread_t* thread);
 void process_awake(pcb_t* process);
 
 void thread_awake(thread_t* thread);
+
+uint8_t get_process_index(pcb_t* pcb);

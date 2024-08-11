@@ -20,4 +20,7 @@
 
 #define MEMORY_INIT_INT 0x14
 
-#define NUM_SYSCALL 0x15
+#define EVENT_REG_INT 0x16
+#define EVENT_WAIT_INT 0x17
+
+#define NUM_SYSCALL 0x18

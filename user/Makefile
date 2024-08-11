@@ -6,12 +6,12 @@
 all: filesystem
 
 # shell
-shell/shell.o:
+shell/shell_o:
 	$(MAKE) -C shell
 
 
 # filesystem
-filesystem: fsmap.bin shell/shell.o
+filesystem: fsmap.bin shell/shell_o
 	dd if=fsmap.bin of=filesystem bs=512 seek=0 conv=notrunc
 	dd if=shell/shell.o of=filesystem bs=512 seek=2 conv=notrunc
 

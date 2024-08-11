@@ -23,3 +23,6 @@ syscall_map:
     .long 0 #0x13
     .long memory_init_handler #0x14
     .long 0 #0x15
+    .long register_event_handler #0x16
+    .long wait_event_handler    #0x17
+    .long 0 #0x18

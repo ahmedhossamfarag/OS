@@ -13,7 +13,7 @@ boot_bin:
 	$(MAKE) -C bios.boot
 
 kernel_bin:
-	$(MAKE) -C kernel kernel.bin
+	$(MAKE) -C kernel kernel_bin
 
 disk_bin:
 	dd if=/dev/zero of=disk.bin count=10000

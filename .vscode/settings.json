@@ -41,6 +41,8 @@
         "random": "c",
         "numbers": "c",
         "hda.h": "c",
-        "syscall.h": "c"
+        "syscall.h": "c",
+        "loader.h": "c",
+        "ev_systcall.h": "c"
     }
 }
