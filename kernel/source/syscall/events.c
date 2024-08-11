@@ -145,8 +145,8 @@ void ev_syscall_keyboard_handler(key_info_t k){
     pcb_t* pcb = active_pcb;
     uint8_t indx = get_process_index(pcb);
     pcb_event_handler_t* ev = events_handlers + indx;
-    if(ev->keyboard_handler.is_waiting){
-        if(ev->keyboard_handler.thread->thread_state == THREAD_STATE_WAITING){
+    if(ev->keyboard_handler.args && ev->keyboard_handler.handler){
+        if(ev->keyboard_handler.is_waiting){
             ev_copy_args(pcb, ev->keyboard_handler.args, &k, sizeof(key_info_t));
             ev_awake_handler(pcb->cr3, ev->keyboard_handler);
             ev_awake_thread(ev, ev->keyboard_handler.thread);
