@@ -119,8 +119,10 @@ void ev_syscall_keyboard_handler(key_info_t k){
     uint8_t indx = get_process_index(pcb);
     pcb_event_handler_t* ev = events_handlers + indx;
     if(ev->keyboard_handler.args && ev->keyboard_handler.handler){
-        ev_copy_args(pcb, ev->keyboard_handler.args, &k, sizeof(key_info_t));
-        ev_awake_handler(pcb->cr3, ev->keyboard_handler);
+        if(ev->keyboard_handler.thread->thread_state == THREAD_STATE_WAITING){
+            ev_copy_args(pcb, ev->keyboard_handler.args, &k, sizeof(key_info_t));
+            ev_awake_handler(pcb->cr3, ev->keyboard_handler);
+        }
     }
 }
 
@@ -132,7 +134,9 @@ void ev_syscall_mouse_handler(mouse_info_t m){
     uint8_t indx = get_process_index(pcb);
     pcb_event_handler_t* ev = events_handlers + indx;
     if(ev->mouse_handler.args && ev->mouse_handler.handler){
-        ev_copy_args(pcb, ev->mouse_handler.args, &m, sizeof(mouse_info_t));
-        ev_awake_handler(pcb->cr3, ev->mouse_handler);
+        if(ev->mouse_handler.thread->thread_state == THREAD_STATE_WAITING){
+            ev_copy_args(pcb, ev->mouse_handler.args, &m, sizeof(mouse_info_t));
+            ev_awake_handler(pcb->cr3, ev->mouse_handler);
+        }
     }
 }

@@ -2,6 +2,7 @@
 #include "vga_print.h"
 #include "keyboard.h"
 #include "memory.h"
+#include "ev_systcall.h"
 
 static char* edit_des;
 static uint32_t edit_len;
@@ -37,7 +38,7 @@ void vga_edit_init(uint32_t len, void (*end_proc)(char*))
 }
 
 static void vga_edit_end(){
-    set_keyboard_handler_proc(0);
+    set_keyboard_handler_proc(ev_syscall_keyboard_handler);
     vga_set_cursor(vga_ofs + edit_indx, edit_des[edit_indx], VGA_PRINT_FG, VGA_PRINT_BG);
     printc('\n');
     if(edit_end_proc){
