@@ -10,7 +10,7 @@ detect_apic:
     mov $1, %eax
     cpuid
     mov %edx, %eax
-    mov $0x200, %eax
+    and $0x200, %eax
     ret
 
 .global enable_lapic
