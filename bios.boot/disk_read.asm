@@ -10,7 +10,6 @@ get_disk_params:
 set_load_offset:
     mov ax , KERNEL_LOAD_OFFSET / 16
     mov es , ax
-    mov bx , KERNEL_LOAD_OFFSET & 0xF
 
 set_n_sector:
     mov ax , [DISK_LD_SECTOR]
@@ -21,6 +20,7 @@ set_n_sector:
     mov cl , [DISK_SPT]
     mov dl , [DISK_ST_SECTOR]
     sub cl , dl
+    add cl , 1
     cmp ax , cx
     jle set_remain
     mov [DISK_N_SECTOR] , cl
@@ -30,6 +30,7 @@ set_n_sector:
 
 read_disk:
     mov ah , 0x02 ; BIOS read sector function
+    mov bx , 0
     mov dl , [BOOT_DRIVE]
     mov ch , [DISK_CYLINDER]
     mov al , [DISK_N_SECTOR]
@@ -38,7 +39,7 @@ read_disk:
     int 0x13 ; BIOS interrupt
 
 update_params:
-    mov al , 0
+    mov al , 1
     mov [DISK_ST_SECTOR] , al   ; set start sector to 0
     mov al , [DISK_HEAD] 
     add al , 1
@@ -56,6 +57,4 @@ update_params:
 jmp set_n_sector
 
 load_end:
-
     pop es                      ; reset es
-    jmp $

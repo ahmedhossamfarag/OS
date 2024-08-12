@@ -11,7 +11,7 @@ mov sp , bp
 
 ; %include "vesa.asm"
 
-%include "kernel_load.asm"
+%include "disk_read.asm"
 
 %include "switch_to_pm.asm"
 
@@ -19,10 +19,8 @@ halt:
 jmp $
 
 ; data
-BOOT_DRIVE db 0
+%include "boot_data.asm"
 %include "gdt.asm"
-
-%include "ap_setup.asm"
 
 ; Bootsector padding
 times 510 -( $ - $$ ) db 0
