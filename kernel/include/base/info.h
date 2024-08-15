@@ -141,6 +141,8 @@ graphics_info_t* info_get_graphics();
 
 uint32_t info_get_rsdp();
 
+uint8_t info_is_gpt();
+
 #pragma region VESA
 
 #define VESA_MODE 0xD000

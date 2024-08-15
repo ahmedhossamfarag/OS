@@ -101,3 +101,8 @@ graphics_info_t* info_get_graphics(){
 uint32_t info_get_rsdp(){
     return memory_info.RSDP;
 }
+
+uint8_t info_is_gpt()
+{
+    return bl_magic == MYBOOTLOADER_MAGIC;
+}

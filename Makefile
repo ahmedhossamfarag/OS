@@ -7,7 +7,7 @@ kernel_o:
 
 ## BIOS run
 bios_run: os-image filesystem
-	qemu-system-x86_64 -device intel-hda -device hda-duplex -smp 4 -m 2048 -drive file=os-image,format=raw
+	qemu-system-x86_64 -monitor stdio -device intel-hda -device hda-duplex -smp 4 -m 2048 -drive file=os-image,format=raw
 
 boot_bin:
 	$(MAKE) -C bios.boot

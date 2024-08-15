@@ -1,7 +1,7 @@
 #pragma once
 
-#define RootDirLBA 201
-#define FirstBlockLBA 300
+#define RootDirLBA disk_get_rootlba()
+#define FirstBlockLBA (RootDirLBA + 1)
 #define MapIdentefier 0xAF55
 #define SectorSize 512
 #define DiskMapLBA (DiskSize - 1)
@@ -41,6 +41,8 @@ void disk_free(uint32_t lba, uint32_t size);
 
 void disk_close(void (*success_proc)(), void (*error_proc)());
 
+uint32_t disk_get_rootlba();
+
 // Master Boot Record (MBR) structure
 typedef struct {
     uint8_t boot_code[446];           // Boot code area
@@ -57,7 +59,7 @@ typedef struct {
         uint32_t size;                // Size of the partition in sectors
     } partition_table[4];             // Partition table entries (4 entries)
     uint16_t signature;               // Signature (0xAA55)
-}__attribute__((packed)) MBR;
+}__attribute__((packed)) mbr_t;
 
 // GPT Header structure
 typedef struct {
@@ -75,7 +77,7 @@ typedef struct {
     uint32_t num_partition_entries;   // Number of partition entries
     uint32_t partition_entry_size;    // Size of each partition entry
     uint32_t partition_array_crc32;   // CRC32 checksum of the partition entries array
-}__attribute__((packed)) GPTHeader;
+}__attribute__((packed)) gpt_header_t;
 
 // GPT Partition Entry structure
 typedef struct {
@@ -85,4 +87,4 @@ typedef struct {
     uint64_t ending_lba;              // Ending LBA of the partition
     uint64_t attributes;              // Attributes of the partition
     uint16_t partition_name[36];      // Partition name (UTF-16, 72 bytes total)
-}__attribute__((packed)) GPTPartitionEntry;
+}__attribute__((packed)) gpt_partition_entry_t;

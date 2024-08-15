@@ -34,7 +34,9 @@ void exception_handler(cpu_state_t* cpu)
 {
     print("\nException Handler\n");
     track_exception(cpu);
-    schedule_thread_terminated(cpu);
+    if(get_current_process() != get_default_process()){
+        schedule_thread_terminated(cpu);
+    }    
 }
 
 void pic_handler(void) {

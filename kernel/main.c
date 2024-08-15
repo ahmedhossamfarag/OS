@@ -37,8 +37,8 @@ void init()
     scheduler_init();
     syscall_init();
     vga_init();
-    // disk_init();
-    // filesystem_init();
+    disk_init();
+    filesystem_init();
 }
 
 void setup()
@@ -99,6 +99,8 @@ int kernel_main()
     println("Welcome To kernel");
 
     // load_program(loader_success, loader_error);
+
+    while (1);
 
     return 0;
 }
