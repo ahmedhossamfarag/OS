@@ -3,6 +3,9 @@
 #define DRIVERS_OFFSET 0xF0000000
 
 
+#define MULTIBOOT_MAGIC 0x2BADB002
+#define MYBOOTLOADER_MAGIC 0x12345678
+
 #include <stdint.h>
 
 typedef struct  {
@@ -12,25 +15,6 @@ typedef struct  {
     uint32_t acpi;
 }memory_region_t;
 
-void info_init();
-
-uint32_t info_get_processor_no();
-
-uint32_t info_get_memory_size();
-
-void info_add_apic_id(uint32_t id);
-
-uint32_t info_get_apic_id(uint8_t i);
-
-uint8_t info_get_processor_id();
-
-#pragma region VESA
-
-#define VESA_MODE 0xD000
-#define VESA_MODE_INFO 0xD100
-#define VESA_FONT_MAP 0xE000
-
-#define MULTIBOOT_MAGIC 0x2BADB002
 
 typedef struct  {
 	uint16_t attributes;		// deprecated, only bit 7 should be of interest to you, and it indicates the mode supports a linear frame buffer.
@@ -121,11 +105,46 @@ typedef struct {
     };
 } __attribute__((packed)) multiboot_info_t;
 
+typedef struct
+{
+    uint32_t FameBufferBase;
+    uint32_t FrameBufferSize;
+    uint32_t Width;
+    uint32_t Height;
+    uint32_t PixelFormat;
+    uint32_t PixelsPerScanLine;
+    uint32_t RedMask;
+    uint32_t GreenMask;
+    uint32_t BlueMask;                  
+} graphics_info_t;
 
-void vesa_init();
+typedef struct
+{
+    uint32_t MomorySizeInMB;
+    uint32_t RSDP;
+} memory_info_t;
 
-uint16_t vesa_get_mode();
 
-vbe_mode_info_t* vesa_get_mode_info();
+void info_init();
+
+uint32_t info_get_processor_no();
+
+uint32_t info_get_memory_size();
+
+void info_add_apic_id();
+
+uint32_t info_get_apic_id(uint8_t i);
+
+uint8_t info_get_processor_id();
+
+graphics_info_t* info_get_graphics();
+
+uint32_t info_get_rsdp();
+
+#pragma region VESA
+
+#define VESA_MODE 0xD000
+#define VESA_MODE_INFO 0xD100
+#define VESA_FONT_MAP 0xE000
 
 #pragma endregion

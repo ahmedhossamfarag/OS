@@ -2,10 +2,10 @@
 #include "vga.h"
 #include "libc.h"
 
-extern uint8_t* framebuffer;
-extern uint16_t pitch;
-extern uint16_t width;
-extern uint16_t height;
+extern uint32_t* framebuffer;
+extern uint32_t pitch;
+extern uint32_t width;
+extern uint32_t height;
 
 static uint32_t vga_offset;
 
@@ -20,7 +20,7 @@ void vga_scroll_up()
     vga_offset -= VgaLineLn;
 }
 
-void vga_new_line(uint8_t bg)
+void vga_new_line(uint32_t bg)
 {
     uint32_t current_offset = vga_offset;
     int line = vga_offset / VgaLineLn;
@@ -32,7 +32,7 @@ void vga_new_line(uint8_t bg)
     }
 }
 
-void vga_print_char(char c, uint8_t fg, uint8_t bg){
+void vga_print_char(char c, uint32_t fg, uint32_t bg){
     if(c == '\n'){
         vga_new_line(bg);
     }else{
@@ -44,7 +44,7 @@ void vga_print_char(char c, uint8_t fg, uint8_t bg){
     }
 }
 
-void vga_print_str(const char* str, uint8_t* fg, uint8_t* bg){
+void vga_print_str(const char* str, uint32_t* fg, uint32_t* bg){
     while (*str != '\0')
     {
         vga_print_char(*str, *fg, *bg);
@@ -54,7 +54,7 @@ void vga_print_str(const char* str, uint8_t* fg, uint8_t* bg){
     }
 }
 
-void vga_print_str_fb(const char *str, uint8_t fg, uint8_t bg)
+void vga_print_str_fb(const char *str, uint32_t fg, uint32_t bg)
 {
     while (*str != '\0')
     {
@@ -63,24 +63,24 @@ void vga_print_str_fb(const char *str, uint8_t fg, uint8_t bg)
     }
 }
 
-void vga_print_clear(uint8_t bg){
+void vga_print_clear(uint32_t bg){
     vga_clear(bg);
     vga_offset = 0;
 }
 
-void vga_set_cursor(uint32_t offset, char c, uint8_t fg, uint8_t bg)
+void vga_set_cursor(uint32_t offset, char c, uint32_t fg, uint32_t bg)
 {
     if(offset > vga_offset) return;
 
     vga_draw_char((offset%VgaLineLn)*CHAR_WIDTH, (offset/VgaLineLn)*FONT_HEIGHT, c, fg, bg);
 }
 
-void vga_set_end_cursor(uint8_t fg, uint8_t bg)
+void vga_set_end_cursor(uint32_t fg, uint32_t bg)
 {
     vga_set_cursor(vga_offset, 0, fg, bg);
 }
 
-void vga_set_offset(int offset)
+void vga_set_offset(uint32_t offset)
 {
     if(offset < VgaEndOffset){
         vga_offset = offset;

@@ -9,12 +9,10 @@ void vga_init();
 
 uint8_t vga_available();
 
-void vga_set_palette_entry(uint8_t index, uint8_t red, uint8_t green, uint8_t blue);
+void put_pixel_rgb(uint32_t x, uint32_t y, uint32_t color);
 
-void vga_clear(uint8_t color);
+void vga_clear(uint32_t color);
 
-void vga_draw_char(int x, int y, char c, uint8_t fg, uint8_t bg);
+void vga_draw_char(int x, int y, char c, uint32_t fg, uint32_t bg);
 
-void vga_copy_buffer(uint8_t* buffer);
-
-void vga_copy_image(uint8_t* image, uint32_t x, uint32_t y, uint32_t img_width, uint32_t img_height);
+void vga_copy_buffer(uint32_t* buffer);

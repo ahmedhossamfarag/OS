@@ -1,6 +1,6 @@
 ## UEFI run
 run: kernel_o
-	qemu-system-i386 -kernel kernel/kernel.o -m 2048 -smp 4
+	$(MAKE) -f Makefile.img
 
 kernel_o:
 	$(MAKE) -C kernel
@@ -31,6 +31,7 @@ filesystem: os-image
 ## clean
 clean:
 	$(MAKE) -C user clean
+	$(MAKE) -f Makefile.img clean
 	find . -name '*.o' -type f -delete
 	find . -name '*.dis' -type f -delete
 	find . -name '*.bin' -type f -delete

@@ -39,3 +39,29 @@ readelf -x .apsetup ap_setup.o
 i686-elf-as -o empty.o /dev/null
 objcopy --add-section=.apsetup=ap_setup.bin empty.o ap_setup.o
 readelf -x .section_name file.o
+
+lsblk
+dd if=/dev/zero of=$@ bs=1M count=1024
+sudo losetup /dev/$(LOOPN) $(DISK_IMAGE)
+sudo parted /dev/$(LOOPN) --script mklabel gpt
+sudo parted /dev/$(LOOPN) --script mkpart primary fat32 1MiB $(EFI_PART_SIZE)
+sudo parted /dev/$(LOOPN) --script set 1 boot on
+sudo parted /dev/$(LOOPN) --script mkpart primary $(EFI_PART_SIZE) 100%
+sudo mkfs.fat -F32 /dev/$(LOOPN)p1
+sudo mkdir -p $(MOUNT)
+sudo mount /dev/$(LOOPN)p1 $(MOUNT)
+sudo mkdir -p $(MOUNT)/EFI/BOOT
+sudo cp BOOTX64.EFI $(MOUNT)/EFI/BOOT/
+sudo dd if=file.txt of=/dev/$(LOOPN)p2 conv=notrunc
+sudo umount $(MOUNT) || true
+sudo rmdir $(MOUNT) || true
+sudo losetup -d /dev/$(LOOPN) || true
+rm -fr $(DISK_IMAGE)
+clang -target x86_64-unknown-windows -ffreestanding -fshort-wchar -mno-red-zone -I/usr/include/efi -I/usr/include/efi/protocol -I/usr/include/efi/x86_64 -c -o efi.o efi.c
+clang -target x86_64-unknown-windows -nostdlib -Wl,-entry:efi_main -Wl,-subsystem:efi_application -fuse-ld=lld-link -o BOOTX64.EFI efi.o
+sudo qemu-system-x86_64 \
+    -drive format=raw,file=$(DISK_IMAGE) \
+    -pflash /usr/share/OVMF/OVMF_CODE_4M.fd \
+    -pflash /usr/share/OVMF/OVMF_VARS_4M.fd \
+    -m 512M \
+    -net none

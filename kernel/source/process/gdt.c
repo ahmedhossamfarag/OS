@@ -38,11 +38,13 @@ void gdt_init() {
 
 }
 
+extern void enable_gdt_asm();
+
 void enable_gdt(){
 
     // Load the GDT
-    asm volatile ("lgdt %0" : : "m" (gdtp));
-
+    // asm volatile ("lgdt %0" : : "m" (gdtp));
+    enable_gdt_asm();
 
     enable_tss();
 }

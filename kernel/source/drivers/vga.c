@@ -4,80 +4,56 @@
 #include "memory.h"
 #include "libc.h"
 
-uint8_t* framebuffer;
-uint16_t pitch;
-uint16_t width;
-uint16_t height;
+uint32_t* framebuffer;
+uint32_t pitch;
+uint32_t width;
+uint32_t height;
 uint8_t* font_map;
 
 void vga_init()
 {
-    vbe_mode_info_t* mode = vesa_get_mode_info();
-    framebuffer = (uint8_t*)mode->framebuffer;
-    pitch = mode->pitch;
-    width = mode->width;
-    height = mode->height;
-    font_map = (uint8_t*)alloc(0x1000);
-    mem_copy((char*)VESA_FONT_MAP, (char*)font_map, 0x1000);
+    graphics_info_t* g = info_get_graphics();
+    framebuffer = (uint32_t*)g->FameBufferBase;
+    pitch = g->PixelsPerScanLine * 4;
+    width = g->Width;
+    height = g->Height;
+    extern uint8_t _font_bitmap[];
+    font_map = _font_bitmap;
 }
 
 uint8_t vga_available()
 {
-    return vesa_get_mode() != 0xFFFF;
+    return info_get_graphics()->PixelFormat != 0xFFFF;
 }
 
-void vga_set_palette_entry(uint8_t index, uint8_t red, uint8_t green, uint8_t blue)
-{
-    outb(VGA_PALETTE_INDEX, index);  // Set the palette index
-    outb(VGA_PALETTE_DATA, red);     // Set the red component
-    outb(VGA_PALETTE_DATA, green);   // Set the green component
-    outb(VGA_PALETTE_DATA, blue);    // Set the blue component
+void put_pixel_rgb(uint32_t x, uint32_t y, uint32_t color){
+    framebuffer[x + y * width] = color;
 }
 
-void vga_clear(uint8_t color)
+void vga_clear(uint32_t color)
 {
     uint32_t len = width * height;
-    for (uint8_t* pixel = framebuffer; pixel < framebuffer + len; pixel++)
+    for (uint32_t* pixel = framebuffer; pixel < framebuffer + len; pixel++)
     {
         *pixel = color;
     }
 }
 
-void vga_draw_char(int x, int y, char c, uint8_t fg, uint8_t bg) {
+void vga_draw_char(int x, int y, char c, uint32_t fg, uint32_t bg) {
     uint8_t *glyph = font_map + c * FONT_HEIGHT;
-    uint8_t *framepntr = framebuffer + y * pitch + x;
     for (int i = 0; i < FONT_HEIGHT; i++) {
         uint8_t line = glyph[i];
         for (int j = 0; j < 8; j++) {
             if (line & (0x80 >> j)) {
-                framepntr[j +  i * pitch] = fg;
+                put_pixel_rgb(x + j, y + i, fg);
             }else{
-                framepntr[j +  i * pitch] = bg;
+                put_pixel_rgb(x + j, y + i, bg);
             }
         }
     }
 }
 
-void vga_copy_buffer(uint8_t *buffer)
+void vga_copy_buffer(uint32_t *buffer)
 {
     mem_copy((char*)buffer, (char*)framebuffer, pitch*height);
-}
-
-void vga_copy_image(uint8_t *image, uint32_t x, uint32_t y, uint32_t img_width, uint32_t img_height)
-{
-    uint32_t length = img_width * pitch / width;
-    uint32_t copyw = img_width;
-    uint32_t copyh = img_height;
-    if(x+img_width > width) copyw = width - x;
-    if(y+img_height > height) copyh = height - y;
-    uint32_t copyl = copyw * pitch / width;
-    
-    uint8_t *framepntr = framebuffer + y * pitch + x;    
-    for (uint32_t i = 0; i < copyh; i++)
-    {
-        mem_copy((char*)image, (char*)framepntr, copyl);
-        framepntr += pitch;
-        image += length;
-    }
-    
 }

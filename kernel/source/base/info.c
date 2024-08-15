@@ -5,55 +5,76 @@
 // #define DISk_SIZE 0x8400
 
 #define MEMORY_DEFAULT_SIZE 0x100000000 // 4GiB
-#define MAX_N_APIC_IDS 10
 
-extern uint32_t grub_magic;
-extern uint32_t boot_info;
+extern uint32_t bl_magic;
+extern uint32_t boot_info_ptr;
+extern uint32_t memory_info_ptr;
+extern uint32_t graphics_info_ptr;
 
 uint32_t processor_no;
-uint64_t memory_size;
+memory_info_t memory_info;
+graphics_info_t graphics_info;
 
+static void info_mbl_init(){
+    memory_info_t* mptr = (memory_info_t*) memory_info_ptr;
+    memory_info = *mptr;
 
-uint32_t apic_ids[MAX_N_APIC_IDS];
-uint8_t n_apic;
+    graphics_info_t* gptr = (graphics_info_t*) graphics_info_ptr;
+    graphics_info = *gptr;
+}
+
+static void info_bios_init(){
+    memory_info.MomorySizeInMB = MEMORY_DEFAULT_SIZE / 1024 / 1024;
+    memory_info.RSDP = 0;
+
+    uint16_t* mode_pntr = (uint16_t*) VESA_MODE;
+    uint16_t vesa_mode = *mode_pntr;
+    if(vesa_mode != 0xFFFF){
+        vbe_mode_info_t* info_pntr = (vbe_mode_info_t*) VESA_MODE_INFO;
+        graphics_info.FameBufferBase = info_pntr->framebuffer;
+        graphics_info.Width = info_pntr->width;
+        graphics_info.Height = info_pntr->height;
+        graphics_info.FrameBufferSize = info_pntr->pitch * info_pntr->height;
+        graphics_info.PixelsPerScanLine = info_pntr->width;
+        graphics_info.RedMask = info_pntr->red_mask;
+        graphics_info.GreenMask = info_pntr->green_mask;
+        graphics_info.BlueMask = info_pntr->blue_mask;
+        graphics_info.PixelFormat = 0;
+    }else{
+        graphics_info.PixelFormat = 0xFFFF;
+    }
+}
 
 void info_init()
 {
-    if(grub_magic == MULTIBOOT_MAGIC){
-        multiboot_info_t* m = (multiboot_info_t*) boot_info;
-        memory_size = (m->mem_lower + m->mem_upper + 1024) * 1024 ;
+    if(bl_magic == MYBOOTLOADER_MAGIC){
+        info_mbl_init();
     }else{
-        memory_size = MEMORY_DEFAULT_SIZE;
+        info_bios_init();
     }
 
-    // apic
-    n_apic = 0;
-
-    vesa_init();
+    processor_no = 0;
 }
 
 uint32_t info_get_processor_no()
 {
-    return n_apic;
+    return processor_no ? processor_no : 1;
 }
 
 uint32_t info_get_memory_size()
 {
-    return  memory_size;
+    return  memory_info.MomorySizeInMB * 1024 * 1024;
 }
 
 
-void info_add_apic_id(uint32_t id)
+void info_add_apic_id()
 {
-    if(n_apic < MAX_N_APIC_IDS){
-        apic_ids[n_apic] = id;
-        n_apic ++;
-    }
+    processor_no ++;
 }
 
 uint32_t info_get_apic_id(uint8_t i)
 {
-    return apic_ids[i];
+    return i;
 }
 
 
@@ -73,26 +94,10 @@ uint8_t info_get_processor_id()
     return processor_id;
 }
 
-#pragma region VESA
-
-uint16_t vesa_mode;
-vbe_mode_info_t mode_info;
-
-void vesa_init(){
-    uint16_t* mode_pntr = (uint16_t*) VESA_MODE;
-    vesa_mode = *mode_pntr;
-    if(vesa_mode != 0xFFFF){
-        vbe_mode_info_t* info_pntr = (vbe_mode_info_t*) VESA_MODE_INFO;
-        mode_info = *info_pntr;
-    }
+graphics_info_t* info_get_graphics(){
+    return &graphics_info;
 }
 
-uint16_t vesa_get_mode(){
-    return vesa_mode;
+uint32_t info_get_rsdp(){
+    return memory_info.RSDP;
 }
-
-vbe_mode_info_t* vesa_get_mode_info(){
-    return &mode_info;
-}
-
-#pragma endregion

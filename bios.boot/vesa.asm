@@ -8,14 +8,33 @@ jne vesa_error
 mov si, [VESA_INFO+14]
 vesa_mode_loop:
     mov cx, [si]
-    cmp cx, VESA_DESIRED_MODE
-    je vesa_set
     cmp cx, 0xFFFF
     je vesa_error
-    add si, 2
-    jmp vesa_mode_loop
-vesa_set:
-    mov [VESA_MODE], cx
+
+    ; check width
+    call vesa_mode_info
+    mov dx, [VESA_MODE_INFO+18]
+    cmp dx, VESA_DESIRED_WIDTH
+    jle vesa_next_mode
+    ; check height
+    mov dx, [VESA_MODE_INFO+20]
+    cmp dx, VESA_DESIRED_HEIGHT
+    jle vesa_next_mode
+    ; check depth
+    mov dl, [VESA_MODE_INFO+25]
+    cmp dl, VESA_DESIRED_DEPTH
+    jne vesa_next_mode
+    ; check framebuffer
+    mov dx, [VESA_MODE_INFO+42]
+    cmp dx, 0
+    je vesa_next_mode
+
+    jmp vesa_set
+
+    vesa_next_mode:
+        add si, 2
+        jmp vesa_mode_loop
+
 vesa_mode_info:
     mov ax, 0
     mov es, ax
@@ -24,6 +43,10 @@ vesa_mode_info:
     int 0x10
     cmp ax, 0x004F
     jne vesa_error
+    ret
+
+vesa_set:
+    mov [VESA_MODE], cx
 vesa_mode_set:
     mov bx, cx
     or bx, 0x4000
@@ -31,24 +54,13 @@ vesa_mode_set:
     int 0x10
     cmp ax, 0x004F
     jne vesa_error
-vesa_font_get:
-    push ds
-	push es
-	mov	ax, 1130h
-	mov	bh, 6
-	int	10h
-	push es
-	pop	ds
-	pop	es
-	mov	si, bp
-    mov di, VESA_FONT_MAP
-	mov	cx, 256*16/4
-	rep	movsd
-	pop	ds
     jmp vesa_end
+
 vesa_error:
     mov cx, 0xFFFF
     mov [VESA_MODE], cx
     nop
+
+
 vesa_end:
     nop

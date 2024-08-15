@@ -15,6 +15,8 @@
 		_ap_setup_start = .;
 		KEEP(*(.ap_setup))
 		_ap_setup_end = .;
+		_font_bitmap = .;
+		KEEP(*(.font_bitmap))
 	}
 
 	.data BLOCK(4K) : ALIGN(4K)

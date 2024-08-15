@@ -1,4 +1,4 @@
-#include "screen_print.h"
+// #include "screen_print.h"
 #include "interrupt.h"
 #include "pic.h"
 #include "timer.h"
@@ -21,7 +21,7 @@
 #include "syscall.h"
 #include "pci.h"
 #include "vga.h"
-// #include "vga_print.h"
+#include "vga_print.h"
 
 void init()
 {
@@ -36,7 +36,7 @@ void init()
     apic_init();
     scheduler_init();
     syscall_init();
-    // vga_init();
+    vga_init();
     // disk_init();
     // filesystem_init();
 }
@@ -95,13 +95,10 @@ int kernel_main()
     init();
     setup();
     ap_setup();
-    screen_clear();
-    println("Welcome To Kernel");
-
+    vga_print_clear(0);
+    println("Welcome To kernel");
 
     // load_program(loader_success, loader_error);
-
-    while (1);
 
     return 0;
 }

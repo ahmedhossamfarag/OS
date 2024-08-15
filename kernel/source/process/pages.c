@@ -7,12 +7,24 @@ static uint8_t* pg_arr;
 static void pages_alloc_kernel(){
     pg_arr[0] = 0;
 
-    for (int i = KERNEL_OFFSET / SEGMENT_SIZE; i < KERNEL_END / SEGMENT_SIZE; i++)
+    for (uint32_t i = KERNEL_OFFSET / SEGMENT_SIZE; i < KERNEL_END / SEGMENT_SIZE; i++)
     {
         pg_arr[i] = 0;
     }
     
-    for (int i = DRIVERS_OFFSET / SEGMENT_SIZE; i < SEGMENT_NO; i++)
+    graphics_info_t* g = info_get_graphics();
+
+    for (uint32_t i = (g->FameBufferBase / SEGMENT_SIZE); i < (g->FameBufferBase + g->FrameBufferSize) / SEGMENT_SIZE; i++)
+    {
+        pg_arr[i] = 0;
+    }
+    
+    for (uint32_t i = DRIVERS_OFFSET / SEGMENT_SIZE; i < SEGMENT_NO; i++)
+    {
+        pg_arr[i] = 0;
+    }
+
+    for (uint32_t i = info_get_memory_size() / SEGMENT_SIZE; i < SEGMENT_NO; i++)
     {
         pg_arr[i] = 0;
     }

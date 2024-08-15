@@ -17,8 +17,10 @@
 .global _start
 .type _start, @function
 _start:
-	mov %eax, grub_magic
-	mov %ebx, boot_info
+	mov %eax, bl_magic
+	mov %ebx, boot_info_ptr
+	mov %ecx, memory_info_ptr
+	mov %edx, graphics_info_ptr
 	mov $0xB000000, %esp
 	call kernel_main
 	cli
@@ -28,9 +30,15 @@ _start:
 .size _start, . - _start
 
 .section .data
-.global grub_magic
-.global boot_info
-grub_magic:
+.global bl_magic
+.global boot_info_ptr
+.global memory_info_ptr
+.global graphics_info_ptr
+bl_magic:
 	.long 0
-boot_info:
+boot_info_ptr:
+	.long 0
+memory_info_ptr:
+	.long 0
+graphics_info_ptr:
 	.long 0

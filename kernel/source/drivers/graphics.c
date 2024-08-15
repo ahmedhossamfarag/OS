@@ -3,27 +3,27 @@
 #include "math.h"
 #include "memory.h"
 
-extern uint16_t pitch;
-extern uint16_t width;
-extern uint16_t height;
+extern uint32_t pitch;
+extern uint32_t width;
+extern uint32_t height;
 extern uint8_t* font_map;
 
-uint8_t* back_buffer;
+uint32_t* back_buffer;
 
 void graphics_init()
 {
-    back_buffer = (uint8_t*) alloc(pitch*height);
+    back_buffer = (uint32_t*) alloc(pitch*height);
     graphics_clear(0);
 }
 
-void set_pixel(int x, int y, uint8_t color) {
-    if(x < width && y < height){
-        back_buffer[y * pitch + x] = color;
+void set_pixel(int x, int y, uint32_t color) {
+    if((uint32_t)x < width && (uint32_t)y < height){
+        back_buffer[y * width + x] = color;
     }
 }
 
 /* Bresenham's Line Algorithm */
-void draw_line(int x0, int y0, int x1, int y1, uint8_t color) {
+void draw_line(int x0, int y0, int x1, int y1, uint32_t color) {
     int dx = math_abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
     int dy = -math_abs(y1 - y0), sy = y0 < y1 ? 1 : -1; 
     int err = dx + dy, e2;
@@ -38,7 +38,7 @@ void draw_line(int x0, int y0, int x1, int y1, uint8_t color) {
 }
 
 
-void draw_rectangle(int x, int y, int width, int height, uint8_t color) {
+void draw_rectangle(int x, int y, int width, int height, uint32_t color) {
     for (int i = 0; i < width; i++) {
         set_pixel(x + i, y, color);
         set_pixel(x + i, y + height - 1, color);
@@ -50,7 +50,7 @@ void draw_rectangle(int x, int y, int width, int height, uint8_t color) {
 }
 
 /* Midpoint Circle Algorithm */
-void draw_circle(int xc, int yc, int radius, uint8_t color) {
+void draw_circle(int xc, int yc, int radius, uint32_t color) {
     int x = radius, y = 0;
     int p = 1 - radius;
 
@@ -73,9 +73,9 @@ void draw_circle(int xc, int yc, int radius, uint8_t color) {
     }
 }
 
-void graphics_clear(uint8_t color){
+void graphics_clear(uint32_t color){
     uint32_t len = width * height;
-    for (uint8_t* pixel = back_buffer; pixel < back_buffer + len; pixel++)
+    for (uint32_t* pixel = back_buffer; pixel < back_buffer + len; pixel++)
     {
         *pixel = color;
     }

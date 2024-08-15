@@ -1,0 +1,55 @@
+DISK_IMAGE = disk_image.iso
+EFI_PART_SIZE = 256MiB
+LOOPN = loop13
+MOUNT = /mnt/partition1
+MYAPP_EFI = /home/ahmed-hossam/src/edk2/Build/MyApp/DEBUG_GCC5/IA32/MyApp.efi
+BOOT = BOOTIA32.EFI
+
+
+all: clean run
+
+
+$(DISK_IMAGE):
+	dd if=/dev/zero of=$@ bs=1M count=1024
+
+$(LOOPN): $(DISK_IMAGE)
+	sudo losetup /dev/$(LOOPN) $(DISK_IMAGE)
+
+partition: $(LOOPN)
+	sudo parted /dev/$(LOOPN) --script mklabel gpt
+	sudo parted /dev/$(LOOPN) --script mkpart primary fat32 1MiB $(EFI_PART_SIZE)
+	sudo parted /dev/$(LOOPN) --script set 1 boot on
+	sudo parted /dev/$(LOOPN) --script mkpart primary $(EFI_PART_SIZE) 100%
+	
+format: partition
+	sudo mkfs.fat -F32 /dev/$(LOOPN)p1
+
+mount: format
+	sudo mkdir -p $(MOUNT)
+	sudo mount /dev/$(LOOPN)p1 $(MOUNT)
+
+copy: mount
+	cp $(MYAPP_EFI) $(BOOT)
+	sudo mkdir -p $(MOUNT)/EFI/BOOT
+	sudo cp $(BOOT) $(MOUNT)/EFI/BOOT/
+	sudo cp kernel/kernel.o $(MOUNT)/
+	sudo umount $(MOUNT)
+	sudo rmdir $(MOUNT)
+	sudo losetup -d /dev/$(LOOPN)
+
+run: copy
+	sudo qemu-system-i386 \
+	-monitor stdio \
+    -drive format=raw,file=$(DISK_IMAGE) \
+    -pflash /home/ahmed-hossam/src/edk2/Build/OvmfIa32/DEBUG_GCC5/FV/OVMF_CODE.fd \
+    -pflash /home/ahmed-hossam/src/edk2/Build/OvmfIa32/DEBUG_GCC5/FV/OVMF_VARS.fd \
+    -m 2048M \
+	-smp 4 \
+    -net none
+
+clean:
+	sudo umount $(MOUNT) || true
+	sudo rmdir $(MOUNT) || true
+	sudo losetup -d /dev/$(LOOPN) || true
+	rm -fr $(DISK_IMAGE)
+	rm -fr $(BOOT)

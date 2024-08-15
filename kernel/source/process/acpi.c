@@ -3,6 +3,11 @@
 #include "info.h"
 
 void *find_rsdp() {
+    uint32_t rsdp = info_get_rsdp();
+    if(rsdp){
+        return (void*) rsdp;
+    }
+
     for (uintptr_t addr = RSDP_SEARCH_START; addr < RSDP_SEARCH_END; addr += RSDP_SEARCH_INCREMENT) {
         if (str_cmp_n((char *)addr, RSDP_SIGNATURE, 8) == 0) {
             return (void *)addr;
@@ -44,8 +49,7 @@ void parse_madt(madt_t *madt) {
         uint8_t length = ptr[1];
         switch (type) {
             case 0: { // Processor Local APIC
-                madt_apic_t *entry = (void *)ptr;
-                info_add_apic_id(entry->apic_id);
+                info_add_apic_id();
                 break;
             }
             default:
