@@ -19,6 +19,13 @@ static void ata_wait_drq(uint16_t base) {
     while (!(inb(base + 7) & 0x08)); // Wait for DRQ (data request) flag to set
 }
 
+
+void ata_init() {
+    outb(PRIMARY_CTRL, 0x04);
+    // Small delay
+    outb(PRIMARY_CTRL, 0x00);
+}
+
 static void ata_read_request(uint16_t base, uint8_t drive, uint32_t lba, uint8_t sector_count){
     //  uint16_t ctrl = base == PRIMARY_BASE ? PRIMARY_CTRL : SECONDARY_CTRL;
     

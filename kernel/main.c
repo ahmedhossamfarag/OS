@@ -81,24 +81,26 @@ void ap_setup()
     }
 }
 
-// static void loader_success(){
-//     println("Loader Success");
-//     enable_scheduler();
-// }
+static void loader_success(){
+    println("Loader Success");
+    enable_scheduler();
+}
 
-// static void loader_error(){
-//     println("Failed To Load Program");
-// } 
+static void loader_error(){
+    println("Failed To Load Program");
+} 
+
 
 int kernel_main()
 {
     init();
     setup();
     ap_setup();
+    ata_init();
     vga_print_clear(0);
     println("Welcome To kernel");
 
-    // load_program(loader_success, loader_error);
+    load_program(loader_success, loader_error);
 
     while (1);
 

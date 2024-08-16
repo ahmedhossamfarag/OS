@@ -1,5 +1,5 @@
 DISK_IMAGE = disk_image.iso
-EFI_PART_SIZE = 256MiB
+EFI_PART_SIZE = 64MiB
 LOOPN = loop13
 MOUNT = /mnt/partition1
 MYAPP_EFI = /home/ahmed-hossam/src/edk2/Build/MyApp/DEBUG_GCC5/IA32/MyApp.efi
@@ -28,11 +28,15 @@ mount: format
 	sudo mkdir -p $(MOUNT)
 	sudo mount /dev/$(LOOPN)p1 $(MOUNT)
 
-copy: mount
+filesystem:
+	$(MAKE) -C user
+
+copy: mount filesystem
 	cp $(MYAPP_EFI) $(BOOT)
 	sudo mkdir -p $(MOUNT)/EFI/BOOT
 	sudo cp $(BOOT) $(MOUNT)/EFI/BOOT/
 	sudo cp kernel/kernel.o $(MOUNT)/
+	sudo dd if=user/filesystem of=/dev/$(LOOPN)p2
 	sudo umount $(MOUNT)
 	sudo rmdir $(MOUNT)
 	sudo losetup -d /dev/$(LOOPN)

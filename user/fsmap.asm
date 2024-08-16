@@ -2,8 +2,8 @@ NameLn equ 100
 FILE_TYPE equ 0x33
 DIR_TYPE equ 0x55
 
-RLBA equ 201
-DLBA equ 203
+RLBA equ 0x20000
+DLBA equ 0x20002
 
 %macro fsentity 7 ; type, lba, parent-lba, prev-lba, next-lba, name, name-ln
     %%start:

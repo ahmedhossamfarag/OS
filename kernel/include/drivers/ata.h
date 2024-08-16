@@ -17,6 +17,8 @@
 
 #include <stdint.h>
 
+void ata_init();
+
 /* lba: Logical Block Addressing */
 void ata_read(uint16_t base, uint8_t drive, uint32_t lba, uint8_t sector_count, void *buffer);
 

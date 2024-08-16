@@ -1,7 +1,9 @@
 #pragma once
 
+#define DISK_USED 51
+
 #define RootDirLBA disk_get_rootlba()
-#define FirstBlockLBA (RootDirLBA + 1)
+#define FirstBlockLBA (RootDirLBA + DISK_USED + 1)
 #define MapIdentefier 0xAF55
 #define SectorSize 512
 #define DiskMapLBA (DiskSize - 1)
