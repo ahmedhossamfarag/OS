@@ -37,6 +37,7 @@ void init()
     scheduler_init();
     syscall_init();
     vga_init();
+    ata_init();
     disk_init();
     filesystem_init();
 }
@@ -44,10 +45,10 @@ void init()
 void setup()
 {
     enable_idt();
-    enable_interrupt();
     enable_gdt();
     enable_apic();
     enable_paging();
+    enable_interrupt();
 }
 
 void ap_start()
@@ -96,7 +97,6 @@ int kernel_main()
     init();
     setup();
     ap_setup();
-    ata_init();
     vga_print_clear(0);
     println("Welcome To kernel");
 

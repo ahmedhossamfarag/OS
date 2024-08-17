@@ -6,7 +6,7 @@ kernel_o:
 	$(MAKE) -C kernel
 
 ## BIOS run
-bios_run: os-image filesystem
+bios_run: os-image bios_filesystem
 	qemu-system-x86_64 -monitor stdio -device intel-hda -device hda-duplex -smp 4 -m 2048 -drive file=os-image,format=raw
 
 boot_bin:
@@ -23,8 +23,8 @@ os-image: boot_bin kernel_bin disk_bin
 
 ROOT_DIR = 201
 
-filesystem: os-image
-	$(MAKE) -C user
+bios_filesystem: os-image
+	$(MAKE) -C user bios_filesystem
 	dd if=user/filesystem of=os-image bs=512 seek=${ROOT_DIR} conv=notrunc
 
 

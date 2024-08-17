@@ -1,6 +1,6 @@
 DISK_IMAGE = disk_image.iso
 EFI_PART_SIZE = 64MiB
-LOOPN = loop13
+LOOPN = loop14
 MOUNT = /mnt/partition1
 MYAPP_EFI = /home/ahmed-hossam/src/edk2/Build/MyApp/DEBUG_GCC5/IA32/MyApp.efi
 BOOT = BOOTIA32.EFI
