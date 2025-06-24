@@ -1,24 +1,49 @@
 # Operating System
-A simple operating system built in C with core components like a File System, Memory Manager, Threading, and
-more.
 
-The system is built for x86 32-bit architecture, and was tested on QEMU.
+A simple operating system built in **C**, designed for the **x86 32-bit architecture**.  
+It includes core components such as a file system, memory management, threading, and basic I/O device support.  
+The system is compiled using `make` and tested with **QEMU**.
 
-Makefiles are used to build the system.
+> This project uses the [OSDev Wiki](https://wiki.osdev.org/Creating_an_Operating_System) as a primary reference.
 
-The [Wiki OS Dev](https://wiki.osdev.org/Creating_an_Operating_System) is used as a reference for the project.
+---
 
-## Features
-- File System
-- Memory Manager (Paging, Virtual Memory)
-- Threading
-- Multiple Processors
-- Screen Printing
-- Input/Output Devices (Mouse, Keyboard)
-- System Calls
-- Interrupts handling
-- Shceduler
-- User Standard Library
+## ⚙️ Features
 
+- **File System**  
+  Basic file storage and access mechanisms.
+
+- **Memory Management**  
+  Includes paging and virtual memory support.
+
+- **Threading & Scheduler**  
+  Cooperative or preemptive threading with a simple scheduling mechanism.
+
+- **Multi-Processor Support**  
+  Basic Multi-Processing support.
+
+- **Device Input/Output**  
+  Mouse and keyboard driver implementations.
+
+- **System Calls**  
+  Interface for user programs to access kernel-level services.
+
+- **Interrupt Handling**  
+  Support for hardware and software interrupts.
+
+- **Screen Output**  
+  Print text directly to the screen.
+
+- **User Standard Library**  
+  Provides basic standard library functions for user programs.
+
+---
+
+## 🛠 Build & Run
+
+- Built using `make` with custom Makefiles.
+- Tested using [QEMU](https://www.qemu.org/), a fast and open-source system emulator.
+
+---
 
 
