@@ -45,5 +45,20 @@ The system is compiled using `make` and tested with **QEMU**.
 - Tested using [QEMU](https://www.qemu.org/), a fast and open-source system emulator.
 
 ---
+### BIAS Run
+```
+make bias_run
+```
 
+### UEFI Run
+1. Set LOOPN in Makefile.img to appropriate value
+2. Run
+```
+make run
+```
 
+## Screenshots
+- BIAS
+![img](screenshots/bias.png)
+- UEFI
+![img](screenshots/uefi.png)
