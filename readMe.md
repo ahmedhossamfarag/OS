@@ -45,9 +45,9 @@ The system is compiled using `make` and tested with **QEMU**.
 - Tested using [QEMU](https://www.qemu.org/), a fast and open-source system emulator.
 
 ---
-### BIAS Run
+### BIOS Run
 ```
-make bias_run
+make bios_run
 ```
 
 ### UEFI Run
@@ -58,7 +58,7 @@ make run
 ```
 
 ## Screenshots
-- BIAS
-![img](screenshots/bias.png)
+- BIOS
+![img](screenshots/bios.png)
 - UEFI
 ![img](screenshots/uefi.png)
