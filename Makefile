@@ -5,6 +5,11 @@ run: kernel_o
 kernel_o:
 	$(MAKE) -C kernel
 
+## VM run
+vm_run: kernel_o
+	$(MAKE) -f Makefile.img copy
+	$(MAKE) -f Makefile.vm
+
 ## BIOS run
 bios_run: os-image bios_filesystem
 	qemu-system-x86_64 -monitor stdio -device intel-hda -device hda-duplex -smp 4 -m 2048 -drive file=os-image,format=raw

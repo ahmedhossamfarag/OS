@@ -65,3 +65,7 @@ sudo qemu-system-x86_64 \
     -pflash /usr/share/OVMF/OVMF_VARS_4M.fd \
     -m 512M \
     -net none
+
+
+sudo modprobe -r kvm_intel 
+sudo modprobe -r kvm

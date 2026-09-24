@@ -56,9 +56,8 @@ vbox-create:
 
 vbox-storage:
 	VBoxManage storagectl "$(VM_NAME)" \
-		--name "SATA" \
-		--add sata \
-		--controller IntelAhci \
+		--name "IDE Controller" \
+		--add ide \
 		2>/dev/null || true
 
 
@@ -68,7 +67,7 @@ vbox-storage:
 
 vbox-disk: vdi vbox-create vbox-storage
 	VBoxManage storageattach "$(VM_NAME)" \
-		--storagectl "SATA" \
+		--storagectl "IDE Controller" \
 		--port 0 \
 		--device 0 \
 		--type hdd \
