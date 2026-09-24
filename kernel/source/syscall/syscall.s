@@ -27,3 +27,8 @@ syscall_map:
     .long wait_event_handler    #0x17
     .long deregister_event_handler #0x18
     .long 0 #0x19
+    .long register_window_handler #0x1A
+    .long deregister_window_handler #0x1B
+    .long redraw_window_handler #0x1C
+    .long update_window_bounds_handler #0x1D
+    .long 0 #0x1E

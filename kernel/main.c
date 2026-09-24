@@ -23,6 +23,7 @@
 #include "vga.h"
 #include "vga_print.h"
 #include "graphics.h"
+#include "windows.h"
 
 void init()
 {
@@ -42,6 +43,7 @@ void init()
     disk_init();
     filesystem_init();
     graphics_init();
+    windows_init();
 }
 
 void setup()
@@ -86,6 +88,10 @@ void ap_setup()
 
 static void loader_success(){
     println("Loader Success");
+    apic_delay(1);
+    graphics_clear(0);
+    graphics_update();
+    apic_delay(1);
     enable_scheduler();
 }
 
@@ -99,12 +105,10 @@ int kernel_main()
     init();
     setup();
     ap_setup();
-    // vga_print_clear(0);
-    // println("Welcome To kernel");
-    graphics_clear(0);
-    graphics_update();
+    vga_print_clear(0);
+    println("Welcome To kernel");
 
-    // load_program(loader_success, loader_error);
+    load_program(loader_success, loader_error);
 
     while (1);
 
