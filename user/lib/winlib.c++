@@ -1,3 +1,7 @@
+#ifndef WINLIB_H
+#define WINLIB_H
+
+
 #include "winlib.h"
 #include "memlib.h"
 #include "syscall_map.h"
@@ -56,3 +60,5 @@ uint8_t update_window_bounds(window_t* window, bounds_t* bounds)
     
     return (uint8_t)result;
 }
+
+#endif // !WINLIB_H
