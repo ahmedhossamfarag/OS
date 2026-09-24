@@ -22,6 +22,7 @@
 #include "pci.h"
 #include "vga.h"
 #include "vga_print.h"
+#include "graphics.h"
 
 void init()
 {
@@ -40,6 +41,7 @@ void init()
     ata_init();
     disk_init();
     filesystem_init();
+    graphics_init();
 }
 
 void setup()
@@ -97,10 +99,12 @@ int kernel_main()
     init();
     setup();
     ap_setup();
-    vga_print_clear(0);
-    println("Welcome To kernel");
+    // vga_print_clear(0);
+    // println("Welcome To kernel");
+    graphics_clear(0);
+    graphics_update();
 
-    load_program(loader_success, loader_error);
+    // load_program(loader_success, loader_error);
 
     while (1);
 
