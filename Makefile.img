@@ -1,4 +1,4 @@
-DISK_IMAGE = disk_image.iso
+DISK_IMAGE = disk_image.img
 EFI_PART_SIZE = 64MiB
 LOOPN = loop100
 MOUNT = /mnt/partition1

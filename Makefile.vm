@@ -1,0 +1,102 @@
+# ============================================================
+# Configuration
+# ============================================================
+
+RAW_IMAGE       = disk_image.img
+VDI_IMAGE       = disk_image.vdi
+
+VM_NAME         = MyOS
+
+
+# ============================================================
+# Default
+# ============================================================
+
+all: clean vbox
+
+
+# ============================================================
+# Convert RAW -> VDI
+# ============================================================
+
+vdi:
+	rm -f $(VDI_IMAGE)
+
+	VBoxManage convertfromraw \
+		$(RAW_IMAGE) \
+		$(VDI_IMAGE) \
+		--format VDI
+
+
+# ============================================================
+# Create VirtualBox VM
+# ============================================================
+
+vbox-create:
+	VBoxManage showvminfo "$(VM_NAME)" >/dev/null 2>&1 || \
+	VBoxManage createvm \
+		--name "$(VM_NAME)" \
+		--ostype "Other" \
+		--register
+
+	VBoxManage modifyvm "$(VM_NAME)" \
+		--memory 2048 \
+		--cpus 4 \
+		--firmware efi32 \
+		--boot1 disk \
+		--boot2 none \
+		--boot3 none \
+		--boot4 none \
+		--nic1 none
+
+
+# ============================================================
+# Create SATA controller
+# ============================================================
+
+vbox-storage:
+	VBoxManage storagectl "$(VM_NAME)" \
+		--name "SATA" \
+		--add sata \
+		--controller IntelAhci \
+		2>/dev/null || true
+
+
+# ============================================================
+# Attach VDI
+# ============================================================
+
+vbox-disk: vdi vbox-create vbox-storage
+	VBoxManage storageattach "$(VM_NAME)" \
+		--storagectl "SATA" \
+		--port 0 \
+		--device 0 \
+		--type hdd \
+		--medium "$(VDI_IMAGE)"
+
+
+# ============================================================
+# Start VirtualBox
+# ============================================================
+
+vbox: vbox-disk
+	VBoxManage startvm "$(VM_NAME)"
+
+
+# ============================================================
+# Remove VM
+# ============================================================
+
+vbox-clean:
+	VBoxManage controlvm "$(VM_NAME)" poweroff 2>/dev/null || true
+	VBoxManage unregistervm "$(VM_NAME)" --delete 2>/dev/null || true
+
+
+# ============================================================
+# Clean build artifacts
+# ============================================================
+
+clean:
+	VBoxManage controlvm "MyOS" poweroff 2>/dev/null || true
+	VBoxManage unregistervm "MyOS" --delete 2>/dev/null || true
+	rm -f $(VDI_IMAGE)
