@@ -18,15 +18,15 @@ uint32_t math_floorm(uint32_t x, uint32_t m)
     return x - x%m;
 }
 
-uint32_t math_abs(uint32_t x)
+int math_abs(int x)
 {
     return x < 0 ? -x : x;
 }
 
-uint32_t math_max(uint32_t x, uint32_t y){
+int math_max(int x, int y){
     return x >= y ? x : y;
 }
 
-uint32_t math_min(uint32_t x, uint32_t y){
+int math_min(int x, int y){
     return x <= y ? x : y;
 }
