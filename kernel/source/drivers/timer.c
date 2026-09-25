@@ -25,7 +25,8 @@ void timer_handler(cpu_state_t* state) {
     if (timer_handler_proc) {
         timer_handler_proc(state);
     }
-    pic_sendEOI(0);
+
+    pic_sendEOI_helper();
 }
 
 void set_timer_handler_proc(void (*proc)(cpu_state_t*))

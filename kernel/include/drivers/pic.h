@@ -33,6 +33,8 @@
 
 void pic_init();
 
+void pic_sendEOI_helper();
+
 void pic_sendEOI(uint8_t irq);
 
 void pic_remap();

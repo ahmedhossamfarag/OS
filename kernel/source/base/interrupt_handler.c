@@ -36,28 +36,14 @@ void exception_handler(cpu_state_t* cpu)
     track_exception(cpu);
     if(get_current_process() != get_default_process()){
         schedule_thread_terminated(cpu);
-    }    
+    }   
+    pic_sendEOI_helper();
 }
 
+
 void pic_handler(void) {
-    uint16_t isr = pic_get_isr();
-    uint8_t master_isr = isr & 0xFF;
-    uint8_t slave_isr = (isr >> 8) & 0xFF;
-
-    // uint16_t irr = pic_get_irr();
-    // uint8_t master_irr = irr & 0xFF;
-    // uint8_t slave_irr = (irr >> 8) & 0xFF;
-
-    if(master_isr){
-        pic_sendEOI(0);
-    }
-    if(slave_isr){
-        pic_sendEOI(8);
-    }
-
-    print("pic ");
-    char s[10];
-    print(int_to_hex_str(isr, s));
+    print("\nPIC Handler\n");
+    pic_sendEOI_helper();
 }
 
 extern void (*syscall_map[NUM_SYSCALL])(cpu_state_t*);

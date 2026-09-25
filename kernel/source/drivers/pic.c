@@ -30,7 +30,19 @@ void pic_init(){
     idt_set_entry(PIC_M_OFFSET + 14, (uint32_t)(isr_ata_handler));
 
     disable_timer();
+}
 
+void pic_sendEOI_helper(){
+    uint16_t isr = pic_get_isr();
+    uint8_t master_isr = isr & 0xFF;
+    uint8_t slave_isr = (isr >> 8) & 0xFF;
+    
+    if(master_isr){
+        pic_sendEOI(0);
+    }
+    if(slave_isr){
+        pic_sendEOI(8);
+    }
 }
 
 void pic_sendEOI(uint8_t irq)
