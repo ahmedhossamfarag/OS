@@ -15,7 +15,7 @@ detect_apic:
 
 .global enable_lapic
 enable_lapic:
-    mov $0x1B, %eax
+    mov $0x1B, %ecx
     rdmsr
     bts $11, %eax # Set the APIC enable bit
     wrmsr

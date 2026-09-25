@@ -37,6 +37,12 @@ isr_default:
     nop
     iret
 
+.global isr_gp_fault_handler
+isr_gp_fault_handler:
+    call gp_fault_handler
+    add $4, %esp
+    iret
+
 
 isr_state exception_handler
 

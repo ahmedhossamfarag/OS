@@ -1,7 +1,9 @@
 #include "interrupt.h"
 #include "memory.h"
+
 extern void isr_exception_handler();
 extern void isr_default();
+extern void isr_gp_fault_handler();
 
 idt_entry_t* idt;
 idt_pointer_t idt_ptr;
@@ -28,6 +30,10 @@ void map_idt_isr(){
     {
         idt_set_entry(i, (uint32_t)(isr_exception_handler));
     }
+    
+    // Set IDT entries for exceptions
+    idt_set_entry(13, (uint32_t)(isr_gp_fault_handler)); // General Protection Fault
+
 }
 
 

@@ -16,7 +16,7 @@ extern void enable_lapic();
 
 void initialize_lapic(){
     set_lapic(LAPIC_SPURIOUS,0x1FF);  // Enable APIC and set spurious interrupt vector to 0xFF
-    set_lapic(LAPIC_TPR, 0x10000); // Set Task Priority Register to 0 to accept all interrupts
+    set_lapic(LAPIC_TPR, 0); // Set Task Priority Register to 0 to accept all interrupts
 }
 
 
@@ -105,8 +105,8 @@ uint32_t ioapic_read(uint32_t reg) {
 }
 
 void ioapic_set_irq(uint8_t irq, uint32_t vector, uint32_t apic_id){
-    ioapic_write(0x10 + 2 * irq, vector);
     ioapic_write(0x10 + 2 * irq + 1, (apic_id << 24));
+    ioapic_write(0x10 + 2 * irq, vector);
 }
 
 extern void isr_apic_timer_handler();
@@ -127,10 +127,11 @@ void ioapic_init(){
 
     idt_set_entry(PIC_M_OFFSET, (uint32_t)(isr_apic_timer_handler));
     idt_set_entry(PIC_M_OFFSET + 1, (uint32_t)(isr_apic_keyboard_handler));
-    idt_set_entry(PIC_M_OFFSET + 8, (uint32_t)(isr_apic_rtc_handler));
-    idt_set_entry(PIC_M_OFFSET + 12, (uint32_t)(isr_apic_mouse_handler));
-    idt_set_entry(PIC_M_OFFSET + 13, (uint32_t)(isr_apic_fpu_handler));
-    idt_set_entry(PIC_M_OFFSET + 14, (uint32_t)(isr_apic_ata_handler));
+    
+    idt_set_entry(PIC_S_OFFSET + 0, (uint32_t)(isr_apic_rtc_handler));
+    idt_set_entry(PIC_S_OFFSET + 4, (uint32_t)(isr_apic_mouse_handler));
+    idt_set_entry(PIC_S_OFFSET + 5, (uint32_t)(isr_apic_fpu_handler));
+    idt_set_entry(PIC_S_OFFSET + 6, (uint32_t)(isr_apic_ata_handler));
 }
 
 

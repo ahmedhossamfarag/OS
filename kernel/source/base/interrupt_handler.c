@@ -58,3 +58,6 @@ void syscall_handler(cpu_state_t* state){
     }
     syscall_map[n](state);
 }
+
+void gp_fault_handler(){
+}
