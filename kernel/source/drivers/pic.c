@@ -1,6 +1,7 @@
 #include "pic.h"
 #include "low_level.h"
 #include "interrupt.h"
+#include "timer.h"
 
 extern void isr_pic_handler();
 extern void isr_timer_handler();
@@ -27,6 +28,9 @@ void pic_init(){
     idt_set_entry(PIC_M_OFFSET + 12, (uint32_t)(isr_mouse_handler));
     idt_set_entry(PIC_M_OFFSET + 13, (uint32_t)(isr_fpu_handler));
     idt_set_entry(PIC_M_OFFSET + 14, (uint32_t)(isr_ata_handler));
+
+    disable_timer();
+
 }
 
 void pic_sendEOI(uint8_t irq)
