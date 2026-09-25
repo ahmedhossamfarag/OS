@@ -24,12 +24,21 @@ void pic_init(){
 
     idt_set_entry(PIC_M_OFFSET, (uint32_t)(isr_timer_handler));
     idt_set_entry(PIC_M_OFFSET + 1, (uint32_t)(isr_keyboard_handler));
-    idt_set_entry(PIC_M_OFFSET + 8, (uint32_t)(isr_rtc_handler));
-    idt_set_entry(PIC_M_OFFSET + 12, (uint32_t)(isr_mouse_handler));
-    idt_set_entry(PIC_M_OFFSET + 13, (uint32_t)(isr_fpu_handler));
-    idt_set_entry(PIC_M_OFFSET + 14, (uint32_t)(isr_ata_handler));
+    
+    idt_set_entry(PIC_S_OFFSET + 0, (uint32_t)(isr_rtc_handler));
+    idt_set_entry(PIC_S_OFFSET + 4, (uint32_t)(isr_mouse_handler));
+    idt_set_entry(PIC_S_OFFSET + 5, (uint32_t)(isr_fpu_handler));
+    idt_set_entry(PIC_S_OFFSET + 6, (uint32_t)(isr_ata_handler));
 
     disable_timer();
+
+    irq_clear_mask(0);  // Enable Timer
+    irq_clear_mask(1);  // Enable Keyboard
+    irq_clear_mask(2);  // CRITICAL: Enable Slave Cascade (Master line 2)
+    irq_clear_mask(8);  // Enable RTC
+    irq_clear_mask(12); // Enable Mouse
+    irq_clear_mask(13); // Enable FPU
+    irq_clear_mask(14); // Enable ATA
 }
 
 void pic_sendEOI_helper(){
