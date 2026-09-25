@@ -2,6 +2,8 @@
 #include "low_level.h"
 #include "pic.h"
 #include "apic.h"
+#include "vga_print.h"
+#include "strlib.h"
 
 #define ata_busy(base) (inb(base + 7) & ATA_STATUS_BSY)
 #define ata_drq(base) (inb(base + 7) & ATA_STATUS_DRQ)
@@ -11,12 +13,47 @@ static void ata_select_drive(uint16_t base, uint8_t drive) {
     outb(base + 6, 0xA0 | (drive << 4)); // 0xA0 for master, 0xB0 for slave
 }
 
-static void ata_wait_busy(uint16_t base) {
-    while (inb(base + 7) & 0x80); // Wait for BSY flag to clear
+static void ata_print_status(uint16_t base) {
+    char str[20];
+    print("Status: ");
+    print(int_to_hex_str(inb(base + 7), str));
+    println("");
+    print("Error: ");
+    print(int_to_hex_str(inb(base + 1), str));
+    println("");
 }
 
-static void ata_wait_drq(uint16_t base) {
-    while (!(inb(base + 7) & 0x08)); // Wait for DRQ (data request) flag to set
+static void ata_small_delay(uint16_t base) {
+    inb(base + 356);
+    inb(base + 356);
+    inb(base + 356);
+    inb(base + 356);
+}
+
+static uint8_t ata_wait_busy(uint16_t base) {
+    uint32_t timeout = ATA_WAIT_TIMEOUT;
+    while (timeout > 0) {
+        if (!(inb(base + 7) & 0x80)) {
+            return 1; // BSY flag cleared successfully
+        }
+        timeout--;
+    }
+    print("ATA wait busy timeout\n");
+    ata_print_status(base);
+    return 0; // Timeout reached while waiting for BSY to clear
+}
+
+static uint8_t ata_wait_drq(uint16_t base) {
+    uint32_t timeout = ATA_WAIT_TIMEOUT;
+    while (timeout > 0) {
+        if (inb(base + 7) & 0x08) {
+            return 1; // DRQ flag set successfully
+        }
+        timeout--;
+    }
+    print("ATA wait drq timeout\n");
+    ata_print_status(base);
+    return 0; // Timeout reached while waiting for DRQ to set
 }
 
 
@@ -41,18 +78,23 @@ static void ata_read_request(uint16_t base, uint8_t drive, uint32_t lba, uint8_t
     outb(base + 7, ATA_READ); // Command
 }
 
-void ata_read(uint16_t base, uint8_t drive, uint32_t lba, uint8_t sector_count, void *buffer) {
-    if(drive != 0 && drive != 1) return;
+uint8_t ata_read(uint16_t base, uint8_t drive, uint32_t lba, uint8_t sector_count, void *buffer) {
+    if(drive != 0 && drive != 1) return 0;
 
-    if(base != PRIMARY_BASE && base != SECONDARY_BASE) return;
+    if(base != PRIMARY_BASE && base != SECONDARY_BASE) return 0;
 
     ata_read_request(base, drive, lba, sector_count);
+    
+    // Small delay
+    ata_small_delay(base);
 
     for (int i = 0; i < sector_count; i++) {
-        ata_wait_busy(base);
-        ata_wait_drq(base);
+        if(!ata_wait_busy(base)) return 0;
+        if(!ata_wait_drq(base)) return 0;
         insw(base, buffer + i * 512, 256); // Read 256 words (512 bytes)
     }
+
+    return 1;
 }
 
 static void ata_write_request(uint16_t base, uint8_t drive, uint32_t lba, uint8_t sector_count){
@@ -71,18 +113,24 @@ static void ata_write_request(uint16_t base, uint8_t drive, uint32_t lba, uint8_
     outb(base + 7, ATA_WRITE); // Command
 }
 
-void ata_write(uint16_t base, uint8_t drive, uint32_t lba, uint8_t sector_count, const void *buffer) {
-    if(drive != 0 && drive != 1) return;
+uint8_t ata_write(uint16_t base, uint8_t drive, uint32_t lba, uint8_t sector_count, const void *buffer) {
+    if(drive != 0 && drive != 1) return 0;
 
-    if(base != PRIMARY_BASE && base != SECONDARY_BASE) return;
+    if(base != PRIMARY_BASE && base != SECONDARY_BASE) return 0;
 
     ata_write_request(base, drive, lba, sector_count);
 
+    // Small delay
+    ata_small_delay(base);
+
     for (int i = 0; i < sector_count; i++) {
-        ata_wait_busy(base);
-        ata_wait_drq(base);
+        if(!ata_wait_busy(base)) return 0;
+        if(!ata_wait_drq(base)) return 0;
         outsw(base, buffer + i * 512, 256); // Write 256 words (512 bytes)
+        ata_wait_busy(base);
     }
+
+    return 1;
 }
 
 static struct{
@@ -188,16 +236,21 @@ void apic_ata_handler()
 }
 
 
-void ata_identify_drive(uint16_t base, uint8_t drive,  void *buffer){
-    if(drive != 0 && drive != 1) return;
+uint8_t ata_identify_drive(uint16_t base, uint8_t drive,  void *buffer){
+    if(drive != 0 && drive != 1) return 0;
 
-    if(base != PRIMARY_BASE && base != SECONDARY_BASE) return;
+    if(base != PRIMARY_BASE && base != SECONDARY_BASE) return 0;
 
     ata_select_drive(base, drive);
 
     outb(base + 7, ATA_IDENTIFY_DRIVE); // Command
 
-    ata_wait_busy(base);
+    ata_small_delay(base); // Small delay
+
+    if(!ata_wait_busy(base)) return 0;
+    if(!ata_wait_drq(base)) return 0;
 
     insw(base, buffer, 256); // Read 256 words (512 bytes)
+
+    return 1;
 }

@@ -15,15 +15,17 @@
 #define ATA_STATUS_DRQ  0x08  /* Data Request */
 #define ATA_STATUS_ERR  0x01  /* Error */
 
+#define ATA_WAIT_TIMEOUT 1e6
+
 #include <stdint.h>
 
 void ata_init();
 
 /* lba: Logical Block Addressing */
-void ata_read(uint16_t base, uint8_t drive, uint32_t lba, uint8_t sector_count, void *buffer);
+uint8_t ata_read(uint16_t base, uint8_t drive, uint32_t lba, uint8_t sector_count, void *buffer);
 
 /* lba: Logical Block Addressing */
-void ata_write(uint16_t base, uint8_t drive, uint32_t lba, uint8_t sector_count, const void *buffer);
+uint8_t ata_write(uint16_t base, uint8_t drive, uint32_t lba, uint8_t sector_count, const void *buffer);
 
 
 void ata_read_sync(uint16_t base, uint8_t drive, uint32_t lba, uint8_t sector_count, void *buffer, void (*success_proc)(), void (*error_proc)());
@@ -35,4 +37,4 @@ void ata_handler();
 
 void apic_ata_handler();
 
-void ata_identify_drive(uint16_t base, uint8_t drive,  void *buffer);
+uint8_t ata_identify_drive(uint16_t base, uint8_t drive,  void *buffer);
