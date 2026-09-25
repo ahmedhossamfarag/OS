@@ -2,6 +2,8 @@ NameLn equ 100
 FILE_TYPE equ 0x33
 DIR_TYPE equ 0x55
 
+SHELL_N_BLOCKS equ 100
+
 ; RLBA equ 201
 ; DLBA equ 203
 
@@ -40,7 +42,7 @@ rootdir:
 %assign dlba (DLBA)
 
 shell:
-    file rlba, RLBA, 0, 0, "shell", 5, dlba, 50, 50*512
+    file rlba, RLBA, 0, 0, "shell", 5, dlba, SHELL_N_BLOCKS, SHELL_N_BLOCKS*512
 
 %assign rlba rlba + 1
-%assign dlba dlba + 50
+%assign dlba dlba + SHELL_N_BLOCKS
