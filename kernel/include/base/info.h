@@ -129,7 +129,7 @@ void info_init();
 
 uint32_t info_get_processor_no();
 
-uint32_t info_get_memory_size();
+uint64_t info_get_memory_size();
 
 void info_add_apic_id();
 

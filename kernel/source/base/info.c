@@ -61,9 +61,10 @@ uint32_t info_get_processor_no()
     return processor_no ? processor_no : 1;
 }
 
-uint32_t info_get_memory_size()
+uint64_t info_get_memory_size()
 {
-    return  memory_info.MomorySizeInMB * 1024 * 1024;
+    uint64_t size_in_mb = memory_info.MomorySizeInMB;
+    return  size_in_mb * 1024 * 1024;
 }
 
 

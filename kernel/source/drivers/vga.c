@@ -8,6 +8,7 @@ uint32_t* framebuffer;
 uint32_t pitch;
 uint32_t width;
 uint32_t height;
+uint32_t pixels_per_scanline;
 uint8_t* font_map;
 
 void vga_init()
@@ -17,6 +18,7 @@ void vga_init()
     pitch = g->PixelsPerScanLine * 4;
     width = g->Width;
     height = g->Height;
+    pixels_per_scanline = g->PixelsPerScanLine;
     extern uint8_t _font_bitmap[];
     font_map = _font_bitmap;
 }
@@ -27,12 +29,12 @@ uint8_t vga_available()
 }
 
 void put_pixel_rgb(uint32_t x, uint32_t y, uint32_t color){
-    framebuffer[x + y * width] = color;
+    framebuffer[x + y * pixels_per_scanline] = color;
 }
 
 void vga_clear(uint32_t color)
 {
-    uint32_t len = width * height;
+    uint32_t len = pixels_per_scanline * height;
     for (uint32_t* pixel = framebuffer; pixel < framebuffer + len; pixel++)
     {
         *pixel = color;
