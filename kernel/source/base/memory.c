@@ -6,8 +6,8 @@
 static uint64_t head;
 static void* lock;
 
-#define mrlock() resource_lock_request(&lock, (void*)(info_get_processor_id()+1))
-#define mflock() resource_lock_free(&lock, (void*)(info_get_processor_id()+1))
+#define mrlock() resource_lock_request(&lock, (void*)(info_get_processor_id()+1L))
+#define mflock() resource_lock_free(&lock, (void*)(info_get_processor_id()+1L))
 
 void memory_init()
 {
@@ -94,7 +94,7 @@ static char* malloc_align(uint64_t size, uint64_t align)
 	// the size of current block
 	uint64_t current_size = *(current_block+1);
 
-	#define curr_blk_align math_cielm((uint64_t)current_block, align)
+	#define curr_blk_align math_cielm64((uint64_t)current_block, align)
 	#define avl_sz() (current_size - (curr_blk_align - (uint64_t)current_block))
 
 	// loop untill first fit or end

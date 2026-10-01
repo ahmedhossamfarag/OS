@@ -6,10 +6,10 @@
 
 static struct
 {
-    uint32_t cr3;
+    uint64_t cr3;
     char* file;
-    uint32_t* entry;
-    uint32_t* membegin;
+    uint64_t* entry;
+    uint64_t* membegin;
     Elf32_Map fmap;
     Elf32_Dependecies deps;
     array_t* deps_names;
@@ -194,7 +194,7 @@ static void linker_load_dependencies(){
     
 }
 
-void linker_load_elf(char* file, uint32_t cr3, uint32_t* entry, uint32_t* membegin, SUCC_ERR){
+void linker_load_elf(char* file, uint64_t cr3, uint64_t* entry, uint64_t* membegin, SUCC_ERR){
     args.file = file;
     args.cr3 = cr3;
     args.entry = entry;

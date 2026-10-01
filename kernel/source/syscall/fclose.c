@@ -16,7 +16,7 @@ static void fclose_success(){
 
 void fclose_handler(cpu_state_t* state)
 {
-    uint32_t fs = state->rax;
+    uint64_t fs = state->rax;
     if(fs){
         args.state = state;
         file_close((fs_entity_t*)fs, fclose_success, fclose_error);

@@ -36,23 +36,23 @@ void init()
     interrupt_handler_init();
     gdt_init();
     pagging_init();
-    // apic_init();
-    // scheduler_init();
-    // syscall_init();
-    // ata_init();
-    // disk_init();
-    // filesystem_init();
-    // graphics_init();
-    // windows_init();
+    apic_init();
+    scheduler_init();
+    syscall_init();
+    ata_init();
+    disk_init();
+    filesystem_init();
+    graphics_init();
+    windows_init();
 }
 
 void setup()
 {
-    enable_idt();
-    enable_gdt();
-    enable_apic();
-    enable_paging();
-    enable_interrupt();
+    // enable_idt();
+    // enable_gdt();
+    // enable_apic();
+    // enable_paging();
+    // enable_interrupt();
 }
 
 void ap_start()
@@ -103,16 +103,10 @@ static void loader_error(){
 int kernel_main()
 {
     init();
-    // setup();
+    setup();
     // ap_setup();
-    // vga_print_clear(0);
+    vga_print_clear(0);
     println("Welcome To kernel");
-    extern idt_entry_t* idt;
-    print("IDT Table: "); println(sxint((uint64_t)idt));
-    extern gdt_entry_t* gdt;
-    print("GDT Table: "); println(sxint((uint64_t)gdt));
-    extern tss_entry_t* tss;
-    print("TSS Table: "); println(sxint((uint64_t)tss));
 
 
     // load_program(loader_success, loader_error);

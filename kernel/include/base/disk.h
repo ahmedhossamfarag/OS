@@ -19,7 +19,7 @@ typedef struct
 typedef struct{
     uint16_t identefier;
     uint32_t n_blocks;
-    uint64_t n_free_blocks;
+    uint32_t n_free_blocks;
     uint32_t free_head;
     uint32_t free_size;
 }__attribute__((packed)) disk_map_t;

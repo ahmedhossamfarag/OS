@@ -40,14 +40,14 @@ static void scans_proc(){
     cpu_state_t* state = &keyboard_queue->handler->cpu_state;
 
     args.des = (char*) state->rdx;
-    args.nchars = state->rcx;
+    args.nchars = state->rcx & 0xFFFFFFFF;
 
     vga_edit_init(args.nchars, scans_end);
 }
 
 void scans_handler(cpu_state_t* state)
 {
-    uint32_t n = state->rcx;
+    uint64_t n = state->rcx;
 
     if(n == 0){
         state->rax = 1;

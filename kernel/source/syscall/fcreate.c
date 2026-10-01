@@ -33,7 +33,7 @@ static void fcreate_error()
 static void fcreate_success()
 {
     fcreate_free();
-    disk_queue->handler->cpu_state.rax = (uint32_t)args.fs;
+    disk_queue->handler->cpu_state.rax = (uint64_t)args.fs;
     thread_awake(disk_queue->handler);
     resource_queue_deque(disk_queue);
 }

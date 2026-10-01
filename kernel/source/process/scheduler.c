@@ -35,11 +35,11 @@ void scheduler_init()
     }
     
 
-    idt_set_entry(SCHEDULE_INT, (uint32_t) isr_schedule_thread);
-    idt_set_entry(PROCESS_WAITING_INT, (uint32_t)isr_schedule_process_waiting);
-    idt_set_entry(THREAD_WAITING_INT, (uint32_t)isr_schedule_thread_waiting);
-    idt_set_entry(PROCESS_TERMINATED_INT, (uint32_t)isr_schedule_process_terminated);
-    idt_set_entry(THREAD_TERMINATED_INT, (uint32_t)isr_schedule_thread_terminated);
+    idt_set_entry(SCHEDULE_INT, (uint64_t) isr_schedule_thread);
+    idt_set_entry(PROCESS_WAITING_INT, (uint64_t)isr_schedule_process_waiting);
+    idt_set_entry(THREAD_WAITING_INT, (uint64_t)isr_schedule_thread_waiting);
+    idt_set_entry(PROCESS_TERMINATED_INT, (uint64_t)isr_schedule_process_terminated);
+    idt_set_entry(THREAD_TERMINATED_INT, (uint64_t)isr_schedule_thread_terminated);
 }
 
 void enable_scheduler()

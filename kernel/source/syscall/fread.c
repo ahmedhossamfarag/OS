@@ -30,7 +30,7 @@ static void fread_move_data(){
     uint64_t th_cr3 = ((pcb_t*)disk_queue->handler->parent)->cr3;
     asm volatile("mov %0, %%cr3" :: "r"(th_cr3));
 
-    uint32_t start = args.seek - args.disk_seek * SectorSize;
+    uint64_t start = args.seek - (uint64_t)args.disk_seek * SectorSize;
     
     mem_copy(args.data + start, args.to, args.count);
     
@@ -50,7 +50,7 @@ static void fread_success(){
 
 static void fread_proc(){
     cpu_state_t* state = &disk_queue->handler->cpu_state;
-    uint32_t pntr = state->rax;
+    uint64_t pntr = state->rax;
     args.to = (char*) state->rdx;
     args.seek = state->rbx;
     args.count = state->rcx;
@@ -84,7 +84,7 @@ static void fread_proc(){
 
 void fread_handler(cpu_state_t* state)
 {
-    uint32_t count = state->rcx;
+    uint32_t count = state->rcx & 0xFFFFFFFF;
 
     if(!count){
         state->rax = 0;

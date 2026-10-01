@@ -10,7 +10,7 @@ extern array_t *open_files;
 
 static struct
 {
-    uint32_t len;
+    uint64_t len;
     char *name_splited;
     char **splits;
     fs_entity_t *parent;
@@ -56,7 +56,7 @@ static void fopen_error()
 static void fopen_success()
 {
     fopen_free();
-    disk_queue->handler->cpu_state.rax = (uint32_t)args.fs;
+    disk_queue->handler->cpu_state.rax = (uint64_t)args.fs;
     thread_awake(disk_queue->handler);
     resource_queue_deque(disk_queue);
 }

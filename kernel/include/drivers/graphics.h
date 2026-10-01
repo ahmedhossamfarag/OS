@@ -1,5 +1,3 @@
-#define BACk_BUFFER_OFFSET 0xE000000
-
 #include <stdint.h>
 
 void graphics_init();

@@ -46,9 +46,9 @@ static void fwrite_copy_data(char* from, uint32_t count){
 
 static void fwrite_proc(){
     cpu_state_t* state = &disk_queue->handler->cpu_state;
-    uint32_t pntr = state->rax;
+    uint64_t pntr = state->rax;
     char *from = (char*) state->rdx;
-    uint32_t count = state->rcx;
+    uint32_t count = state->rcx & 0xFFFFFFFF;
     args.data = 0;
 
     fs_entity_t* fs = (fs_entity_t*)(pntr);
@@ -72,7 +72,7 @@ static void fwrite_proc(){
 
 void fwrite_handler(cpu_state_t* state)
 {
-    uint32_t count = state->rcx;
+    uint32_t count = state->rcx & 0xFFFFFFFF;
 
     if(!count){
         state->rax = 0;

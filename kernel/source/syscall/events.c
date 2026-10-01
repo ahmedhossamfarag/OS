@@ -96,7 +96,7 @@ void clear_events_handler(pcb_t* pcb, thread_t* thread){
     }
 }
 
-static void ev_copy_args(pcb_t* pcb, void* to, void* args, uint32_t size){
+static void ev_copy_args(pcb_t* pcb, void* to, void* args, uint64_t size){
     uint64_t current_cr3;
     asm("mov %%cr3, %0":"=r"(current_cr3));
     uint64_t th_cr3 = pcb->cr3;
@@ -113,10 +113,10 @@ static void ev_push_eip(uint64_t cr3, cpu_state_t* cpu){
     uint64_t th_cr3 = cr3;
     asm volatile("mov %0, %%cr3" :: "r"(th_cr3));
 
-    uint32_t* rsp = (uint32_t*)cpu->user_rsp;
+    uint64_t* rsp = (uint64_t*)cpu->user_rsp;
     rsp --;
     *rsp = cpu->rip;
-    cpu->user_rsp = (uint32_t)rsp;
+    cpu->user_rsp = (uint64_t)rsp;
 
     asm volatile("mov %0, %%cr3" :: "r"(current_cr3));
 }

@@ -34,7 +34,7 @@ typedef struct {
 
 
 typedef struct{
-    uint32_t tid;
+    uint64_t tid;
     void* parent;
     uint8_t processor_id;
     thread_state_t thread_state;
@@ -42,8 +42,8 @@ typedef struct{
 } thread_t;
 
 typedef struct {
-    uint32_t pid;                 // Process ID
-    uint32_t ppid;                // Parent Process ID
+    uint64_t pid;                 // Process ID
+    uint64_t ppid;                // Parent Process ID
     process_state_t process_state;        // Process state
     thread_t threads[MAX_N_THREAD];
     uint8_t n_active_threads;
@@ -55,11 +55,11 @@ void process_init();
 
 pcb_t* get_default_process();
 
-uint8_t add_new_process(uint32_t pid, uint32_t ppid, uint32_t cr3, uint32_t rip, uint32_t rbp, uint32_t memo_begin);
+uint8_t add_new_process(uint64_t pid, uint64_t ppid, uint64_t cr3, uint64_t rip, uint64_t rbp, uint64_t memo_begin);
 
 void remove_process(pcb_t* process);
 
-pcb_t* get_process_pid(uint32_t ppid, uint32_t pid);
+pcb_t* get_process_pid(uint64_t ppid, uint64_t pid);
 
 void thread_inqueue(thread_t* thread);
 
@@ -67,11 +67,11 @@ thread_t* thread_dequeue();
 
 void thread_remove(thread_t* thread);
 
-uint8_t add_new_thread(pcb_t* process, uint32_t tid, uint32_t rip, uint32_t rbp);
+uint8_t add_new_thread(pcb_t* process, uint64_t tid, uint64_t rip, uint64_t rbp);
 
 void remove_thread(thread_t* thread);
 
-thread_t* get_thread_tid(pcb_t *process, uint32_t tid);
+thread_t* get_thread_tid(pcb_t *process, uint64_t tid);
 
 thread_t* get_process_thread(pcb_t* process, uint8_t n);
 

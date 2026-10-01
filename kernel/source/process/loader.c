@@ -11,8 +11,8 @@ static struct
     uint32_t file_nsectors;
     fs_entity_t* root_dir, *filefs;
     uint64_t cr3;
-    uint32_t entry;
-    uint32_t membegin;
+    uint64_t entry;
+    uint64_t membegin;
     SUCC_ERR_V
 } args;
 
@@ -20,7 +20,7 @@ static struct
 #define SHELL_STACK_SZ 0x1000 
 #define MEMORY_PADDING 0x100
 
-extern void linker_load_elf(char* file, uint64_t cr3, uint32_t* entry, uint32_t* membegin, SUCC_ERR);
+extern void linker_load_elf(char* file, uint64_t cr3, uint64_t* entry, uint64_t* membegin, SUCC_ERR);
 
 
 static void loader_free(){
@@ -48,9 +48,9 @@ static void loader_error(){
 static void loader_succ(){
     loader_free();
 
-    uint32_t rip = args.entry;
-    uint32_t membegin = args.membegin;
-    uint32_t rbp = membegin + SHELL_STACK_SZ;
+    uint64_t rip = args.entry;
+    uint64_t membegin = args.membegin;
+    uint64_t rbp = membegin + SHELL_STACK_SZ;
     membegin += SHELL_STACK_SZ + MEMORY_PADDING;
 
     add_new_process(1, 0, args.cr3, rip, rbp, membegin);

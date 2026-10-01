@@ -9,7 +9,7 @@ volatile uint32_t *ioapic;
 
 extern void disable_pic();
 
-extern uint32_t detect_apic();
+extern uint64_t detect_apic();
 
 extern void enable_lapic();
 
@@ -75,7 +75,7 @@ extern void isr_lapic_timer_handler();
 
 void enable_lapic_timer(uint32_t initial, uint32_t mode){
     if(!apic_detected) return;
-    idt_set_entry(TIMER_INT, (uint32_t)isr_lapic_timer_handler);
+    idt_set_entry(TIMER_INT, (uint64_t)isr_lapic_timer_handler);
     set_lapic(LAPIC_LVT_TIMER, TIMER_INT | mode);
     set_lapic(LAPIC_TIMER_DIV, LAPIC_TIMER_DIV_16);
     set_lapic(LAPIC_TIMER_INIT, initial);
@@ -119,19 +119,20 @@ extern void isr_apic_ata_handler();
 void ioapic_init(){
     ioapic_set_irq(0, PIC_M_OFFSET, 0);
     ioapic_set_irq(1, PIC_M_OFFSET + 1, 0);
-    ioapic_set_irq(8, PIC_M_OFFSET + 8, 0);
-    ioapic_set_irq(12, PIC_M_OFFSET + 12, 0);
-    ioapic_set_irq(13, PIC_M_OFFSET + 13, 0);
-    ioapic_set_irq(14, PIC_M_OFFSET + 14, 0);
+
+    ioapic_set_irq(8, PIC_S_OFFSET + 0, 0);
+    ioapic_set_irq(12, PIC_S_OFFSET + 4, 0);
+    ioapic_set_irq(13, PIC_S_OFFSET + 5, 0);
+    ioapic_set_irq(14, PIC_S_OFFSET + 6, 0);
 
 
-    idt_set_entry(PIC_M_OFFSET, (uint32_t)(isr_apic_timer_handler));
-    idt_set_entry(PIC_M_OFFSET + 1, (uint32_t)(isr_apic_keyboard_handler));
+    idt_set_entry(PIC_M_OFFSET, (uint64_t)(isr_apic_timer_handler));
+    idt_set_entry(PIC_M_OFFSET + 1, (uint64_t)(isr_apic_keyboard_handler));
     
-    idt_set_entry(PIC_S_OFFSET + 0, (uint32_t)(isr_apic_rtc_handler));
-    idt_set_entry(PIC_S_OFFSET + 4, (uint32_t)(isr_apic_mouse_handler));
-    idt_set_entry(PIC_S_OFFSET + 5, (uint32_t)(isr_apic_fpu_handler));
-    idt_set_entry(PIC_S_OFFSET + 6, (uint32_t)(isr_apic_ata_handler));
+    idt_set_entry(PIC_S_OFFSET + 0, (uint64_t)(isr_apic_rtc_handler));
+    idt_set_entry(PIC_S_OFFSET + 4, (uint64_t)(isr_apic_mouse_handler));
+    idt_set_entry(PIC_S_OFFSET + 5, (uint64_t)(isr_apic_fpu_handler));
+    idt_set_entry(PIC_S_OFFSET + 6, (uint64_t)(isr_apic_ata_handler));
 }
 
 

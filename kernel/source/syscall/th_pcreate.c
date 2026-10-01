@@ -3,7 +3,7 @@
 #include "file_system.h"
 #include "pagging.h"
 
-extern void linker_load_elf(char* file, uint32_t cr3, uint32_t* entry, uint32_t* membegin, SUCC_ERR);
+extern void linker_load_elf(char* file, uint64_t cr3, uint64_t* entry, uint64_t* membegin, SUCC_ERR);
 
 #define PROCESS_STACK_SIZE 0x1000
 #define MEMORY_PADDING 0x100
@@ -14,13 +14,13 @@ static struct
     uint64_t cr3;
     char* data;   
     uint32_t n_sectors;
-    uint32_t entry;
-    uint32_t membegin;
+    uint64_t entry;
+    uint64_t membegin;
 } args;
 
 static void pcreate_error(){
     if(args.data){
-        free((char*)args.data, args.n_sectors * SectorSize);
+        free((char*)args.data, (uint64_t)args.n_sectors * SectorSize);
     }
     if(args.cr3){
         free_pagging_dir((uint64_t*) args.cr3);
@@ -34,17 +34,17 @@ static void pcreate_add(){
     cpu_state_t* state = &disk_queue->handler->cpu_state;
     pcb_t* parent = (pcb_t*) disk_queue->handler->parent;
 
-    uint32_t rip = args.entry;
-    uint32_t membegin = args.membegin;
-    uint32_t rbp = membegin + PROCESS_STACK_SIZE;
+    uint64_t rip = args.entry;
+    uint64_t membegin = args.membegin;
+    uint64_t rbp = membegin + PROCESS_STACK_SIZE;
     membegin += PROCESS_STACK_SIZE + MEMORY_PADDING;
 
-    add_new_process(parent->pid, state->rax, args.cr3, rip, rbp, membegin);
+    add_new_process(state->rax, parent->pid, args.cr3, rip, rbp, membegin);
 }
 
 static void pcreate_success(){
     if(args.data){
-        free((char*)args.data, args.n_sectors * SectorSize);
+        free((char*)args.data, (uint64_t)args.n_sectors * SectorSize);
     }
     pcreate_add();
     disk_queue->handler->cpu_state.rax = 1;

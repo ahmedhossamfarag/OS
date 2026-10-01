@@ -43,7 +43,7 @@ static void dir_delete_dir(dir_entity_t* dir){
     file_close((fs_entity_t*)dir, 0, 0);
     disk_free(dir->fs.lba, 1);
     if(dir->head){
-        list_append(args.list, (void*) dir->head);
+        list_append(args.list, (void*) (uint64_t)dir->head);
     }
 }
 
@@ -59,7 +59,7 @@ static void dir_delete_next(){
 
     uint32_t next = fs->next;
     if(!next){
-        next = (uint32_t) list_remove_first(args.list);
+        next = (uint32_t) ((uint64_t) list_remove_first(args.list) & 0xFFFFFFFF);
     }
 
     if(!next){

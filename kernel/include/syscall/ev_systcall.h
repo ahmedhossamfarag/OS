@@ -6,7 +6,7 @@
 typedef struct{
     thread_t* thread;
     uint8_t is_waiting;
-    uint32_t handler;
+    uint64_t handler;
     void* args;
 }event_t;
 

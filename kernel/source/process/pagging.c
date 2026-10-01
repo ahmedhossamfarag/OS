@@ -32,7 +32,7 @@ void pagging_init() {
 
             for (int i = 0; i < NUM_PAGES; i++) {
                 // Set the page table entry to map to the physical address
-                pagging_table[i] = ((i << 12) + (j << 21)) + (k << 30) | KERNEL_PRIVILEGE; // Present, Read/Write, Supervisor
+                pagging_table[i] = ((i << 12) + (j << 21) + (k << 30)) | KERNEL_PRIVILEGE; // Present, Read/Write, Supervisor
             }
 
             dir_table[j] = ((uint64_t)pagging_table) | KERNEL_PRIVILEGE;

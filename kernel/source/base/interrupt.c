@@ -58,6 +58,7 @@ void idt_init() {
 }
 
 void enable_idt(){
+    __asm__ volatile ("cli"); // clear the interrupt flag
     __asm__ volatile ("lidt %0" : : "m"(idt_ptr)); // load the new IDT
 }
 
