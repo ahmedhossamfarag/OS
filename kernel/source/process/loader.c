@@ -10,7 +10,7 @@ static struct
     char* file;
     uint32_t file_nsectors;
     fs_entity_t* root_dir, *filefs;
-    uint32_t cr3;
+    uint64_t cr3;
     uint32_t entry;
     uint32_t membegin;
     SUCC_ERR_V
@@ -20,7 +20,7 @@ static struct
 #define SHELL_STACK_SZ 0x1000 
 #define MEMORY_PADDING 0x100
 
-extern void linker_load_elf(char* file, uint32_t cr3, uint32_t* entry, uint32_t* membegin, SUCC_ERR);
+extern void linker_load_elf(char* file, uint64_t cr3, uint32_t* entry, uint32_t* membegin, SUCC_ERR);
 
 
 static void loader_free(){
@@ -38,7 +38,7 @@ static void loader_free(){
 static void loader_error(){
     loader_free();
     if(args.cr3){
-        free_pagging_dir((uint32_t*)args.cr3);
+        free_pagging_dir((uint64_t*)args.cr3);
     }
     if(args.error_proc){
         args.error_proc();
@@ -48,12 +48,12 @@ static void loader_error(){
 static void loader_succ(){
     loader_free();
 
-    uint32_t eip = args.entry;
+    uint32_t rip = args.entry;
     uint32_t membegin = args.membegin;
-    uint32_t ebp = membegin + SHELL_STACK_SZ;
+    uint32_t rbp = membegin + SHELL_STACK_SZ;
     membegin += SHELL_STACK_SZ + MEMORY_PADDING;
 
-    add_new_process(1, 0, args.cr3, eip, ebp, membegin);
+    add_new_process(1, 0, args.cr3, rip, rbp, membegin);
 
     if(args.success_proc){
         args.success_proc();
@@ -84,7 +84,7 @@ void load_program(SUCC_ERR)
     args.error_proc = error_proc;
     args.root_dir = args.filefs = 0;
     args.file = 0;
-    args.cr3 = (uint32_t)get_available_pagging_dir();
+    args.cr3 = (uint64_t)get_available_pagging_dir();
     if(args.cr3){
         file_open(0, 0, &args.root_dir, open_file, loader_error);
     }

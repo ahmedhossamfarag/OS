@@ -12,7 +12,7 @@ typedef struct{
     void** data;
 } queue_t;
 
-queue_t* queue_new(uint32_t capacity, char* (*alloc)(uint32_t));
+queue_t* queue_new(uint32_t capacity, char* (*alloc)(uint64_t));
 
 void queue_inque(queue_t* queue, void* item);
 
@@ -20,7 +20,7 @@ void* queue_deque(queue_t* queue);
 
 uint8_t queue_remove(queue_t* queue, void* item);
 
-void queue_delete(queue_t* queue, void (*free)(char*,uint32_t));
+void queue_delete(queue_t* queue, void (*free)(char*,uint64_t));
 
 #pragma endregion
 
@@ -34,11 +34,11 @@ typedef struct{
 typedef struct{
     list_node_t* head;
     list_node_t* tail;
-    char* (*alloc)(uint32_t);
-    void (*free)(char*,uint32_t);
+    char* (*alloc)(uint64_t);
+    void (*free)(char*,uint64_t);
 } list_t;
 
-list_t* list_new(char* (*alloc)(uint32_t), void (*free)(char*,uint32_t));
+list_t* list_new(char* (*alloc)(uint64_t), void (*free)(char*,uint64_t));
 
 void list_append(list_t* list, void* item);
 
@@ -56,7 +56,7 @@ typedef struct{
     void** data;
 } array_t;
 
-array_t* array_new(uint32_t capacity, char* (*alloc)(uint32_t));
+array_t* array_new(uint32_t capacity, char* (*alloc)(uint64_t));
 
 uint8_t array_contains(array_t* arr, void** pntr);
 
@@ -66,7 +66,7 @@ void* array_get(array_t* arr, void** pntr);
 
 uint8_t array_remove(array_t* arr, void** pntr);
 
-void array_delete(array_t* arr, void (*free)(char*,uint32_t));
+void array_delete(array_t* arr, void (*free)(char*,uint64_t));
 
 #pragma endregion
 

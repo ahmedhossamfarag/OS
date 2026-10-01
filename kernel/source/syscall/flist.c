@@ -24,15 +24,15 @@ static void flist_free(){
 static void flist_error()
 {
     flist_free();
-    disk_queue->handler->cpu_state.eax = 0;
+    disk_queue->handler->cpu_state.rax = 0;
     thread_awake(disk_queue->handler);
     resource_queue_deque(disk_queue);
 }
 
 static void flist_copy_names(){
-    uint32_t current_cr3;
+    uint64_t current_cr3;
     asm("mov %%cr3, %0":"=r"(current_cr3));
-    uint32_t th_cr3 = ((pcb_t*)disk_queue->handler->parent)->cr3;
+    uint64_t th_cr3 = ((pcb_t*)disk_queue->handler->parent)->cr3;
     asm volatile("mov %0, %%cr3" :: "r"(th_cr3));
 
     mem_copy(args.list, args.to, args.n_files*NameLength);
@@ -45,7 +45,7 @@ static void flist_success()
 {
     flist_copy_names();
     flist_free();
-    disk_queue->handler->cpu_state.eax = 1;
+    disk_queue->handler->cpu_state.rax = 1;
     thread_awake(disk_queue->handler);
     resource_queue_deque(disk_queue);
 }
@@ -53,14 +53,14 @@ static void flist_success()
 static void flist_proc(){
     cpu_state_t* state = &disk_queue->handler->cpu_state;
 
-    fs_entity_t* fs = (fs_entity_t*)state->eax;
+    fs_entity_t* fs = (fs_entity_t*)state->rax;
 
     if(!file_is_open(fs) || fs->type != DIR_TYPE){
         flist_error();
         return;
     }
 
-    args.to = (char*) state->edx;
+    args.to = (char*) state->rdx;
     args.n_files = ((dir_entity_t*)fs)->n_childs;
     args.list = alloc(args.n_files * NameLength);
 

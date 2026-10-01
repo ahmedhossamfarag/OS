@@ -74,27 +74,27 @@ static uint8_t get_next_processor_id(){
     return res;
 }
 
-static void create_thread(thread_t* thread, uint32_t tid, uint32_t eip, uint32_t ebp){
+static void create_thread(thread_t* thread, uint32_t tid, uint32_t rip, uint32_t rbp){
     thread->tid = tid;
 
     thread->thread_state = THREAD_STATE_READY;
     
-    thread->cpu_state.eip = eip;
+    thread->cpu_state.rip = rip;
     thread->cpu_state.cs = USER_CS;
-    thread->cpu_state.eflags = EFLAGS_DEFAULT;
-    thread->cpu_state.user_esp= ebp;
+    thread->cpu_state.rflags = EFLAGS_DEFAULT;
+    thread->cpu_state.user_rsp= rbp;
     thread->cpu_state.user_ss = USER_DS;
     thread->cpu_state.ds = USER_DS;
     thread->cpu_state.es = USER_DS;
     thread->cpu_state.gs = USER_DS;
     thread->cpu_state.fs = USER_DS;
-    thread->cpu_state.ebp = ebp;
+    thread->cpu_state.rbp = rbp;
 
     thread->processor_id = get_next_processor_id();
 
 }
 
-static void create_process(pcb_t* pcb, uint32_t pid, uint32_t ppid, uint32_t cr3, uint32_t eip, uint32_t ebp, uint32_t memo_begin){
+static void create_process(pcb_t* pcb, uint32_t pid, uint32_t ppid, uint32_t cr3, uint32_t rip, uint32_t rbp, uint32_t memo_begin){
     pcb->pid = pid;
     pcb->ppid = ppid;
     pcb->process_state = PROCESS_STATE_READY;
@@ -107,11 +107,11 @@ static void create_process(pcb_t* pcb, uint32_t pid, uint32_t ppid, uint32_t cr3
     }
 
     thread_t* main_thread = pcb->threads;
-    create_thread(main_thread, 0, eip, ebp);
+    create_thread(main_thread, 0, rip, rbp);
     pcb->n_active_threads = 1;
 }
 
-uint8_t add_new_process(uint32_t pid, uint32_t ppid, uint32_t cr3, uint32_t eip, uint32_t ebp, uint32_t memo_begin){
+uint8_t add_new_process(uint32_t pid, uint32_t ppid, uint32_t cr3, uint32_t rip, uint32_t rbp, uint32_t memo_begin){
     resource_lock_request(&pstate_lock, (void*)(info_get_processor_id()+1));
 
     for (pcb_t* p = processes; p < processes + MAX_N_PROCESS; p++)
@@ -127,7 +127,7 @@ uint8_t add_new_process(uint32_t pid, uint32_t ppid, uint32_t cr3, uint32_t eip,
     for (pcb_t* p = processes; p < processes + MAX_N_PROCESS; p++)
     {
         if(p->process_state == PROCESS_STATE_TERMINATED && !p->n_active_threads){
-            create_process(p, pid, ppid, cr3, eip, ebp, memo_begin);
+            create_process(p, pid, ppid, cr3, rip, rbp, memo_begin);
             thread_inqueue(p->threads);
             res = 1;
             break;
@@ -143,7 +143,7 @@ static void process_free_thread(pcb_t* process){
     process->n_active_threads --;
     if(!process->n_active_threads){
         process->process_state = PROCESS_STATE_TERMINATED;
-        free_pagging_dir((uint32_t*)process->cr3);
+        free_pagging_dir((uint64_t*)process->cr3);
     }
 }
 
@@ -203,7 +203,7 @@ void thread_remove(thread_t* thread){
     resource_lock_free(queues_lock + n, (void*)(n+1));
 }
 
-uint8_t add_new_thread(pcb_t *process, uint32_t tid, uint32_t eip, uint32_t ebp)
+uint8_t add_new_thread(pcb_t *process, uint32_t tid, uint32_t rip, uint32_t rbp)
 {
     resource_lock_request(&pstate_lock, (void*)(info_get_processor_id()+1));
 
@@ -222,7 +222,7 @@ uint8_t add_new_thread(pcb_t *process, uint32_t tid, uint32_t eip, uint32_t ebp)
     {
         thread_t* t = process->threads + i;
         if(t->thread_state == THREAD_STATE_TERMINATED){
-            create_thread(t, tid, eip, ebp);
+            create_thread(t, tid, rip, rbp);
             process->n_active_threads ++;
             thread_inqueue(t);
             res = 1;

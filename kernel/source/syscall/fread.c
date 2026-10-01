@@ -19,15 +19,15 @@ static void fread_error(){
     if(args.data){
         free((char*)args.data, args.disk_count * SectorSize);
     }
-    disk_queue->handler->cpu_state.eax = 0;
+    disk_queue->handler->cpu_state.rax = 0;
     thread_awake(disk_queue->handler);
     resource_queue_deque(disk_queue);
 }
 
 static void fread_move_data(){
-    uint32_t current_cr3;
+    uint64_t current_cr3;
     asm("mov %%cr3, %0":"=r"(current_cr3));
-    uint32_t th_cr3 = ((pcb_t*)disk_queue->handler->parent)->cr3;
+    uint64_t th_cr3 = ((pcb_t*)disk_queue->handler->parent)->cr3;
     asm volatile("mov %0, %%cr3" :: "r"(th_cr3));
 
     uint32_t start = args.seek - args.disk_seek * SectorSize;
@@ -42,7 +42,7 @@ static void fread_success(){
     if(args.data){
         free((char*)args.data, args.disk_count * SectorSize);
     }
-    disk_queue->handler->cpu_state.eax = 1;
+    disk_queue->handler->cpu_state.rax = 1;
     thread_awake(disk_queue->handler);
     resource_queue_deque(disk_queue);
 }
@@ -50,10 +50,10 @@ static void fread_success(){
 
 static void fread_proc(){
     cpu_state_t* state = &disk_queue->handler->cpu_state;
-    uint32_t pntr = state->eax;
-    args.to = (char*) state->edx;
-    args.seek = state->ebx;
-    args.count = state->ecx;
+    uint32_t pntr = state->rax;
+    args.to = (char*) state->rdx;
+    args.seek = state->rbx;
+    args.count = state->rcx;
     args.data = 0;
 
     fs_entity_t* fs = (fs_entity_t*)pntr;
@@ -84,15 +84,15 @@ static void fread_proc(){
 
 void fread_handler(cpu_state_t* state)
 {
-    uint32_t count = state->ecx;
+    uint32_t count = state->rcx;
 
     if(!count){
-        state->eax = 0;
+        state->rax = 0;
         return;
     }
     
     if(disk_queue->queue->size >= disk_queue->queue->capacity){
-        state->eax = 0;
+        state->rax = 0;
         return;
     }
 

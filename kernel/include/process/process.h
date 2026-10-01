@@ -27,9 +27,9 @@ typedef enum {
 } thread_state_t;
 
 typedef struct {
-    uint32_t ds, es, fs, gs;
-    uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
-    uint32_t eip, cs, eflags, user_esp, user_ss;
+    uint64_t ds, es, fs, gs;
+    uint64_t rdi, rsi, rbp, rsp, rbx, rdx, rcx, rax;
+    uint64_t rip, cs, rflags, user_rsp, user_ss;
 } cpu_state_t;
 
 
@@ -47,15 +47,15 @@ typedef struct {
     process_state_t process_state;        // Process state
     thread_t threads[MAX_N_THREAD];
     uint8_t n_active_threads;
-    uint32_t cr3;
-    uint32_t memo_begin;
+    uint64_t cr3;
+    uint64_t memo_begin;
 } pcb_t;
 
 void process_init();
 
 pcb_t* get_default_process();
 
-uint8_t add_new_process(uint32_t pid, uint32_t ppid, uint32_t cr3, uint32_t eip, uint32_t ebp, uint32_t memo_begin);
+uint8_t add_new_process(uint32_t pid, uint32_t ppid, uint32_t cr3, uint32_t rip, uint32_t rbp, uint32_t memo_begin);
 
 void remove_process(pcb_t* process);
 
@@ -67,7 +67,7 @@ thread_t* thread_dequeue();
 
 void thread_remove(thread_t* thread);
 
-uint8_t add_new_thread(pcb_t* process, uint32_t tid, uint32_t eip, uint32_t ebp);
+uint8_t add_new_thread(pcb_t* process, uint32_t tid, uint32_t rip, uint32_t rbp);
 
 void remove_thread(thread_t* thread);
 

@@ -81,9 +81,9 @@ static void linker_success(){
 }
 
 static void linker_process(){
-    uint32_t current_cr3;
+    uint64_t current_cr3;
     asm("mov %%cr3, %0":"=r"(current_cr3));
-    uint32_t th_cr3 = args.cr3;
+    uint64_t th_cr3 = args.cr3;
     asm volatile("mov %0, %%cr3" :: "r"(th_cr3));
 
     // create maps

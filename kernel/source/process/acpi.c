@@ -3,7 +3,7 @@
 #include "info.h"
 
 void *find_rsdp() {
-    uint32_t rsdp = info_get_rsdp();
+    uint64_t rsdp = info_get_rsdp();
     if(rsdp){
         return (void*) rsdp;
     }

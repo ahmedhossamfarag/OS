@@ -13,18 +13,17 @@ void tss_init(){
 
     for (uint8_t i = 0; i < n_tss; i++)
     {
-        uint32_t base = (uint32_t)&tss[i];
-        uint32_t limit = base + sizeof(tss_entry_t);
+        uint64_t base = (uint64_t)&tss[i];
+        uint64_t limit = sizeof(tss_entry_t) - 1;
 
         for (char* c = (char*)base; c < (char*)limit; c++)
         {
             *c = 0;
         }
         
-        tss[i].ss0 = KERNEL_DATA_SEGMENT;  // Set the kernel data segment selector
-        tss[i].esp0 = KERNEK_STACK_POINTER(i);        // Set the kernel stack pointer
+        tss[i].rsp0 = KERNEK_STACK_POINTER(i);        // Set the kernel stack pointer
 
-        set_gdt_entry(TSS_INDEX(i), base, limit, 0xE9, 0x00);  // 0xE9 is the access byte for TSS
+        set_gdt_entry(TSS_INDEX(i), base, limit, 0x89, 0x00);  // 0x89 is the access byte for TSS
     }
     
 

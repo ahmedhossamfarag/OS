@@ -23,4 +23,4 @@ void schedule_process_terminated(cpu_state_t*);
 void schedule_thread_terminated(cpu_state_t*);
 
 
-void context_switch(cpu_state_t* cpu, thread_t* current_thread, thread_t* next_thread, uint32_t cr3);
+void context_switch(cpu_state_t* cpu, thread_t* current_thread, thread_t* next_thread, uint64_t cr3);

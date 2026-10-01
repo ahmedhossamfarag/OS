@@ -1,3 +1,5 @@
-void mem_copy(char* from, char* to, unsigned int size);
+#include "stdint.h"
 
-char *mem_set(char *dest, char val, unsigned int count);
+void mem_copy(char* from, char* to, uint64_t size);
+
+char *mem_set(char *dest, char val, uint64_t count);

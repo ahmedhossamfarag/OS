@@ -6,10 +6,10 @@
 
 #define MEMORY_DEFAULT_SIZE 0x100000000 // 4GiB
 
-extern uint32_t bl_magic;
-extern uint32_t boot_info_ptr;
-extern uint32_t memory_info_ptr;
-extern uint32_t graphics_info_ptr;
+extern uint64_t bl_magic;
+extern uint64_t boot_info_ptr;
+extern uint64_t memory_info_ptr;
+extern uint64_t graphics_info_ptr;
 
 uint32_t processor_no;
 memory_info_t memory_info;
@@ -82,16 +82,16 @@ uint32_t info_get_apic_id(uint8_t i)
 
 uint8_t info_get_processor_id()
 {
-    unsigned int eax, ebx, ecx, edx;
+    uint64_t rax, rbx, rcx, rdx;
     
     // Call CPUID with EAX=1
     asm volatile (
         "cpuid"
-        : "=a" (eax), "=b" (ebx), "=c" (ecx), "=d" (edx)
+        : "=a" (rax), "=b" (rbx), "=c" (rcx), "=d" (rdx)
         : "a" (1)
     );
     
-    unsigned int processor_id = (ebx >> 24) & 0xFF;
+    unsigned int processor_id = (rbx >> 24) & 0xFF;
     return processor_id;
 }
 
@@ -99,7 +99,7 @@ graphics_info_t* info_get_graphics(){
     return &graphics_info;
 }
 
-uint32_t info_get_rsdp(){
+uint64_t info_get_rsdp(){
     return memory_info.RSDP;
 }
 

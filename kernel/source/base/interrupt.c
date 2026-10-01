@@ -4,35 +4,46 @@
 extern void isr_exception_handler();
 extern void isr_default();
 extern void isr_gp_fault_handler();
+extern void isr_error_exception_handler();
 
 idt_entry_t* idt;
 idt_pointer_t idt_ptr;
 
-void idt_set_entry(int n, uint32_t handler) {
+void idt_set_entry(int n, uint64_t handler) {
     idt[n].offset_low = handler & 0xFFFF;
     idt[n].selector = 0x08; // Kernel code segment
-    idt[n].zero = 0;
+    idt[n].ist = 0;
     idt[n].type_attr = 0x8E; // Interrupt gate, kernel privilege
-    idt[n].offset_high = (handler >> 16) & 0xFFFF;
+    idt[n].offset_middle = (handler >> 16) & 0xFFFF;
+    idt[n].offset_high = (handler >> 32) & 0xFFFFFFFF;
+    idt[n].zero = 0;
 }
 
 
-void idt_set_user_entry(int n, uint32_t handler){
+void idt_set_user_entry(int n, uint64_t handler){
     idt[n].offset_low = handler & 0xFFFF;
     idt[n].selector = 0x08; // Kernel code segment
     idt[n].zero = 0;
     idt[n].type_attr = 0xEE; // Interrupt gate , user privilege
-    idt[n].offset_high = (handler >> 16) & 0xFFFF;
+    idt[n].offset_middle = (handler >> 16) & 0xFFFF;
+    idt[n].offset_high = (handler >> 32) & 0xFFFFFFFF;
 }
 
 void map_idt_isr(){
     for (int i = 0; i < IDT_ENTRIES; i++)
     {
-        idt_set_entry(i, (uint32_t)(isr_exception_handler));
+        idt_set_entry(i, (uint64_t)(isr_exception_handler));
     }
     
-    // Set IDT entries for exceptions
-    idt_set_entry(13, (uint32_t)(isr_gp_fault_handler)); // General Protection Fault
+    // Set IDT entries for exceptions with error codes
+    idt_set_entry(8, (uint64_t)(isr_error_exception_handler));
+    idt_set_entry(10, (uint64_t)(isr_error_exception_handler));
+    idt_set_entry(11, (uint64_t)(isr_error_exception_handler));
+    idt_set_entry(12, (uint64_t)(isr_error_exception_handler));
+    idt_set_entry(13, (uint64_t)(isr_gp_fault_handler)); // General Protection Fault
+    idt_set_entry(14, (uint64_t)(isr_error_exception_handler));
+    idt_set_entry(17, (uint64_t)(isr_error_exception_handler));
+    idt_set_entry(21, (uint64_t)(isr_error_exception_handler));
 
 }
 
@@ -41,7 +52,7 @@ void idt_init() {
     idt = (idt_entry_t*) alloc(IDT_ENTRIES * sizeof(idt_entry_t));
 
     idt_ptr.limit = sizeof(idt_entry_t) * IDT_ENTRIES - 1;
-    idt_ptr.base = (uint32_t)&idt[0];
+    idt_ptr.base = (uint64_t)&idt[0];
 
     map_idt_isr();
 }

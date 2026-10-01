@@ -1,9 +1,12 @@
 .global enable_gdt_asm
 enable_gdt_asm:
     lgdt gdtp
-    ljmp $0x8, $gdt_resume
+    pushq $0x08
+    leaq 1f(%rip), %rax
+    pushq %rax
+    lretq
 
-gdt_resume:
+1:
     mov $0x10, %eax
     mov %eax, %ds
     mov %eax, %es

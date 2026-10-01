@@ -48,7 +48,7 @@ static void fopen_error()
     {
         file_close(args.fs, 0, 0);
     }
-    disk_queue->handler->cpu_state.eax = 0;
+    disk_queue->handler->cpu_state.rax = 0;
     thread_awake(disk_queue->handler);
     resource_queue_deque(disk_queue);
 }
@@ -56,7 +56,7 @@ static void fopen_error()
 static void fopen_success()
 {
     fopen_free();
-    disk_queue->handler->cpu_state.eax = (uint32_t)args.fs;
+    disk_queue->handler->cpu_state.rax = (uint32_t)args.fs;
     thread_awake(disk_queue->handler);
     resource_queue_deque(disk_queue);
 }
@@ -95,8 +95,8 @@ static void fopen_next()
 
 static void fopen_proc()
 {
-    char *name = (char*) disk_queue->handler->cpu_state.eax;
-    fs_entity_t* parent = (fs_entity_t*) disk_queue->handler->cpu_state.ebx;
+    char *name = (char*) disk_queue->handler->cpu_state.rax;
+    fs_entity_t* parent = (fs_entity_t*) disk_queue->handler->cpu_state.rbx;
 
     args.len = str_len(name);
     args.name_splited = alloc(args.len + 2);
@@ -138,13 +138,13 @@ void fopen_handler(cpu_state_t *state)
 {
     if (open_files->size >= open_files->capacity)
     {
-        state->eax = 0;
+        state->rax = 0;
         return;
     }
 
     if (disk_queue->queue->size >= disk_queue->queue->capacity)
     {
-        state->eax = 0;
+        state->rax = 0;
         return;
     }
 

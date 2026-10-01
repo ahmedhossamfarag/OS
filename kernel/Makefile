@@ -9,31 +9,35 @@ GCC_INCLUDE := -Iinclude/base -Iinclude/drivers -Iinclude/process -Iinclude/lib 
 
 
 %.o : %.c ${HEADERS}
-	i686-elf-gcc $(GCC_INCLUDE) -c $< -o $@ -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+	x86_64-elf-gcc $(GCC_INCLUDE) -c $< -o $@ \
+		-std=gnu99 -ffreestanding -O2 -Wall -Wextra \
+		-mno-red-zone
 
 %.o : %.s
-	i686-elf-as $< -o $@
+	x86_64-elf-as $< -o $@
 
 %.o : %.asm
 	nasm $< -f bin -o $(basename $<).bin
-	i686-elf-as -o $@ /dev/null
+	x86_64-elf-as -o $@ /dev/null
 	objcopy --add-section=.$(basename $<)=$(basename $<).bin $@ $@
 
 %.o : %.data
-	i686-elf-as -o $@ /dev/null
-	objcopy --add-section=.$(basename $<)=$< $@ $@
+	x86_64-elf-as -o $@ /dev/null
+	objcopy --add-section=.$(basename $<)=$< $@
 
 all: kernel_o
 
 # Build the kernel binary
 kernel_o: kernel_entry.o main.o ap_setup.o font_bitmap.o ${C_OBJ} ${ASM_OBJ}
-	i686-elf-gcc -T link.ld -o kernel.o -ffreestanding -O2 -nostdlib $^ -lgcc
+	x86_64-elf-gcc -T link.ld -o kernel.o \
+		-ffreestanding -O2 -nostdlib -mno-red-zone \
+		$^ -lgcc
 
 
 # Build the kernel binary
 kernel_bin: kernel_entry.o main.o ap_setup.o font_bitmap.o ${C_OBJ} ${ASM_OBJ}
-	i686-elf-ld -T bios_link.ld -e _start -o kernel.bin $^ --oformat binary
-
+	x86_64-elf-ld -T bios_link.ld -e _start -o kernel.bin \
+		$^ --oformat binary
 
 
 

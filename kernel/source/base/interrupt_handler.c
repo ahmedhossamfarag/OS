@@ -11,7 +11,7 @@ extern void isr_syscall_handler();
 
 void interrupt_handler_init()
 {
-    idt_set_user_entry(0x80, (uint32_t)isr_syscall_handler);
+    idt_set_user_entry(0x80, (uint64_t)isr_syscall_handler);
 }
 
 static void track_exception(cpu_state_t* cpu){
@@ -25,9 +25,9 @@ static void track_exception(cpu_state_t* cpu){
     print("CS: ")
     println(int_to_hex_str(cpu->cs, s))
     print("EIP: ")
-    println(int_to_hex_str(cpu->eip, s))
+    println(int_to_hex_str(cpu->rip, s))
     print("ESP: ")
-    println(int_to_hex_str(cpu->user_esp, s))
+    println(int_to_hex_str(cpu->user_rsp, s))
 }
 
 void exception_handler(cpu_state_t* cpu)
@@ -49,14 +49,17 @@ void pic_handler(void) {
 extern void (*syscall_map[NUM_SYSCALL])(cpu_state_t*);
 
 void syscall_handler(cpu_state_t* state){
-    uint32_t n;
-    asm("mov %%esi, %0":"=m"(n));
+    uint64_t n;
+    asm("mov %%rsi, %0":"=m"(n));
 
     if(n >= NUM_SYSCALL || !syscall_map[n]){
-        state->eax = 0;
+        state->rax = 0;
         return;
     }
     syscall_map[n](state);
+}
+
+void error_exception_handler(){
 }
 
 void gp_fault_handler(){

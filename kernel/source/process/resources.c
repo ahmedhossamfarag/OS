@@ -25,7 +25,7 @@ void resources_init(){
 void resource_request_handler(cpu_state_t* state){
     asm("cli");
 
-    uint32_t resource_id = state->eax;
+    uint32_t resource_id = state->rax;
 
     thread_t* thread = get_current_thread();
 
@@ -51,7 +51,7 @@ void resource_free_handler(){
     asm("cli");
 
     uint32_t resource_id;
-    asm("mov %%eax, %0" : "=r"(resource_id));
+    asm("mov %%rax, %0" : "=r"(resource_id));
 
     thread_t* thread = get_current_thread();
 

@@ -2,7 +2,7 @@
 
 #pragma region Queue
 
-queue_t *queue_new(uint32_t capacity, char *(*alloc)(uint32_t))
+queue_t *queue_new(uint32_t capacity, char* (*alloc)(uint64_t))
 {
     queue_t* queue = (queue_t*) alloc(sizeof(queue_t));
     if(!queue){
@@ -59,7 +59,7 @@ uint8_t queue_remove(queue_t *queue, void *item)
     return 0;
 }
 
-void queue_delete(queue_t *queue, void (*free)(char *, uint32_t))
+void queue_delete(queue_t *queue, void (*free)(char *, uint64_t))
 {
     free((char*)queue->data, queue->capacity * sizeof(void*));
     free((char*)queue, sizeof(queue_t));
@@ -70,7 +70,7 @@ void queue_delete(queue_t *queue, void (*free)(char *, uint32_t))
 
 #pragma region Linked List
 
-list_t *list_new(char *(*alloc)(uint32_t), void (*free)(char *, uint32_t))
+list_t *list_new(char* (*alloc)(uint64_t), void (*free)(char *, uint64_t))
 {
     list_t* list = (list_t*) alloc(sizeof(list_t));
     if(!list){
@@ -116,7 +116,7 @@ void *list_remove_first(list_t *list)
 
 void list_delete(list_t *list)
 {
-    void (*free)(char *, uint32_t) = list->free;
+    void (*free)(char *, uint64_t) = list->free;
     list_node_t* node = list->head;
     while(node){
         list_node_t* next = node->next_node;
@@ -130,7 +130,7 @@ void list_delete(list_t *list)
 
 #pragma region Array
 
-array_t* array_new(uint32_t capacity, char* (*alloc)(uint32_t)){
+array_t* array_new(uint32_t capacity, char* (*alloc)(uint64_t)){
     array_t* arr = (array_t*) alloc(sizeof(array_t));
     if(!arr){
         return 0;
@@ -182,7 +182,7 @@ uint8_t array_remove(array_t* arr, void** pntr){
     return 0;
 }
 
-void array_delete(array_t* arr, void (*free)(char*,uint32_t)){
+void array_delete(array_t* arr, void (*free)(char*,uint64_t)){
     free((char*)arr->data, arr->capacity * sizeof(void*));
     free((char*)arr, sizeof(array_t));
 }

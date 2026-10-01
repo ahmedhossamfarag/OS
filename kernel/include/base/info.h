@@ -107,7 +107,7 @@ typedef struct {
 
 typedef struct
 {
-    uint32_t FameBufferBase;
+    uint64_t FameBufferBase;
     uint32_t FrameBufferSize;
     uint32_t Width;
     uint32_t Height;
@@ -120,8 +120,8 @@ typedef struct
 
 typedef struct
 {
-    uint32_t MomorySizeInMB;
-    uint32_t RSDP;
+    uint64_t MomorySizeInMB;
+    uint64_t RSDP;
 } memory_info_t;
 
 
@@ -139,7 +139,7 @@ uint8_t info_get_processor_id();
 
 graphics_info_t* info_get_graphics();
 
-uint32_t info_get_rsdp();
+uint64_t info_get_rsdp();
 
 uint8_t info_is_gpt();
 

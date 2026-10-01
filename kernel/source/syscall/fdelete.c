@@ -9,14 +9,14 @@ extern resource_queue_t *disk_queue;
 
 static void fdelete_error()
 {
-    disk_queue->handler->cpu_state.eax = 0;
+    disk_queue->handler->cpu_state.rax = 0;
     thread_awake(disk_queue->handler);
     resource_queue_deque(disk_queue);
 }
 
 static void fdelete_success()
 {
-    disk_queue->handler->cpu_state.eax = 1;
+    disk_queue->handler->cpu_state.rax = 1;
     thread_awake(disk_queue->handler);
     resource_queue_deque(disk_queue);
 }
@@ -25,7 +25,7 @@ static void fdelete_success()
 static void fdelete_proc(){
     cpu_state_t* state = &disk_queue->handler->cpu_state;
 
-    fs_entity_t* fs = (fs_entity_t*)state->eax;
+    fs_entity_t* fs = (fs_entity_t*)state->rax;
 
     if(!file_is_open(fs)){
         fdelete_error();

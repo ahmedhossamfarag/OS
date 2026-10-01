@@ -7,14 +7,14 @@ static uint8_t* pg_arr;
 static void pages_alloc_kernel(){
     pg_arr[0] = 0;
 
-    for (uint32_t i = KERNEL_OFFSET / SEGMENT_SIZE; i < KERNEL_END / SEGMENT_SIZE; i++)
+    for (uint32_t i = KERNEL_OFFSET / SEGMENT_SIZE; i <= KERNEL_END / SEGMENT_SIZE; i++)
     {
         pg_arr[i] = 0;
     }
     
     graphics_info_t* g = info_get_graphics();
 
-    for (uint32_t i = (g->FameBufferBase / SEGMENT_SIZE); i < (g->FameBufferBase + g->FrameBufferSize) / SEGMENT_SIZE; i++)
+    for (uint32_t i = (g->FameBufferBase / SEGMENT_SIZE); i <= (g->FameBufferBase + g->FrameBufferSize) / SEGMENT_SIZE; i++)
     {
         pg_arr[i] = 0;
     }
@@ -42,30 +42,30 @@ void pages_init(){
     pages_alloc_kernel();
 }
 
-uint32_t pages_alloc(){
+uint64_t pages_alloc(){
     for (int i = 0; i < SEGMENT_NO; i++)
     {
         if(pg_arr[i]){
             pg_arr[i] = 0;
-            return i * SEGMENT_SIZE;
+            return (uint64_t)i * SEGMENT_SIZE;
         }
     }
     return 0;
 }
 
-uint32_t pages_alloc_next(uint32_t seg){
+uint64_t pages_alloc_next(uint64_t seg){
     seg /= SEGMENT_SIZE;
     for (int i = seg; i < SEGMENT_NO; i++)
     {
         if(pg_arr[i]){
             pg_arr[i] = 0;
-            return i * SEGMENT_SIZE;
+            return (uint64_t)i * SEGMENT_SIZE;
         }
     }
     return 0;
 }
 
-void pages_free(uint32_t seg){
+void pages_free(uint64_t seg){
     seg /= SEGMENT_SIZE;
     if(seg > 0 && seg < SEGMENT_NO){
         pg_arr[seg] = 1;

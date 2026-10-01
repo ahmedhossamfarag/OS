@@ -25,7 +25,7 @@ static void fcreate_free(){
 static void fcreate_error()
 {
     fcreate_free();
-    disk_queue->handler->cpu_state.eax = 0;
+    disk_queue->handler->cpu_state.rax = 0;
     thread_awake(disk_queue->handler);
     resource_queue_deque(disk_queue);
 }
@@ -33,15 +33,15 @@ static void fcreate_error()
 static void fcreate_success()
 {
     fcreate_free();
-    disk_queue->handler->cpu_state.eax = (uint32_t)args.fs;
+    disk_queue->handler->cpu_state.rax = (uint32_t)args.fs;
     thread_awake(disk_queue->handler);
     resource_queue_deque(disk_queue);
 }
 
 static void fcreate_copy_name(char* src, char* des){
-    uint32_t current_cr3;
+    uint64_t current_cr3;
     asm("mov %%cr3, %0":"=r"(current_cr3));
-    uint32_t th_cr3 = ((pcb_t*)disk_queue->handler->parent)->cr3;
+    uint64_t th_cr3 = ((pcb_t*)disk_queue->handler->parent)->cr3;
     asm volatile("mov %0, %%cr3" :: "r"(th_cr3));
 
     str_copy_n(src, des, NameLength);
@@ -61,11 +61,11 @@ static void fcreate_proc(){
         return;
     }
 
-    dir_entity_t* dir = (dir_entity_t*) state->eax;
+    dir_entity_t* dir = (dir_entity_t*) state->rax;
 
-    fcreate_copy_name((char*)state->edx, args.name);
+    fcreate_copy_name((char*)state->rdx, args.name);
 
-    if(state->ebx){
+    if(state->rbx){
         dir_create(dir, args.name, &args.fs, fcreate_success, fcreate_error);
     }else{
         file_create(dir, args.name, &args.fs, fcreate_success, fcreate_error);
@@ -75,13 +75,13 @@ static void fcreate_proc(){
 void fcreate_handler(cpu_state_t* state){
     if (open_files->size >= open_files->capacity)
     {
-        state->eax = 0;
+        state->rax = 0;
         return;
     }
 
     if (disk_queue->queue->size >= disk_queue->queue->capacity)
     {
-        state->eax = 0;
+        state->rax = 0;
         return;
     }
 

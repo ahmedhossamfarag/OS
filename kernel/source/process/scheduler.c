@@ -125,12 +125,12 @@ void schedule_thread_terminated(cpu_state_t* state){
     apic_sendEOI();
 }
 
-void context_switch(cpu_state_t* cpu, thread_t* current_thread, thread_t* next_thread, uint32_t cr3){
+void context_switch(cpu_state_t* cpu, thread_t* current_thread, thread_t* next_thread, uint64_t cr3){
 
     if(current_thread){
         current_thread->cpu_state = *cpu;
     }
-    next_thread->cpu_state.esp = cpu->esp;
+    next_thread->cpu_state.rsp = cpu->rsp;
     *cpu = next_thread->cpu_state;
 
     asm volatile("mov %0, %%cr3" :: "r"(cr3));

@@ -1,4 +1,4 @@
-#define MemoryBeginAddress 0xB900000
+#define MemoryBeginAddress 0xD100000
 #define MemoryEnd 0x10000000 - 0x100
 #define MemorySize MemoryEnd - MemoryBeginAddress
 #define NULL 0
@@ -7,8 +7,8 @@
 
 void memory_init();
 
-char* alloc(uint32_t size);
+char* alloc(uint64_t size);
 
-char* alloc_align(uint32_t size, uint32_t align);
+char* alloc_align(uint64_t size, uint64_t align);
 
-void free(char* ptr, uint32_t size);
+void free(char* ptr, uint64_t size);

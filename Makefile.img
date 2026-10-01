@@ -2,8 +2,10 @@ DISK_IMAGE = disk_image.img
 EFI_PART_SIZE = 64MiB
 LOOPN = loop100
 MOUNT = /mnt/partition1
-MYAPP_EFI = /home/ahmed-hossam/src/edk2/Build/MyApp/DEBUG_GCC5/IA32/MyApp.efi
-BOOT = BOOTIA32.EFI
+MYAPP_EFI = /home/ahmed-farag/src/edk2/Build/MyApp/DEBUG_GCC/X64/MyApp.efi
+OVMF_CODE = UEFI/OVMF_CODE.fd
+OVMF_VARS = UEFI/OVMF_VARS.fd
+BOOT = BOOTX64.EFI
 
 
 all: clean run
@@ -42,11 +44,11 @@ copy: mount filesystem
 	sudo losetup -d /dev/$(LOOPN)
 
 run: copy
-	sudo qemu-system-i386 \
+	sudo qemu-system-x86_64 \
 	-monitor stdio \
     -drive format=raw,file=$(DISK_IMAGE) \
-    -pflash /home/ahmed-hossam/src/edk2/Build/OvmfIa32/DEBUG_GCC5/FV/OVMF_CODE.fd \
-    -pflash /home/ahmed-hossam/src/edk2/Build/OvmfIa32/DEBUG_GCC5/FV/OVMF_VARS.fd \
+    -pflash $(OVMF_CODE) \
+    -pflash $(OVMF_VARS) \
     -m 2048M \
 	-smp 4 \
     -net none

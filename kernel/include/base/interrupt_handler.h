@@ -9,3 +9,5 @@ void pic_handler(void);
 void syscall_handler(cpu_state_t* state);
 
 void gp_fault_handler();
+
+void error_exception_handler();

@@ -17,11 +17,11 @@
 .global _start
 .type _start, @function
 _start:
-	mov %eax, bl_magic
-	mov %ebx, boot_info_ptr
-	mov %ecx, memory_info_ptr
-	mov %edx, graphics_info_ptr
-	mov $0xB000000, %esp
+	mov %rax, bl_magic
+	mov %rbx, boot_info_ptr
+	mov %rcx, memory_info_ptr
+	mov %rdx, graphics_info_ptr
+	mov $0xB000000, %rsp
 	call kernel_main
 	cli
 1:	hlt
@@ -35,10 +35,10 @@ _start:
 .global memory_info_ptr
 .global graphics_info_ptr
 bl_magic:
-	.long 0
+	.quad 0
 boot_info_ptr:
-	.long 0
+	.quad 0
 memory_info_ptr:
-	.long 0
+	.quad 0
 graphics_info_ptr:
-	.long 0
+	.quad 0

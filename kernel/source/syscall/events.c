@@ -13,8 +13,8 @@ void set_active_process(pcb_t* pcb){
 }
 
 void register_event_handler(cpu_state_t* cpu){
-    if(!cpu->ebx || !cpu->edx){
-        cpu->eax = 0;
+    if(!cpu->rbx || !cpu->rdx){
+        cpu->rax = 0;
         return;
     }
     pcb_t* pcb = get_current_process();
@@ -22,24 +22,24 @@ void register_event_handler(cpu_state_t* cpu){
     pcb_event_handler_t* ev = events_handlers + indx;
     ev->pcb = pcb;
     thread_t* thread = get_current_thread();
-    switch (cpu->eax)
+    switch (cpu->rax)
     {
     case MOUSE_EVENT:
-        ev->mouse_handler.handler = cpu->ebx;
-        ev->mouse_handler.args = (void*) cpu->edx;
+        ev->mouse_handler.handler = cpu->rbx;
+        ev->mouse_handler.args = (void*) cpu->rdx;
         ev->mouse_handler.thread = thread;
         ev->mouse_handler.is_waiting = 0;
         break;
     case KEYBOARD_EVENT:
-        ev->keyboard_handler.handler = cpu->ebx;
-        ev->keyboard_handler.args = (void*) cpu->edx;
+        ev->keyboard_handler.handler = cpu->rbx;
+        ev->keyboard_handler.args = (void*) cpu->rdx;
         ev->keyboard_handler.thread = thread;
         ev->keyboard_handler.is_waiting = 0;
     default:
         break;
     }
 
-    cpu->eax = 1;
+    cpu->rax = 1;
 }
 
 void deregister_event_handler(cpu_state_t* cpu){
@@ -47,7 +47,7 @@ void deregister_event_handler(cpu_state_t* cpu){
     uint8_t indx = get_process_index(pcb);
     pcb_event_handler_t* ev = events_handlers + indx;
     ev->pcb = pcb;
-    switch (cpu->eax)
+    switch (cpu->rax)
     {
     case MOUSE_EVENT:
         ev->mouse_handler.handler = 0;
@@ -61,7 +61,7 @@ void deregister_event_handler(cpu_state_t* cpu){
     default:
         break;
     }
-    cpu->eax = 1;
+    cpu->rax = 1;
 }
 
 static void ev_wait_thread(pcb_t* pcb, thread_t* thread){
@@ -97,9 +97,9 @@ void clear_events_handler(pcb_t* pcb, thread_t* thread){
 }
 
 static void ev_copy_args(pcb_t* pcb, void* to, void* args, uint32_t size){
-    uint32_t current_cr3;
+    uint64_t current_cr3;
     asm("mov %%cr3, %0":"=r"(current_cr3));
-    uint32_t th_cr3 = pcb->cr3;
+    uint64_t th_cr3 = pcb->cr3;
     asm volatile("mov %0, %%cr3" :: "r"(th_cr3));
 
     mem_copy((char*)args, (char*)to, size);
@@ -107,24 +107,24 @@ static void ev_copy_args(pcb_t* pcb, void* to, void* args, uint32_t size){
     asm volatile("mov %0, %%cr3" :: "r"(current_cr3));
 }
 
-static void ev_push_eip(uint32_t cr3, cpu_state_t* cpu){
-    uint32_t current_cr3;
+static void ev_push_eip(uint64_t cr3, cpu_state_t* cpu){
+    uint64_t current_cr3;
     asm("mov %%cr3, %0":"=r"(current_cr3));
-    uint32_t th_cr3 = cr3;
+    uint64_t th_cr3 = cr3;
     asm volatile("mov %0, %%cr3" :: "r"(th_cr3));
 
-    uint32_t* esp = (uint32_t*)cpu->user_esp;
-    esp --;
-    *esp = cpu->eip;
-    cpu->user_esp = (uint32_t)esp;
+    uint32_t* rsp = (uint32_t*)cpu->user_rsp;
+    rsp --;
+    *rsp = cpu->rip;
+    cpu->user_rsp = (uint32_t)rsp;
 
     asm volatile("mov %0, %%cr3" :: "r"(current_cr3));
 }
 
-static void ev_awake_handler(uint32_t cr3, event_t event){
+static void ev_awake_handler(uint64_t cr3, event_t event){
     if(event.thread->thread_state == THREAD_STATE_WAITING){
         ev_push_eip(cr3, &event.thread->cpu_state);
-        event.thread->cpu_state.eip = event.handler;
+        event.thread->cpu_state.rip = event.handler;
         thread_awake(event.thread);
     }
 }
