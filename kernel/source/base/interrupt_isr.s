@@ -9,9 +9,9 @@
     .global isr_\fname
     isr_\fname:
         save_regs                  # Save all general-purpose registers
-        push %rsp               # Push the stack pointer to pass it to the C handler
+        mov %rsp, %rdi          # Pass the stack pointer as an argument to the C handler
 
-        mov $0x10, %rax 
+        mov $0x20, %rax         # Set the data segment selector (0x20) for the kernel data segment
         mov %rax, %ds
         mov %rax, %es
         mov %rax, %fs
@@ -19,7 +19,6 @@
 
         call \fname    # Call the C handler
 
-        pop %rsp                # Restore the stack pointer
         restore_regs                   # Restore general-purpose registers
         iretq                   # Return from interrupt
 .endm

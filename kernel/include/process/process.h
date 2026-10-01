@@ -3,10 +3,10 @@
 #define MAX_N_PROCESS 10
 #define MAX_N_THREAD 5
 
-#define KERNEL_CS 0x8
-#define KERNEL_DS 0x10
-#define USER_CS 0x18 | 3
-#define USER_DS 0x20 | 3
+#define KERNEL_CS 0x10
+#define KERNEL_DS 0x20
+#define USER_CS 0x30 | 3
+#define USER_DS 0x40 | 3
 
 #define EFLAGS_DEFAULT 0x200
 

@@ -1,17 +1,18 @@
 .global enable_gdt_asm
 enable_gdt_asm:
+    pushq $0x10
+    leaq reload_segments, %rax
+    push %rax
     lgdt gdtp
-    pushq $0x08
-    leaq 1f(%rip), %rax
-    pushq %rax
     lretq
+    hlt
 
-1:
-    mov $0x10, %eax
-    mov %eax, %ds
-    mov %eax, %es
-    mov %eax, %fs
-    mov %eax, %ss
-    mov %eax, %gs
+reload_segments:
+    mov $0x20, %rax
+    mov %rax, %ds
+    mov %rax, %es
+    mov %rax, %fs
+    mov %rax, %ss
+    mov %rax, %gs
     nop
     ret

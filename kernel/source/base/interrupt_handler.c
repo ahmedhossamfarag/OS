@@ -24,9 +24,9 @@ static void track_exception(cpu_state_t* cpu){
     println(int_to_hex_str(get_current_process()->cr3, s))
     print("CS: ")
     println(int_to_hex_str(cpu->cs, s))
-    print("EIP: ")
+    print("RIP: ")
     println(int_to_hex_str(cpu->rip, s))
-    print("ESP: ")
+    print("RSP: ")
     println(int_to_hex_str(cpu->user_rsp, s))
 }
 

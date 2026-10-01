@@ -27,3 +27,5 @@ void idt_init();
 void enable_idt();
 
 void enable_interrupt();
+
+void disable_interrupt();

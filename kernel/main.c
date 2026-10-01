@@ -48,11 +48,12 @@ void init()
 
 void setup()
 {
-    // enable_idt();
-    // enable_gdt();
-    // enable_apic();
+    disable_interrupt();
+    enable_gdt();
+    enable_idt();
+    enable_apic();
     // enable_paging();
-    // enable_interrupt();
+    enable_interrupt();
 }
 
 void ap_start()
