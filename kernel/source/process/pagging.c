@@ -169,7 +169,7 @@ void enable_paging()
      *
      * default_dir is currently identity mapped.
      */
-    uint64_t cr3 = (uint64_t)user_dirs[7];
+    uint64_t cr3 = (uint64_t)default_dir;
 
     asm volatile (
         "mov %0, %%cr3"
