@@ -12,7 +12,7 @@ ap_setup_start:
 
     jmp 0x8 : ap_init_pm - ap_setup_start + AP_SETUP_OFFSET ; Make a far jump 
 
-    [ bits 32]
+    [bits 32]
     ap_init_pm :
         mov ax , 0x10 ;
         mov ds , ax
@@ -21,35 +21,94 @@ ap_setup_start:
         mov fs , ax
         mov gs , ax
 
-        mov ebp , [AP_SETUP_OFFSET + 0x100] ; Update our stack position so it is right
-        mov esp , ebp
+        ; Load PML4
+        mov eax, [AP_SETUP_OFFSET + 0x300]
+        mov cr3, eax
+
+        ; Enable PAE
+        mov eax, cr4
+        or  eax, 1 << 5          ; CR4.PAE
+        mov cr4, eax
+
+        ; Enable Long Mode Enable (LME)
+        mov ecx, 0xC0000080      ; IA32_EFER
+        rdmsr
+        or  eax, 1 << 8          ; EFER.LME
+        wrmsr
+
+        ; Enable paging
+        mov eax, cr0
+        or  eax, 1 << 31         ; CR0.PG
+        mov cr0, eax
+
+        ; Enter 64-bit code segment
+        jmp 0x18: long_mode_entry - ap_setup_start + AP_SETUP_OFFSET ; Make a far jump
 
 
-        mov ebx, [AP_SETUP_OFFSET + 0x200]
-        call ebx ; Finally , call the kernel
-        jmp $
+        ; -----------------------------
+        ; 64-bit long mode
+        ; -----------------------------
+
+        [bits 64]
+
+        long_mode_entry:
+                mov ax, 0x20
+                mov ds, ax
+                mov es, ax
+                mov ss, ax
+                mov fs, ax
+                mov gs, ax
+
+                mov rbp , [AP_SETUP_OFFSET + 0x100] ; Update our stack position so it is right
+                mov rsp , rbp
 
 
-_gdt_start :
-_gdt_null : 
-    dd 0x0 
-    dd 0x0
-_gdt_code :
+                mov rbx, [AP_SETUP_OFFSET + 0x200]
+                call rbx ; Finally , call the kernel
+                jmp $
+
+
+_gdt_start:
+
+_gdt_null:
+    dd 0x00000000
+    dd 0x00000000
+
+_gdt_code:
     dw 0xffff
-    dw 0x0
-    db 0x0
-    db 10011010b
-    db 11001111b
-    db 0x0
-_gdt_data :
-    dw 0xffff 
-    dw 0x0 
-    db 0x0 
-    db 10010010b 
-    db 11001111b 
-    db 0x0 
-_gdt_end :
-_gdt_descriptor :
+    dw 0x0000
+    db 0x00
+    db 10011010b       ; Present, ring 0, code, readable
+    db 11001111b       ; G=1, D=1, L=0
+    db 0x00
+
+_gdt_data:
+    dw 0xffff
+    dw 0x0000
+    db 0x00
+    db 10010010b       ; Present, ring 0, data, writable
+    db 11001111b       ; G=1, D=1
+    db 0x00
+
+_gdt_code64:
+    dw 0xffff
+    dw 0x0000
+    db 0x00
+    db 10011010b       ; Present, ring 0, code, readable
+    db 10101111b       ; G=1, L=1, D=0
+    db 0x00
+
+_gdt_data64:
+    dw 0xffff
+    dw 0x0000
+    db 0x00
+    db 10010010b       ; Present, ring 0, data, writable
+    db 00001111b       ; G=0, L=0, D=0
+    db 0x00
+
+_gdt_end:
+
+_gdt_descriptor:
     dw _gdt_end - _gdt_start - 1
     dd _gdt_start - ap_setup_start + AP_SETUP_OFFSET
 

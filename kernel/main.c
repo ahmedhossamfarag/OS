@@ -29,7 +29,7 @@ void init()
 {
     info_init();
     vga_init();
-    // acpi_init();
+    acpi_init();
     memory_init();
     idt_init();
     pic_init();
@@ -68,13 +68,17 @@ extern uint8_t _ap_setup_end[];
 
 void ap_setup()
 {
+    extern uint64_t* default_dir;
+
     uint8_t* code_offset = (uint8_t*)0xA000;
     uint64_t* stack_size_pntr = (uint64_t*)0xA100;
     uint64_t* start_pntr = (uint64_t*)0xA200;
+    uint32_t* dir_pntr = (uint32_t*)0xA300;
 
     mem_copy((char*)_ap_setup_start, (char*)code_offset, _ap_setup_end - _ap_setup_start);
 
     *start_pntr = (uint64_t) ap_start;
+    *dir_pntr = (uint32_t) default_dir & 0xFFFFFFFF;
 
     for (uint8_t apic_id = 1; apic_id < info_get_processor_no(); apic_id++)
     {
@@ -105,7 +109,7 @@ int kernel_main()
 {
     init();
     setup();
-    // ap_setup();
+    ap_setup();
     vga_print_clear(0);
     println("Welcome To kernel");
 

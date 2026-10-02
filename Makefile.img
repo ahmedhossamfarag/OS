@@ -3,8 +3,8 @@ EFI_PART_SIZE = 64MiB
 LOOPN = loop100
 MOUNT = /mnt/partition1
 MYAPP_EFI = /home/ahmed-farag/src/edk2/Build/MyApp/DEBUG_GCC/X64/MyApp.efi
-OVMF_CODE = UEFI/OVMF_CODE.fd
-OVMF_VARS = UEFI/OVMF_VARS.fd
+OVMF_CODE = /home/ahmed-farag/src/edk2/Build/OvmfX64/DEBUG_GCC/FV/OVMF_CODE.fd
+OVMF_VARS = /home/ahmed-farag/src/edk2/Build/OvmfX64/DEBUG_GCC/FV/OVMF_VARS.fd
 BOOT = BOOTX64.EFI
 
 
