@@ -42,5 +42,5 @@ void memory_init_handler(cpu_state_t* state)
 {
     pcb_t* pcb = get_current_process();
     state->rbx = pcb->memo_begin;
-    state->rdx = PROCESS_N_PAGE_TABLES * PAGE_SIZE * NUM_PAGES;
+    state->rdx = PROCESS_N_PD_ENTRIES * PAGE_SIZE * NUM_PAGES;
 }

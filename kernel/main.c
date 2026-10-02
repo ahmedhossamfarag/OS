@@ -52,7 +52,7 @@ void setup()
     enable_gdt();
     enable_idt();
     enable_apic();
-    // enable_paging();
+    enable_paging();
     enable_interrupt();
 }
 

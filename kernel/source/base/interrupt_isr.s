@@ -94,7 +94,7 @@ isr fpu_handler
 
 isr ata_handler
 
-isr page_fault_handler
+isr_error page_fault_handler
 
 isr_state timer_handler
 

@@ -1,13 +1,42 @@
 #define PAGE_SIZE 4096  // 4KB page size
 #define NUM_PAGES 512   // Corresponds to 2MB of address space with 4KB pages
-#define NUM_PAGE_TABLES 4   // Corresponds to 4GB of address space with 4KB pages
+#define NUM_PDPT_ENTRIES 4   // Corresponds to 4GB of address space with 4KB pages
 
 #define FIRST_DIR_ALIGN 0XB001000
-#define PROCESS_N_PAGE_TABLES 0x4
+#define PROCESS_N_PD_ENTRIES 0x4
 #define N_DIRS 8
 
 #define KERNEL_PRIVILEGE 3
 #define USER_PRIVILEGE 7
+
+
+#define ENTRIES_PER_TABLE 512
+
+#define PAGE_4K            0x1000ULL
+#define PAGE_2M            0x200000ULL
+
+/* x86-64 paging flags */
+#define PAGE_PRESENT       (1ULL << 0)
+#define PAGE_WRITE         (1ULL << 1)
+#define PAGE_USER          (1ULL << 2)
+#define PAGE_PS            (1ULL << 7)   /* 2 MiB page */
+
+#define PAGE_ADDR_MASK     0x000FFFFFFFFFF000ULL
+#define PAGE_2M_ADDR_MASK  0x000FFFFFFFE00000ULL
+
+/*
+ * A 2 MiB page uses:
+ *
+ *   PML4 index : bits 47:39
+ *   PDPT index : bits 38:30
+ *   PD index   : bits 29:21
+ *   offset     : bits 20:0
+ */
+
+#define PML4_INDEX(va)     (((va) >> 39) & 0x1FF)
+#define PDPT_INDEX(va)     (((va) >> 30) & 0x1FF)
+#define PD_INDEX(va)       (((va) >> 21) & 0x1FF)
+#define PAGE_2M_OFFSET(va) ((va) & 0x1FFFFF)
 
 #include <stdint.h>
 
