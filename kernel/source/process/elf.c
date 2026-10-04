@@ -4,23 +4,23 @@
 #include "math.h"
 #include "strlib.h"
 
-static inline uint8_t elf_check_file(Elf32_Ehdr* ehdr){
+static inline uint8_t elf_check_file(Elf64_Ehdr* ehdr){
     return ehdr->e_ident[0] == EI_MAG0 && ehdr->e_ident[1] == EI_MAG1 && 
         ehdr->e_ident[2] == EI_MAG2 && ehdr->e_ident[3] == EI_MAG3;
 }
 
-uint8_t elf_check_supported(Elf32_Ehdr* ehdr){
-    return ehdr->e_machine == EM_386 && ehdr->e_ident[EI_CLASS] == ELFCLASS32 &&
+uint8_t elf_check_supported(Elf64_Ehdr* ehdr){
+    return ehdr->e_ident[EI_CLASS] == ELFCLASS32 &&
         ehdr->e_ident[EI_DATA] == ELFDATA2LSB && ehdr->e_version >= EV_CURRENT;
 }
 
-uint8_t elf_check_executable(Elf32_Ehdr* ehdr){
+uint8_t elf_check_executable(Elf64_Ehdr* ehdr){
     return ehdr->e_type == ET_EXEC || ehdr->e_type == ET_DYN;
 }
 
-static inline void elf_get_ehdr(Elf32_Map *map, char *file)
+static inline void elf_get_ehdr(Elf64_Map *map, char *file)
 {
-    Elf32_Ehdr* ehdr = (Elf32_Ehdr*) file;
+    Elf64_Ehdr* ehdr = (Elf64_Ehdr*) file;
     if(elf_check_file(ehdr)){
         map->ehdr = ehdr;
     }else{
@@ -28,10 +28,10 @@ static inline void elf_get_ehdr(Elf32_Map *map, char *file)
     }
 }
 
-static inline void elf_get_shdr(Elf32_Map *map, char *file)
+static inline void elf_get_shdr(Elf64_Map *map, char *file)
 {
     if(map->ehdr->e_shoff){
-        map->shdr = (Elf32_Shdr*)(file + map->ehdr->e_shoff);
+        map->shdr = (Elf64_Shdr*)(file + map->ehdr->e_shoff);
         if(map->ehdr->e_shnum){
             map->nshdr = map->ehdr->e_shnum;
         }else{
@@ -43,10 +43,10 @@ static inline void elf_get_shdr(Elf32_Map *map, char *file)
     }
 }
 
-static inline void elf_get_phdr(Elf32_Map *map, char *file)
+static inline void elf_get_phdr(Elf64_Map *map, char *file)
 {
     if(map->ehdr->e_phoff){
-        map->phdr = (Elf32_Phdr*)(file + map->ehdr->e_phoff);
+        map->phdr = (Elf64_Phdr*)(file + map->ehdr->e_phoff);
         if(map->ehdr->e_phnum != PN_XNUM){
             map->nphdr = map->ehdr->e_phnum;
         }else{
@@ -58,7 +58,7 @@ static inline void elf_get_phdr(Elf32_Map *map, char *file)
     }
 }
 
-static inline void elf_get_str(Elf32_Map *map, char *file)
+static inline void elf_get_str(Elf64_Map *map, char *file)
 {
     if(map->ehdr->e_shstrndx != SHN_UNDEF){
         if(map->ehdr->e_shstrndx != SHN_XINDEX){
@@ -71,7 +71,7 @@ static inline void elf_get_str(Elf32_Map *map, char *file)
     }
 }
 
-void elf_get_map(Elf32_Map *map, char *file)
+void elf_get_map(Elf64_Map *map, char *file)
 {
     elf_get_ehdr(map, file);
     if(map->ehdr){
@@ -83,26 +83,26 @@ void elf_get_map(Elf32_Map *map, char *file)
     }
 }
 
-char* elf_get_str_section(Elf32_Map* map, uint32_t shindx){
+char* elf_get_str_section(Elf64_Map* map, uint32_t shindx){
     char* file = (char*) map->ehdr;
     return file + map->shdr[shindx].sh_offset;
 }
 
-void* elf_get_table(Elf32_Map* map, Elf32_Shdr* shdr){
+void* elf_get_table(Elf64_Map* map, Elf64_Shdr* shdr){
     char* file = (char*) map->ehdr;
-    return (Elf32_Sym*) (file + shdr->sh_offset);
+    return (Elf64_Sym*) (file + shdr->sh_offset);
 }
 
-Elf32_Shdr* elf_get_sheader(Elf32_Map* map, uint32_t shindx){
+Elf64_Shdr* elf_get_sheader(Elf64_Map* map, uint32_t shindx){
     return &map->shdr[shindx];
 }
 
-uint32_t elf_get_num_entries(Elf32_Shdr* shdr){
+uint32_t GLOBelf_get_num_entries(Elf64_Shdr* shdr){
     return shdr->sh_size / shdr->sh_entsize;
 }
 
 /* Check memory region does not intersect with kernel region and drivers region */
-static inline uint8_t elf_check_mregion(uint32_t offset, uint32_t size){
+static inline uint8_t elf_check_mregion(uint64_t offset, uint64_t size){
     #define between(x, a, b) ((x) >= (a) && (x) <= (b))
     #define intersect(x,y,a,b) (between(x, a, b) || between(y, a, b) || between(a, x, y)) 
     if(intersect(offset, offset+size, KERNEL_OFFSET, KERNEL_END-1)) return 0;
@@ -110,16 +110,16 @@ static inline uint8_t elf_check_mregion(uint32_t offset, uint32_t size){
     return 1;
 }
 
-uint8_t elf_load_file(Elf32_Map* map, uint32_t* offset){
-    uint32_t org = *offset;
+uint8_t elf_load_file(Elf64_Map* map, uint64_t* offset){
+    uint64_t org = *offset;
     map->org = org;
 
     char* file = (char*) map->ehdr;
 
-    uint32_t max_offset = 0; 
+    uint64_t max_offset = 0; 
 
     // copy program sections
-    Elf32_Phdr* phdr = map->phdr;
+    Elf64_Phdr* phdr = map->phdr;
     for (uint32_t i = 0; i < map->nphdr; i++)
     {
         if(phdr->p_type == PT_LOAD){
@@ -139,7 +139,7 @@ uint8_t elf_load_file(Elf32_Map* map, uint32_t* offset){
     }
 
     // set bss sections to zero
-    Elf32_Shdr* shdr = map->shdr;
+    Elf64_Shdr* shdr = map->shdr;
     for (uint32_t i = 0; i < map->nshdr; i++)
     {
         if(shdr->sh_type == SHT_NOBITS){
@@ -157,13 +157,13 @@ uint8_t elf_load_file(Elf32_Map* map, uint32_t* offset){
     }
 
     // make offset multiple of 4k
-    *offset = math_cielm(org + max_offset, 0x1000);
+    *offset = math_cielm64(org + max_offset, 0x1000);
 
     return 1;
 }
 
-static void elf_get_dyn_dependecies(Elf32_Map* map, Elf32_Shdr* shdr, array_t* arr){
-    Elf32_Dyn* dyn = elf_get_table(map, shdr);
+static void elf_get_dyn_dependecies(Elf64_Map* map, Elf64_Shdr* shdr, array_t* arr){
+    Elf64_Dyn* dyn = elf_get_table(map, shdr);
     int n = elf_get_num_entries(shdr);
 
     char *str = 0;
@@ -188,21 +188,21 @@ static void elf_get_dyn_dependecies(Elf32_Map* map, Elf32_Shdr* shdr, array_t* a
     }
 }
 
-void elf_get_dependecies(Elf32_Map* map, array_t* arr){
+void elf_get_dependecies(Elf64_Map* map, array_t* arr){
     for (uint32_t i = 0; i < map->nshdr; i++)
     {
-        Elf32_Shdr* shdr = map->shdr + i;
+        Elf64_Shdr* shdr = map->shdr + i;
         if(shdr->sh_type == SHT_DYNAMIC){
             elf_get_dyn_dependecies(map, shdr, arr);
         }
     }
 }
 
-static uint32_t elf_st_lookup_sym(Elf32_Map* map, Elf32_Shdr* shdr, char* name){
+static Elf64_Addr elf_st_lookup_sym(Elf64_Map* map, Elf64_Shdr* shdr, char* name){
     char* str = elf_get_str_section(map, shdr->sh_link);
     int n = elf_get_num_entries(shdr);
 
-    Elf32_Sym* sym = (Elf32_Sym*)elf_get_table(map, shdr);
+    Elf64_Sym* sym = (Elf64_Sym*)elf_get_table(map, shdr);
     for (int i = 0; i < n; i++)
     {
         if(str_cmp(name, str + sym->st_name) == 0) return sym->st_value;
@@ -212,13 +212,13 @@ static uint32_t elf_st_lookup_sym(Elf32_Map* map, Elf32_Shdr* shdr, char* name){
     return 0;
 }
 
-uint32_t elf_lookup_sym(Elf32_Map* map, char* name){
-    Elf32_Shdr* shdr = map->shdr;
+Elf64_Addr elf_lookup_sym(Elf64_Map* map, char* name){
+    Elf64_Shdr* shdr = map->shdr;
 
     for (uint32_t i = 0; i < map->nshdr; i++)
     {
         if(shdr->sh_type == SHT_SYMTAB){
-            uint32_t value = elf_st_lookup_sym(map, shdr, name);
+            Elf64_Addr value = elf_st_lookup_sym(map, shdr, name);
             if(value) return value;
 
         }
@@ -228,19 +228,19 @@ uint32_t elf_lookup_sym(Elf32_Map* map, char* name){
     return 0;
 }
 
-static uint8_t elf_get_st_value(Elf32_Map* map, Elf32_Shdr* shdr, uint32_t indx, Elf32_Dependecies deps, uint32_t* st_value){
+static uint8_t elf_get_st_value(Elf64_Map* map, Elf64_Shdr* shdr, uint32_t indx, Elf64_Dependecies deps, Elf64_Addr* st_value){
 
     uint32_t n = elf_get_num_entries(shdr);
     if(indx >= n) return 0;
 
-    Elf32_Sym* sym = (Elf32_Sym*)elf_get_table(map, shdr) + indx;
+    Elf64_Sym* sym = (Elf64_Sym*)elf_get_table(map, shdr) + indx;
     if(sym->st_shndx == SHN_UNDEF && deps.libs){
         char* str = elf_get_str_section(map, shdr->sh_link);
         *st_value = 0;
         for (uint32_t i = 0; i < deps.nlibs; i++)
         {
-            Elf32_Map* lib = deps.libs + i;
-            uint32_t value = elf_lookup_sym(lib, str + sym->st_name);
+            Elf64_Map* lib = deps.libs + i;
+            Elf64_Addr value = elf_lookup_sym(lib, str + sym->st_name);
             if(value){
                 *st_value = value + lib->org;
                 break;
@@ -253,47 +253,77 @@ static uint8_t elf_get_st_value(Elf32_Map* map, Elf32_Shdr* shdr, uint32_t indx,
     return 1;
 }
 
-static uint8_t elf_do_section_rel(Elf32_Map* map, Elf32_Shdr* shdr, Elf32_Dependecies deps){
-    Elf32_Shdr* st = map->shdr + shdr->sh_link;
-    Elf32_Rel* rel = elf_get_table(map, shdr);
+static uint8_t elf_do_section_rel(Elf64_Map* map, Elf64_Shdr* shdr, Elf64_Dependecies deps){
+    Elf64_Shdr *symtab = map->shdr + shdr->sh_link;
+    Elf64_Rela *rela = elf_get_table(map, shdr);
     int n = elf_get_num_entries(shdr);
 
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < n; i++, rela++)
     {
-        uint32_t sindx = ELF32_R_SYM(rel->r_info);
-        uint32_t rtype = ELF32_R_TYPE(rel->r_info);
-        uint32_t* target_address = (uint32_t*) (map->org + rel->r_offset);
-        uint32_t st_value = 0;
-        if(sindx){
-            elf_get_st_value(map, st, sindx, deps, &st_value);
+        uint32_t sym_index = ELF64_R_SYM(rela->r_info);
+        uint32_t type      = ELF64_R_TYPE(rela->r_info);
+
+        uint8_t *target = map->org + rela->r_offset;
+
+        Elf64_Addr S = 0;                  // Symbol value
+        Elf64_Addr P = (Elf64_Addr)target; // Relocation place
+        Elf64_Addr B = (Elf64_Addr)map->org; // Load base
+        Elf64_Addr A = rela->r_addend;     // Addend
+
+        if (sym_index != 0) {
+            elf_get_st_value(map, symtab, sym_index, deps, &S);
         }
-        switch (rtype)
+
+        switch (type)
         {
-        case R_386_GLOB_DAT: {
-            *target_address = map->org + st_value;
-            break;
+            case R_X86_64_NONE:
+                break;
+            case R_X86_64_64:
+                *(uint64_t *)target = S + A;
+                break;
+            case R_X86_64_PC32:
+                *(uint32_t *)target = (uint32_t)(S + A - P);
+                break;
+            case R_X86_64_GLOB_DAT:
+                *(uint64_t *)target = S;
+                break;
+            case R_X86_64_JUMP_SLOT:
+                *(uint64_t *)target = S;
+                break;
+            case R_X86_64_RELATIVE:
+                *(uint64_t *)target = B + A;
+                break;
+            case R_X86_64_32:
+                *(uint32_t *)target = (uint32_t)(S + A);
+                break;
+            case R_X86_64_32S:
+                *(int32_t *)target = (int32_t)(S + A);
+                break;
+            case R_X86_64_16:
+                *(uint16_t *)target = (uint16_t)(S + A);
+                break;
+            case R_X86_64_PC16:
+                *(uint16_t *)target = (uint16_t)(S + A - P);
+                break;
+            case R_X86_64_8:
+                *(uint8_t *)target = (uint8_t)(S + A);
+                break;
+            case R_X86_64_PC8:
+                *(uint8_t *)target = (uint8_t)(S + A - P);
+                break;
+            default:
+                break;
         }
-        case R_386_JMP_SLOT: {
-            *target_address = st_value;
-            break;
-        }
-        case R_386_RELATIVE: {
-            *target_address = map->org + *target_address;
-            break;
-        }
-        default:
-            break;
-        }
-        rel ++;
     }
+
     return 1;
 }
 
-uint8_t elf_do_rel(Elf32_Map* map, Elf32_Dependecies deps){
-    Elf32_Shdr* shdr = map->shdr;
+uint8_t elf_do_rel(Elf64_Map* map, Elf64_Dependecies deps){
+    Elf64_Shdr* shdr = map->shdr;
     for (uint32_t i = 0; i < map->nshdr; i++)
     {
-        if(shdr->sh_type == SHT_REL){
+        if(shdr->sh_type == SHT_RELA){
             if(!elf_do_section_rel(map, shdr, deps)) return 0;
         }
         shdr ++;

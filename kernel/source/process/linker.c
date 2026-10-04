@@ -10,15 +10,15 @@ static struct
     char* file;
     uint64_t* entry;
     uint64_t* membegin;
-    Elf32_Map fmap;
-    Elf32_Dependecies deps;
+    Elf64_Map fmap;
+    Elf64_Dependecies deps;
     array_t* deps_names;
     fs_entity_t** deps_fs;
     fs_entity_t* rootdir;
     char** deps_data;
     uint32_t loaded_deps;
     uint32_t open_deps;
-    uint32_t max_offset;
+    uint64_t max_offset;
     SUCC_ERR_V
 } args;
 
@@ -30,7 +30,7 @@ static void linker_free(){
     }
 
     if(args.deps.libs){
-        free((char*)args.deps.libs, ndeps*sizeof(Elf32_Map));
+        free((char*)args.deps.libs, ndeps*sizeof(Elf64_Map));
     }
 
     if(args.deps_data){
@@ -90,7 +90,7 @@ static void linker_process(){
     for (uint32_t i = 0; i < args.deps.nlibs; i++)
     {
         elf_get_map(args.deps.libs + i, args.deps_data[i]);
-        Elf32_Map* map = args.deps.libs + i;
+        Elf64_Map* map = args.deps.libs + i;
         if(!map->ehdr || !map->shdr || !map->phdr){
             linker_error();
             return;
@@ -116,7 +116,7 @@ static void linker_process(){
 
 
 
-    Elf32_Dependecies def_deps = {0,0};
+    Elf64_Dependecies def_deps = {0,0};
     for (uint32_t i = 0; i < args.deps.nlibs; i++)
     {
         elf_do_rel(args.deps.libs + i, def_deps);
@@ -174,7 +174,7 @@ static void linker_load_dependencies(){
     if(args.deps_names->size){
         uint32_t ndeps = args.deps_names->size;
         args.deps.nlibs = ndeps;
-        args.deps.libs = (Elf32_Map*) alloc(ndeps*sizeof(Elf32_Map));
+        args.deps.libs = (Elf64_Map*) alloc(ndeps*sizeof(Elf64_Map));
         args.deps_fs = (fs_entity_t**) alloc(ndeps*sizeof(fs_entity_t*));
         args.deps_data = (char**) alloc(ndeps*sizeof(char*));
         if(!args.deps.libs || !args.deps_fs || !args.deps_data){
@@ -204,7 +204,7 @@ void linker_load_elf(char* file, uint64_t cr3, uint64_t* entry, uint64_t* membeg
 
     elf_get_map(&args.fmap, file);
 
-    Elf32_Map* map = &args.fmap;
+    Elf64_Map* map = &args.fmap;
     if(!map->ehdr || !map->shdr || !map->phdr || 
         !elf_check_supported(map->ehdr) || !elf_check_executable(map->ehdr))
     {
@@ -223,11 +223,11 @@ void linker_load_elf(char* file, uint64_t cr3, uint64_t* entry, uint64_t* membeg
 #define view(name, value) print(name) println(value)
 #define viewline(name1, value1, name2, value2) print(name1) print(value1) print(" & ") print(name2) println(value2)
 
-static void linker_read_sym_table(Elf32_Map* map, Elf32_Shdr* shdr){
+static void linker_read_sym_table(Elf64_Map* map, Elf64_Shdr* shdr){
     if(shdr->sh_type != SHT_SYMTAB && shdr->sh_type != SHT_DYNSYM) return;
     char* str = elf_get_str_section(map, shdr->sh_link);
     int n = shdr->sh_size / shdr->sh_entsize;
-    Elf32_Sym* sym = elf_get_table(map, shdr);
+    Elf64_Sym* sym = elf_get_table(map, shdr);
     for (int i = 0; i < n; i++)
     {
         viewline("Sym ", str + sym->st_name, "Value ", sxint(sym->st_value))
@@ -239,20 +239,20 @@ static void linker_read_sym_table(Elf32_Map* map, Elf32_Shdr* shdr){
 
 
 
-static void linker_read_rel_table(Elf32_Map* map, Elf32_Shdr* shdr){
+static void linker_read_rel_table(Elf64_Map* map, Elf64_Shdr* shdr){
     linker_read_sym_table(map, map->shdr + shdr->sh_link);
-    Elf32_Rel* rel = elf_get_table(map, shdr);
+    Elf64_Rel* rel = elf_get_table(map, shdr);
     int n = shdr->sh_size / shdr->sh_entsize;
 
     for (int i = 0; i < n; i++){
-        uint32_t* target_address = (uint32_t*) rel->r_offset;
+        Elf64_Addr* target_address = (Elf64_Addr*) rel->r_offset;
         viewline("Rel ", sxint(rel->r_info), sxint(target_address), sxint(*target_address))
         rel ++;
     }
 }
 
-static void linker_read_d_table(Elf32_Map* map, Elf32_Shdr* shdr){
-    Elf32_Dyn* dyn = elf_get_table(map, shdr);
+static void linker_read_d_table(Elf64_Map* map, Elf64_Shdr* shdr){
+    Elf64_Dyn* dyn = elf_get_table(map, shdr);
     int n = shdr->sh_size / shdr->sh_entsize;
     char *str;
     for (int i = 0; i < n; i++)
@@ -273,10 +273,10 @@ static void linker_read_d_table(Elf32_Map* map, Elf32_Shdr* shdr){
     }
     
 }
-static void linker_read_sections(Elf32_Map* map){
+static void linker_read_sections(Elf64_Map* map){
     for (int i = 0; i < map->nshdr; i++)
     {
-        Elf32_Shdr* shdr = map->shdr + i;
+        Elf64_Shdr* shdr = map->shdr + i;
         // view("Shdr ", map->str + shdr->sh_name);
         switch (shdr->sh_type)
         {
@@ -297,7 +297,7 @@ static void linker_read_sections(Elf32_Map* map){
 }
 
         
-static void linker_print_ehdr(Elf32_Map* map){
+static void linker_print_ehdr(Elf64_Map* map){
     view("Ehdr ", sxint(map->ehdr))
     view("Type ", sint(map->ehdr->e_type))
     view("Shdr ", sxint(map->shdr))
@@ -309,8 +309,8 @@ static void linker_print_ehdr(Elf32_Map* map){
 
 
 void linker_load_file(char* file, char* lib){
-    Elf32_Map fmap = {0};
-    Elf32_Map lmap = {0};
+    Elf64_Map fmap = {0};
+    Elf64_Map lmap = {0};
     elf_get_map(&fmap, file);
     elf_get_map(&lmap, lib);
     // linker_print_ehdr(&fmap);
@@ -321,8 +321,8 @@ void linker_load_file(char* file, char* lib){
         //     // linker_read_sections(&fmap);
         //     uint32_t org = 0;
         //     uint32_t offset = org;
-        //     Elf32_Dependecies fdeps = {&lmap, 1};
-        //     Elf32_Dependecies ldeps = {0, 0};
+        //     Elf64_Dependecies fdeps = {&lmap, 1};
+        //     Elf64_Dependecies ldeps = {0, 0};
         //     println(sint(elf_load_file(&fmap, &offset)));
         //     println(sint(elf_load_file(&lmap, &offset)));
         //     println(sint(elf_do_rel(&fmap, fdeps)));
