@@ -14,9 +14,11 @@
 mov eax, FIRST_DIR_ALIGN
 mov cr3, eax
 
-; Enable PAE
+; Enable PAE, OSFXSR, and OSXSAVE
 mov eax, cr4
 or  eax, 1 << 5          ; CR4.PAE
+or  eax, 1 << 9          ; CR4.OSFXSR
+or  eax, 1 << 10         ; CR4.OSXSAVE
 mov cr4, eax
 
 ; Enable Long Mode Enable (LME)

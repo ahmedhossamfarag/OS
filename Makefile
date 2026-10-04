@@ -12,7 +12,7 @@ vm_run: kernel_o
 
 ## BIOS run
 bios_run: os-image bios_filesystem
-	qemu-system-x86_64 -monitor stdio -device intel-hda -device hda-duplex -smp 4 -m 2048 -drive file=os-image,format=raw
+	qemu-system-x86_64 -monitor stdio -smp 4 -m 2048M -drive file=os-image,format=raw
 
 boot_bin:
 	$(MAKE) -C bios.boot
