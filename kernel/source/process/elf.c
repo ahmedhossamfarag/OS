@@ -10,7 +10,7 @@ static inline uint8_t elf_check_file(Elf64_Ehdr* ehdr){
 }
 
 uint8_t elf_check_supported(Elf64_Ehdr* ehdr){
-    return ehdr->e_ident[EI_CLASS] == ELFCLASS32 &&
+    return ehdr->e_ident[EI_CLASS] == ELFCLASS64 &&
         ehdr->e_ident[EI_DATA] == ELFDATA2LSB && ehdr->e_version >= EV_CURRENT;
 }
 

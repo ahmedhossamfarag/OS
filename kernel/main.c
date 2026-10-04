@@ -114,7 +114,7 @@ int kernel_main()
     println("Welcome To kernel");
 
 
-    // load_program(loader_success, loader_error);
+    load_program(loader_success, loader_error);
 
     while (1);
 
