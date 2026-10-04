@@ -23,6 +23,24 @@ db 0x0 ; Base ( bits 16 -23)
 db 10010010b ; 1 st flags , type flags
 db 11001111b ; 2 nd flags , Limit ( bits 16 -19)
 db 0x0 ; Base ( bits 24 -31)
+
+; 64 - bit code segment descriptor
+gdt_code64:
+    dw 0xffff
+    dw 0x0000
+    db 0x00
+    db 10011010b       ; Present, ring 0, code, readable
+    db 10101111b       ; G=1, L=1, D=0
+    db 0x00
+
+gdt_data64:
+    dw 0xffff
+    dw 0x0000
+    db 0x00
+    db 10010010b       ; Present, ring 0, data, writable
+    db 00001111b       ; G=0, L=0, D=0
+    db 0x00
+    
 gdt_end : ; The reason for putting a label at the end of the
 ; GDT is so we can have the assembler calculate
 ; the size of the GDT for the GDT decriptor ( below )

@@ -24,7 +24,7 @@ disk_bin:
 	dd if=/dev/zero of=disk.bin count=10000
 
 os-image: boot_bin kernel_bin disk_bin
-	cat bios.boot/boot.bin kernel/kernel.bin disk.bin > os-image
+	cat bios.boot/boot.bin bios.boot/long_mode.bin kernel/kernel.bin disk.bin > os-image
 
 ROOT_DIR = 201
 

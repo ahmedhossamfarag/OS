@@ -36,8 +36,10 @@ kernel_o: kernel_entry.o main.o ap_setup.o font_bitmap.o ${C_OBJ} ${ASM_OBJ}
 
 # Build the kernel binary
 kernel_bin: kernel_entry.o main.o ap_setup.o font_bitmap.o ${C_OBJ} ${ASM_OBJ}
-	x86_64-elf-ld -T bios_link.ld -e _start -o kernel.bin \
-		$^ --oformat binary
+	x86_64-elf-gcc -T bios_link.ld -o kernel.o \
+		-ffreestanding -O2 -nostdlib -mno-red-zone \
+		$^ -lgcc
+	objcopy -O binary kernel.o kernel.bin
 
 
 
