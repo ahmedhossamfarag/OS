@@ -52,8 +52,8 @@ static void fread_proc(){
     cpu_state_t* state = &disk_queue->handler->cpu_state;
     uint64_t pntr = state->rax;
     args.to = (char*) state->rdx;
-    args.seek = state->rbx;
-    args.count = state->rcx;
+    args.seek = state->rbx & 0xFFFFFFFF;
+    args.count = state->rcx & 0xFFFFFFFF;
     args.data = 0;
 
     fs_entity_t* fs = (fs_entity_t*)pntr;

@@ -1,7 +1,7 @@
 
 #include <stdint.h>
 
-#define FILE uint32_t
+#define FILE uint64_t
 
 #define FILE_NAME_LENGTH 100
 

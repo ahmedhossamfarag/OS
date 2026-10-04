@@ -11,15 +11,14 @@ ASM_OBJ = ${ASM_SOURCES:.asm=.o}
 
 
 GCC_INCLUDE := ${IUSER_LIBS} -Iinclude
-
 %.o : %.c++ ${HEADERS}
-	g++ -m32 -nostdlib -nodefaultlibs -c ${GCC_INCLUDE} $< -o $@
+	g++ -m64 -nostdlib -nodefaultlibs -c ${GCC_INCLUDE} $< -o $@
 
 %.o : %.asm
-	nasm $< -f elf -o $@
+	nasm $< -f elf64 -o $@
 
 all: shell.o
 
 
 shell.o: start.o ${C_OBJ} ${ASM_OBJ} ${USER_LIBS_OBJ}
-	g++ -m32 -nostdlib -nodefaultlibs -nostartfiles -o $@ $^ -z noexecstack
+	g++ -m64 -nostdlib -nodefaultlibs -nostartfiles -o $@ $^ -z noexecstack
