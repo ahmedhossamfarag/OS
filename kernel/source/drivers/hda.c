@@ -5,7 +5,7 @@
 
 extern uint16_t hda_vendorId;
 extern uint16_t hda_deviceId;
-extern uint32_t hda_memory_bar;
+extern uint64_t hda_memory_bar;
 extern uint8_t hda_irq;
 static uint8_t iss; // num of in streams
 static uint8_t oss; // num of out streams
@@ -95,8 +95,8 @@ static void hda_init_corb_rirb(){
     corb = (hda_corb_entry_t*) alloc_align(corb_sz*sizeof(hda_corb_entry_t), 128);
     rirb = (hda_rirb_entry_t*) alloc_align(rirb_sz*sizeof(hda_rirb_entry_t), 128);
 
-    hda_write_dword(HDA_CORBADDR, (uint32_t)corb); // write corb address
-    hda_write_dword(HDA_RIRBADDR, (uint32_t)rirb); // write rib address
+    hda_write_dword(HDA_CORBADDR, (uint64_t)corb & 0xFFFFFFFF); // write corb address
+    hda_write_dword(HDA_RIRBADDR, (uint64_t)rirb & 0xFFFFFFFF); // write rib address
 
     hda_write_word(HDA_CORBWP, 0); // reset corb write pointer
     hda_write_word(HDA_CORBRP, 1 << 15); // reset corb read pointer
@@ -181,11 +181,11 @@ void hda_init_bdl(){
         hda_bdl_entry_t* bdl = (hda_bdl_entry_t*)alloc_align(N_BDL*sizeof(hda_bdl_entry_t), 128);
         for (uint8_t i = 0; i < N_BDL; i++)
         {
-            bdl[i].address = (uint32_t) alloc_align(BUFFER_LN, 128);
+            bdl[i].address = (uint64_t) alloc_align(BUFFER_LN, 128) & 0xFFFFFFFF;
             bdl[i].length = BUFFER_LN;
             bdl[i].ioc = 1;
         }
-        hda_write_dword(HDA_ISDnBDPL(i), (uint32_t)bdl);
+        hda_write_dword(HDA_ISDnBDPL(i), (uint64_t)bdl & 0xFFFFFFFF);
         hda_write_word(HDA_ISDnLVI(i), N_BDL-1);
         hda_write_dword(HDA_ISDnCBL(i), cbl);
         hda_write_word(HDA_ISDnFMT(i), SD_FMT);
@@ -199,11 +199,11 @@ void hda_init_bdl(){
         hda_bdl_entry_t* bdl = (hda_bdl_entry_t*)alloc_align(N_BDL*sizeof(hda_bdl_entry_t), 128);
         for (uint8_t i = 0; i < N_BDL; i++)
         {
-            bdl[i].address = (uint32_t)alloc_align(BUFFER_LN, 128);
+            bdl[i].address = (uint64_t)alloc_align(BUFFER_LN, 128) & 0xFFFFFFFF;
             bdl[i].length = BUFFER_LN;
             bdl[i].ioc = 1;
         }
-        hda_write_dword(HDA_OSDnBDPL(i), (uint32_t)bdl);
+        hda_write_dword(HDA_OSDnBDPL(i), (uint64_t)bdl & 0xFFFFFFFF);
         hda_write_word(HDA_OSDnLVI(i), N_BDL-1);
         hda_write_dword(HDA_OSDnCBL(i), cbl);
         hda_write_word(HDA_OSDnFMT(i), SD_FMT);  
@@ -236,7 +236,7 @@ void hda_handler(){
 
 void hda_init()
 {
-    idt_set_entry(PIC_M_OFFSET + hda_irq, (uint32_t)hda_handler);
+    idt_set_entry(PIC_M_OFFSET + hda_irq, (uint64_t)hda_handler);
     irq_clear_mask(hda_irq);
 
     // reset

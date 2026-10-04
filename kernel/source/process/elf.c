@@ -263,7 +263,7 @@ static uint8_t elf_do_section_rel(Elf64_Map* map, Elf64_Shdr* shdr, Elf64_Depend
         uint32_t sym_index = ELF64_R_SYM(rela->r_info);
         uint32_t type      = ELF64_R_TYPE(rela->r_info);
 
-        uint8_t *target = map->org + rela->r_offset;
+        uint8_t *target = (uint8_t *)(map->org + rela->r_offset);
 
         Elf64_Addr S = 0;                  // Symbol value
         Elf64_Addr P = (Elf64_Addr)target; // Relocation place

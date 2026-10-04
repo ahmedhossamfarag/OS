@@ -5,7 +5,7 @@
 
 extern uint16_t ethernet_vendorId;
 extern uint16_t ethernet_deviseId;
-extern uint32_t ethernet_memory_bar;
+extern uint64_t ethernet_memory_bar;
 extern uint8_t ethernet_irq;
 e1000_tx_desc_t *tx_desc;
 e1000_rx_desc_t *rx_desc;
@@ -58,7 +58,7 @@ void ethernet_start()
 
 void ethernet_send_packet(void *packet, uint32_t length)
 {
-    tx_desc->buffer_addr = (uint32_t)packet;
+    tx_desc->buffer_addr = (uint64_t)packet;
     tx_desc->length = length;
     tx_desc->cmd = TXD_CMD_EOP | TXD_CMD_RS;
     tx_desc->status = 0;
@@ -80,8 +80,8 @@ void ethernet_init()
     ethernet_write_mac_address(mac_addr);
     tx_desc = (e1000_tx_desc_t *)alloc(sizeof(e1000_tx_desc_t) * N_DESC);
     rx_desc = (e1000_rx_desc_t *)alloc(sizeof(e1000_rx_desc_t) * N_DESC);
-    ethernet_tx_init((uint32_t)tx_desc, sizeof(e1000_tx_desc_t) * N_DESC);
-    ethernet_rx_init((uint32_t)rx_desc, sizeof(e1000_rx_desc_t) * N_DESC);
+    ethernet_tx_init((uint64_t)tx_desc, sizeof(e1000_tx_desc_t) * N_DESC);
+    ethernet_rx_init((uint64_t)rx_desc, sizeof(e1000_rx_desc_t) * N_DESC);
     ethernet_enable_interrupts();
     ethernet_start();
 }

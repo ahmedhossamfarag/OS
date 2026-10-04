@@ -78,7 +78,7 @@ void ap_setup()
     mem_copy((char*)_ap_setup_start, (char*)code_offset, _ap_setup_end - _ap_setup_start);
 
     *start_pntr = (uint64_t) ap_start;
-    *dir_pntr = (uint32_t) default_dir & 0xFFFFFFFF;
+    *dir_pntr = (uint64_t) default_dir & 0xFFFFFFFF;
 
     for (uint8_t apic_id = 1; apic_id < info_get_processor_no(); apic_id++)
     {

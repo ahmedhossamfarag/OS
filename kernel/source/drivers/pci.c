@@ -17,7 +17,7 @@ uint32_t pci_read_config(uint8_t bus, uint8_t device, uint8_t function, uint8_t 
 
 uint16_t hda_vendorId;
 uint16_t hda_deviceId;
-uint32_t hda_memory_bar;
+uint64_t hda_memory_bar;
 uint8_t hda_irq;
 
 void pci_hda_device_init(uint8_t bus, uint8_t device, uint8_t function)
@@ -33,7 +33,7 @@ void pci_hda_device_init(uint8_t bus, uint8_t device, uint8_t function)
 
 uint16_t ethernet_vendorId;
 uint16_t ethernet_deviseId;
-uint32_t ethernet_memory_bar;
+uint64_t ethernet_memory_bar;
 uint8_t ethernet_irq;
 
 void pci_ethernet_device_init(uint8_t bus, uint8_t device, uint8_t function)
