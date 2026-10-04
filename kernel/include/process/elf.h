@@ -318,10 +318,10 @@ void* elf_get_table(Elf64_Map* map, Elf64_Shdr* shdr);
 
 Elf64_Shdr* elf_get_sheader(Elf64_Map* map, uint32_t shindx);
 
-uint8_t elf_load_file(Elf64_Map* map, uint32_t* offset);
+uint8_t elf_load_file(Elf64_Map* map, uint64_t* offset);
 
 void elf_get_dependecies(Elf64_Map* map, array_t* arr);
 
-uint32_t elf_lookup_sym(Elf64_Map* map, char* name);
+Elf64_Addr elf_lookup_sym(Elf64_Map* map, char* name);
 
 uint8_t elf_do_rel(Elf64_Map* map, Elf64_Dependecies deps);

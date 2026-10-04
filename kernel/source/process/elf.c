@@ -97,7 +97,7 @@ Elf64_Shdr* elf_get_sheader(Elf64_Map* map, uint32_t shindx){
     return &map->shdr[shindx];
 }
 
-uint32_t GLOBelf_get_num_entries(Elf64_Shdr* shdr){
+uint32_t elf_get_num_entries(Elf64_Shdr* shdr){
     return shdr->sh_size / shdr->sh_entsize;
 }
 
@@ -112,7 +112,7 @@ static inline uint8_t elf_check_mregion(uint64_t offset, uint64_t size){
 
 uint8_t elf_load_file(Elf64_Map* map, uint64_t* offset){
     uint64_t org = *offset;
-    map->org = org;
+    map->org = (char*)org;
 
     char* file = (char*) map->ehdr;
 
@@ -242,7 +242,7 @@ static uint8_t elf_get_st_value(Elf64_Map* map, Elf64_Shdr* shdr, uint32_t indx,
             Elf64_Map* lib = deps.libs + i;
             Elf64_Addr value = elf_lookup_sym(lib, str + sym->st_name);
             if(value){
-                *st_value = value + lib->org;
+                *st_value = value + (Elf64_Addr) lib->org;
                 break;
             }
         }
