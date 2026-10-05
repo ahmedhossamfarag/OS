@@ -24,6 +24,7 @@
 #include "vga_print.h"
 #include "graphics.h"
 #include "windows.h"
+#include "mouse.h"
 
 void init()
 {
@@ -44,6 +45,7 @@ void init()
     filesystem_init();
     graphics_init();
     windows_init();
+    mouse_init();
 }
 
 void setup()

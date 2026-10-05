@@ -14,8 +14,6 @@
 
 #define MouseIRQ 12 
 
-#define MaxMouseX 2000
-#define MaxMouseY 1600
 
 #include <stdint.h>
 

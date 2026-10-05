@@ -2,9 +2,13 @@
 #include "pic.h"
 #include "low_level.h"
 #include "apic.h"
+#include "info.h"
+#include "graphics.h"
 
 int16_t MouseX;
 int16_t MouseY;
+int16_t MouseMaxX;
+int16_t MouseMaxY;
 
 
 static void update_mouse_location(int16_t delta_x, int16_t delta_y){
@@ -15,8 +19,8 @@ static void update_mouse_location(int16_t delta_x, int16_t delta_y){
     if (MouseX < 0) MouseX = 0;
     if (MouseY < 0) MouseY = 0;
 
-    if (MouseX > MaxMouseX) MouseX = MaxMouseX;
-    if(MouseY > MaxMouseY) MouseY = MaxMouseY;
+    if (MouseX > MouseMaxX) MouseX = MouseMaxX;
+    if(MouseY > MouseMaxY) MouseY = MouseMaxY;
     
 }
 
@@ -28,8 +32,8 @@ static void handle_mouse_info(){
 
     uint8_t status = inb(MouseDataPort); // Read status byte from the PS/2 controller
 
-    uint8_t delta_x = inb(MouseDataPort); // Second byte (X movement)
-    uint8_t delta_y = inb(MouseDataPort); // Third byte (Y movement)
+    int8_t delta_x = inb(MouseDataPort); // Second byte (X movement)
+    int8_t delta_y = inb(MouseDataPort); // Third byte (Y movement)
 
     // Process Data
 
@@ -37,13 +41,15 @@ static void handle_mouse_info(){
     info.right_button = (status & RightButton) != 0;
     info.middle_button = (status & MiddleButton) != 0;
 
-    info.delta_x = (status & XMoveSign) == 0 ? delta_x : -delta_x;
-    info.delta_y = (status & YMoveSign) == 0 ? delta_y : -delta_y;
+    info.delta_x = delta_x;
+    info.delta_y = -delta_y;
 
     update_mouse_location(info.delta_x, info.delta_y);
 
     info.mouse_x = MouseX;
     info.mouse_y = MouseY;
+
+    graphics_cursor(MouseX, MouseY);
 
     // Excute Proc
     if(mouse_handler_proc)
@@ -83,6 +89,11 @@ static void enable_mouse_device() {
 
 void mouse_init() {
     enable_mouse_device();
+    MouseX = 0;
+    MouseY = 0;
+    graphics_info_t* g = info_get_graphics();
+    MouseMaxX = g->Width & 0xFFFF;
+    MouseMaxY = g->Height & 0xFFFF;
 }
 
 

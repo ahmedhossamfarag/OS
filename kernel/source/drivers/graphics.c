@@ -12,10 +12,40 @@ extern uint8_t* font_map;
 
 uint32_t* back_buffer;
 
+uint32_t arrow_cursor_map[CURSOR_LENGTH] = {
+    0x40000000, // B
+    0x50000000, // BB
+    0x64000000, // BWB
+    0x69000000, // BWWB
+    0x6A400000, // BWWWB
+    0x6A900000, // BWWWWB
+    0x6AA40000, // BWWWWWWB
+    0x6AA90000, // BWWWWWWWB
+    0x6AAA4000, // BWWWWWWWWB
+    0x6AAA9000, // BWWWWWWWWWB
+    0x6A955500, // BWWWWBBBBBBB 
+    0x6A400000, // BWWWB
+    0x69000000, // BWWB
+    0x69000000, // BWWB
+    0x64000000, // BWB
+    0x50000000  // BB
+};
+
+static struct
+{
+    int16_t x;
+    int16_t y;
+    int8_t visible;
+    uint32_t* cursor_back_buffer;
+} cursor_args;
+
+
 void graphics_init()
 {
     back_buffer = (uint32_t*) alloc(pitch*height);
     graphics_clear(0);
+
+    cursor_args.cursor_back_buffer = (uint32_t*) alloc(CURSOR_LENGTH*CURSOR_LENGTH*sizeof(uint32_t));
 }
 
 void graphics_clear(uint32_t color){
@@ -120,4 +150,45 @@ void graphics_read(uint32_t* buffer, int32_t x, int32_t y, uint32_t w, uint32_t 
         read_pntr += pixels_per_scanline;
         buffer += pbsl;
     }
+}
+
+
+void graphics_cursor(uint32_t cursor_x, uint32_t cursor_y){
+    if(cursor_args.visible){
+        graphics_write(cursor_args.cursor_back_buffer, cursor_args.x, cursor_args.y, CURSOR_LENGTH, CURSOR_LENGTH, CURSOR_LENGTH);
+        graphics_update_region(cursor_args.x, cursor_args.y, CURSOR_LENGTH, CURSOR_LENGTH);
+    }
+
+    graphics_read(cursor_args.cursor_back_buffer, cursor_x, cursor_y, CURSOR_LENGTH, CURSOR_LENGTH, CURSOR_LENGTH);
+
+    if (cursor_x > width - CURSOR_LENGTH)
+        cursor_x = width - CURSOR_LENGTH;
+    if (cursor_y > height -CURSOR_LENGTH)
+        cursor_y = height - CURSOR_LENGTH;
+
+    for(int y = 0; y < CURSOR_LENGTH; y++){
+        for(int x = 0; x < CURSOR_LENGTH; x++){
+            uint8_t sh = CURSOR_LENGTH - x - 1;
+            uint8_t pixel = ((arrow_cursor_map[y] >> sh )>> sh) & 0b11;
+            uint32_t* pntr = back_buffer 
+                                + ((cursor_y + y) * pixels_per_scanline) 
+                                + cursor_x + x;
+
+            switch (pixel)
+            {
+            case 0b01:
+                *pntr = 0x0;
+                break;
+            case 0b10:
+                *pntr = 0xFFFFFFFF;
+            default:
+                break;
+            }
+        }
+    }
+    graphics_update_region(cursor_x, cursor_y, CURSOR_LENGTH, CURSOR_LENGTH);
+
+    cursor_args.x = cursor_x;
+    cursor_args.y = cursor_y;
+    cursor_args.visible = 1;
 }
