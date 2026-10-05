@@ -16,3 +16,5 @@ void vga_clear(uint32_t color);
 void vga_draw_char(int x, int y, char c, uint32_t fg, uint32_t bg);
 
 void vga_copy_buffer(uint32_t* buffer);
+
+void vga_copy_sz_buffer(uint32_t* buffer, uint32_t offset, uint32_t size);

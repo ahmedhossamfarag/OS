@@ -22,8 +22,6 @@ void windows_init();
 
 window_t* register_window(window_t* window);
 
-uint8_t owns_window(window_t* window);
-
 uint8_t unregister_window(window_t* window);
 
 uint8_t window_focus(window_t* window);
@@ -32,4 +30,4 @@ uint8_t update_window_bounds(window_t* window, bounds_t* bounds);
 
 void redraw_window(window_t* window);
 
-void windows_redraw();
+void redraw_window_region(window_t* window, bounds_t* bounds);

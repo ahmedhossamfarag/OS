@@ -59,3 +59,8 @@ void vga_copy_buffer(uint32_t *buffer)
 {
     mem_copy((char*)buffer, (char*)framebuffer, pitch*height);
 }
+
+void vga_copy_sz_buffer(uint32_t *buffer, uint32_t offset, uint32_t size)
+{
+    mem_copy((char*)buffer, (char*)(framebuffer + offset), size * sizeof(uint32_t));
+}

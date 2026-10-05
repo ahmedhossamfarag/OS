@@ -31,7 +31,36 @@ void graphics_update(){
     vga_copy_buffer(back_buffer);
 }
 
-void graphics_write(uint32_t* buffer, int32_t x, int32_t y, uint32_t w, uint32_t h) {
+
+void graphics_update_region(int32_t x, int32_t y, uint32_t w, uint32_t h){
+    if (x >= (int32_t)width || y >= (int32_t)height || x + w <= 0 || y + h <= 0) return;
+
+    uint32_t offsetx= 0, offsety = 0;
+    if (x < 0) {
+        offsetx = -x;
+        x = 0;
+    }
+    if (y < 0) {
+        offsety = -y;
+        y = 0;
+    }
+
+    uint32_t cw = w - offsetx;
+    uint32_t ch = h - offsety;
+    cw = math_min(cw, width - x);
+    ch = math_min(ch, height - y);
+
+    for (uint32_t row = 0; row < ch; row++)
+    {
+        uint32_t offset = ((y + row) * pixels_per_scanline) + x;
+        uint32_t* src = back_buffer + offset;
+        vga_copy_sz_buffer(src, offset, cw);
+
+    }
+}
+
+
+void graphics_write(uint32_t* buffer, int32_t x, int32_t y, uint32_t w, uint32_t h, uint32_t pbsl) { // pbsl = pixels per scanline
     if (x >= (int32_t)width || y >= (int32_t)height || x + w <= 0 || y + h <= 0) return;
 
     uint32_t offsetx= 0, offsety = 0;
@@ -50,7 +79,7 @@ void graphics_write(uint32_t* buffer, int32_t x, int32_t y, uint32_t w, uint32_t
     ch = math_min(ch, height - y);
 
     uint32_t* write_pntr = back_buffer + (y * pixels_per_scanline) + x;
-    buffer += offsety * w;
+    buffer += offsety * pbsl;
 
     uint32_t cpitch = cw * sizeof(uint32_t);
 
@@ -58,11 +87,11 @@ void graphics_write(uint32_t* buffer, int32_t x, int32_t y, uint32_t w, uint32_t
     {
         mem_copy((char*)buffer, (char*)write_pntr, cpitch);
         write_pntr += pixels_per_scanline;
-        buffer += w;
+        buffer += pbsl;
     }
 }
 
-void graphics_read(uint32_t* buffer, int32_t x, int32_t y, uint32_t w, uint32_t h) {
+void graphics_read(uint32_t* buffer, int32_t x, int32_t y, uint32_t w, uint32_t h, uint32_t pbsl) { // pbsl = pixels per scanline
     if (x >= (int32_t)width || y >= (int32_t)height || x + w <= 0 || y + h <= 0) return;
 
     uint32_t offsetx= 0, offsety = 0;
@@ -81,7 +110,7 @@ void graphics_read(uint32_t* buffer, int32_t x, int32_t y, uint32_t w, uint32_t 
     ch = math_min(ch, height - y);
 
     uint32_t* read_pntr = back_buffer + (y * pixels_per_scanline) + x;
-    buffer += offsety * w;
+    buffer += offsety * pbsl;
 
     uint32_t cpitch = cw * sizeof(uint32_t);
 
@@ -89,6 +118,6 @@ void graphics_read(uint32_t* buffer, int32_t x, int32_t y, uint32_t w, uint32_t 
     {
         mem_copy((char*)read_pntr, (char*)buffer, cpitch);
         read_pntr += pixels_per_scanline;
-        buffer += w;
+        buffer += pbsl;
     }
 }
