@@ -97,7 +97,9 @@ static uint8_t owns_window(window_t* window) {
 }
 
 static void draw_window(window_t* window){
+    cursor_write_back();
     graphics_write(window->buffer, window->bounds.locationx, window->bounds.locationy, window->bounds.width, window->bounds.height, window->bounds.width);
+    cursor_read_back();
     graphics_update_region(window->bounds.locationx, window->bounds.locationy, window->bounds.width, window->bounds.height);
 }
 
@@ -123,6 +125,8 @@ static void draw_window_switch(window_t* window, bounds_t* abs_bounds){
 }
 
 static void windows_redraw(bounds_t* bounds){
+    cursor_write_back();
+
     for (uint32_t i = 0; i < windows_queue->size; i++)
     {
         window_t* window = windows_queue->data[(windows_queue->head + i) % windows_queue->capacity];
@@ -130,6 +134,8 @@ static void windows_redraw(bounds_t* bounds){
         if (intersection.width > 0 && intersection.height > 0)
             draw_window_switch(window, &intersection);
     }
+
+    cursor_read_back();
 
     graphics_update_region(bounds->locationx, bounds->locationy, bounds->width, bounds->height);
 }
@@ -208,6 +214,8 @@ void redraw_window(window_t* window){
 
 void redraw_window_region(window_t* window, bounds_t* bounds){
     if (owns_window(window)){
+        cursor_write_back();
+
         bounds_t abs_bounds = absolute_bounds(window, bounds);
         uint8_t drawing = 0;
         for (uint32_t i = 0; i < windows_queue->size; i++)
@@ -221,6 +229,9 @@ void redraw_window_region(window_t* window, bounds_t* bounds){
                     draw_window_switch(w, &intersection);
             }
         }
+
+        cursor_read_back();
+        
         graphics_update_region(abs_bounds.locationx, abs_bounds.locationy, abs_bounds.width, abs_bounds.height);
     }
 }

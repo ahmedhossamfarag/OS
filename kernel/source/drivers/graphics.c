@@ -152,19 +152,28 @@ void graphics_read(uint32_t* buffer, int32_t x, int32_t y, uint32_t w, uint32_t 
     }
 }
 
+void cursor_write_back(){
+    int x = cursor_args.x,
+        y = cursor_args.y,
+        cw = CURSOR_LENGTH,
+        ch = CURSOR_LENGTH,
+        pbsl = CURSOR_LENGTH;
+    uint32_t* buffer = cursor_args.cursor_back_buffer;
+    uint32_t* write_pntr = back_buffer + (y * pixels_per_scanline) + x;
 
-void graphics_cursor(uint32_t cursor_x, uint32_t cursor_y){
-    if(cursor_args.visible){
-        graphics_write(cursor_args.cursor_back_buffer, cursor_args.x, cursor_args.y, CURSOR_LENGTH, CURSOR_LENGTH, CURSOR_LENGTH);
-        graphics_update_region(cursor_args.x, cursor_args.y, CURSOR_LENGTH, CURSOR_LENGTH);
+    uint32_t cpitch = cw * sizeof(uint32_t);
+
+    for (int i = 0; i < ch; i++)
+    {
+        mem_copy((char*)buffer, (char*)write_pntr, cpitch);
+        write_pntr += pixels_per_scanline;
+        buffer += pbsl;
     }
+}
 
-    graphics_read(cursor_args.cursor_back_buffer, cursor_x, cursor_y, CURSOR_LENGTH, CURSOR_LENGTH, CURSOR_LENGTH);
-
-    if (cursor_x > width - CURSOR_LENGTH)
-        cursor_x = width - CURSOR_LENGTH;
-    if (cursor_y > height -CURSOR_LENGTH)
-        cursor_y = height - CURSOR_LENGTH;
+void cursor_draw(){
+    int cursor_x = cursor_args.x,
+        cursor_y = cursor_args.y;
 
     for(int y = 0; y < CURSOR_LENGTH; y++){
         for(int x = 0; x < CURSOR_LENGTH; x++){
@@ -186,9 +195,47 @@ void graphics_cursor(uint32_t cursor_x, uint32_t cursor_y){
             }
         }
     }
-    graphics_update_region(cursor_x, cursor_y, CURSOR_LENGTH, CURSOR_LENGTH);
+}
 
+void cursor_read_back(){
+    int x = cursor_args.x,
+        y = cursor_args.y,
+        cw = CURSOR_LENGTH,
+        ch = CURSOR_LENGTH,
+        pbsl = CURSOR_LENGTH;
+    uint32_t* buffer = cursor_args.cursor_back_buffer;
+    uint32_t* read_pntr = back_buffer + (y * pixels_per_scanline) + x;
+
+    uint32_t cpitch = cw * sizeof(uint32_t);
+
+    for (int i = 0; i < ch; i++)
+    {
+        mem_copy((char*)read_pntr, (char*)buffer, cpitch);
+        read_pntr += pixels_per_scanline;
+        buffer += pbsl;
+    }
+
+    cursor_draw();
+}
+
+void graphics_cursor(uint32_t cursor_x, uint32_t cursor_y){
+    if(cursor_args.visible){
+        cursor_write_back();
+        graphics_update_region(cursor_args.x, cursor_args.y, CURSOR_LENGTH, CURSOR_LENGTH);
+    }
+
+
+    if (cursor_x > width - CURSOR_LENGTH)
+        cursor_x = width - CURSOR_LENGTH;
+    if (cursor_y > height -CURSOR_LENGTH)
+        cursor_y = height - CURSOR_LENGTH;
+
+    
     cursor_args.x = cursor_x;
     cursor_args.y = cursor_y;
     cursor_args.visible = 1;
+
+    cursor_read_back();
+    
+    graphics_update_region(cursor_x, cursor_y, CURSOR_LENGTH, CURSOR_LENGTH);
 }

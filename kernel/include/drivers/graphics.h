@@ -14,4 +14,8 @@ void graphics_write(uint32_t* buffer, int32_t x, int32_t y, uint32_t w, uint32_t
 
 void graphics_read(uint32_t* buffer, int32_t x, int32_t y, uint32_t w, uint32_t h, uint32_t pbsl); // pbsl = pixels per scanline
 
+void cursor_write_back();
+
+void cursor_read_back();
+
 void graphics_cursor(uint32_t cursor_x, uint32_t cursor_y);
