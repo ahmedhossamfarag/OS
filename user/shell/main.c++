@@ -398,6 +398,8 @@ void draw_welcome_window(window_t* w) {
 /* Entry point                                                         */
 /* ------------------------------------------------------------------ */
 
+#include "evlib.h"
+
 int main() {
     int32_t  x = 10;
     int32_t  y = 20;
@@ -409,10 +411,25 @@ int main() {
 
     draw_welcome_window(window);
 
-    register_window(window);
-    
-    while (1);
+    void* handler = register_window(window);
 
+    event_queue_t* queue = event_queue_new(10);
+    event_queue_register(queue);
+
+    while (1)
+    {
+        event_t event = event_queue_deque(queue);
+        if (event.type == KEYBOARD_EVENT)
+        {
+            if (event.keyboard_info.key_code == ESC)
+            {
+                deregister_window(handler);
+                event_queue_deregister();
+                break;
+            }
+        }
+    }
+    
     return 0;
 }
 

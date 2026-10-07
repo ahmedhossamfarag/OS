@@ -1,171 +1,142 @@
 #include "ev_systcall.h"
 #include "scheduler.h"
 #include "libc.h"
+#include "windows.h"
 #include "vga_print.h"
 #include "strlib.h"
 
-pcb_event_handler_t* events_handlers;
+pcb_event_handler_t* event_handlers;
 
-static pcb_t* active_pcb = 0;
 
-void set_active_process(pcb_t* pcb){
-    active_pcb = pcb;
+static pcb_t* get_active_pcb(){
+    window_t* active_window = get_active_window();
+    if (active_window){
+        return (pcb_t*) active_window->owner->parent;
+    }
+    return 0;
 }
 
-void register_event_handler(cpu_state_t* cpu){
-    if(!cpu->rbx || !cpu->rdx){
+static pcb_t* get_running_pcb_at(int32_t x, int32_t y){
+    window_t* window = get_window_at(x, y);
+    if (window){
+        return (pcb_t*) window->owner->parent;
+    }
+    return 0;
+}
+
+void register_event_queue(cpu_state_t* cpu){
+    if(!cpu->rbx){
         cpu->rax = 0;
         return;
     }
     pcb_t* pcb = get_current_process();
-    uint8_t indx = get_process_index(pcb);
-    pcb_event_handler_t* ev = events_handlers + indx;
-    ev->pcb = pcb;
     thread_t* thread = get_current_thread();
-    switch (cpu->rax)
-    {
-    case MOUSE_EVENT:
-        ev->mouse_handler.handler = cpu->rbx;
-        ev->mouse_handler.args = (void*) cpu->rdx;
-        ev->mouse_handler.thread = thread;
-        ev->mouse_handler.is_waiting = 0;
-        break;
-    case KEYBOARD_EVENT:
-        ev->keyboard_handler.handler = cpu->rbx;
-        ev->keyboard_handler.args = (void*) cpu->rdx;
-        ev->keyboard_handler.thread = thread;
-        ev->keyboard_handler.is_waiting = 0;
-    default:
-        break;
-    }
-
+    uint8_t indx = get_process_index(pcb);
+    pcb_event_handler_t* ev_handler = event_handlers + indx;
+    event_queue_t* ev_queue = (event_queue_t*) cpu->rbx;
+    ev_handler->queue = ev_queue;
+    ev_handler->thread = thread;
+    ev_handler->is_waiting = 0;
     cpu->rax = 1;
 }
 
-void deregister_event_handler(cpu_state_t* cpu){
+void deregister_event_queue(cpu_state_t* cpu){
     pcb_t* pcb = get_current_process();
     uint8_t indx = get_process_index(pcb);
-    pcb_event_handler_t* ev = events_handlers + indx;
-    ev->pcb = pcb;
-    switch (cpu->rax)
-    {
-    case MOUSE_EVENT:
-        ev->mouse_handler.handler = 0;
-        ev->mouse_handler.args = 0;
-        ev->mouse_handler.is_waiting = 0;
-        break;
-    case KEYBOARD_EVENT:
-        ev->keyboard_handler.handler = 0;
-        ev->keyboard_handler.args = 0;
-        ev->keyboard_handler.is_waiting = 0;
-    default:
-        break;
-    }
+    pcb_event_handler_t* ev_handler = event_handlers + indx;
+    ev_handler->queue = 0;
+    ev_handler->thread = 0;
+    ev_handler->is_waiting = 0;
     cpu->rax = 1;
-}
-
-static void ev_wait_thread(pcb_t* pcb, thread_t* thread){
-    uint8_t indx = get_process_index(pcb);
-    pcb_event_handler_t* ev = events_handlers + indx;
-    
-    if(ev->mouse_handler.thread == thread){
-        ev->mouse_handler.is_waiting = 1;
-    }
-    if(ev->keyboard_handler.thread == thread){
-        ev->keyboard_handler.is_waiting = 1;
-    }
-}
-
-void wait_event_handler(cpu_state_t* cpu){
-    ev_wait_thread(get_current_process(), get_current_thread());
-    schedule_thread_waiting(cpu);
 }
 
 void clear_events_handler(pcb_t* pcb, thread_t* thread){
     uint8_t indx = get_process_index(pcb);
-    pcb_event_handler_t* ev = events_handlers + indx;
-    if(ev->mouse_handler.thread == thread){
-        ev->mouse_handler.args = 0;
-        ev->mouse_handler.handler = 0;
-        ev->mouse_handler.is_waiting = 0;
-    }
-    if(ev->keyboard_handler.thread == thread){
-        ev->keyboard_handler.args = 0;
-        ev->keyboard_handler.handler = 0;
-        ev->keyboard_handler.is_waiting = 0;
+    pcb_event_handler_t* ev = event_handlers + indx;
+    if (ev->thread == thread){
+        ev->queue = 0;
+        ev->thread = 0;
+        ev->is_waiting = 0;
     }
 }
 
-static void ev_copy_args(pcb_t* pcb, void* to, void* args, uint64_t size){
+void wait_event_handler(cpu_state_t* cpu){
+    pcb_t* pcb = get_current_process();
+    thread_t* thread = get_current_thread();
+    uint8_t indx = get_process_index(pcb);
+    pcb_event_handler_t* ev_handler = event_handlers + indx;
+    ev_handler->thread = thread;
+    ev_handler->is_waiting = 1;
+    schedule_thread_waiting(cpu);
+}
+
+static uint64_t switch_to_process_cr3(pcb_t* pcb){
     uint64_t current_cr3;
-    asm("mov %%cr3, %0":"=r"(current_cr3));
-    uint64_t th_cr3 = pcb->cr3;
-    asm volatile("mov %0, %%cr3" :: "r"(th_cr3));
-
-    mem_copy((char*)args, (char*)to, size);
-
-    asm volatile("mov %0, %%cr3" :: "r"(current_cr3));
+    asm volatile("mov %%cr3, %0":"=r"(current_cr3));
+    uint64_t process_cr3 = pcb->cr3;
+    asm volatile("mov %0, %%cr3"::"r"(process_cr3));
+    return current_cr3;
 }
 
-static void ev_push_eip(uint64_t cr3, cpu_state_t* cpu){
-    uint64_t current_cr3;
-    asm("mov %%cr3, %0":"=r"(current_cr3));
-    uint64_t th_cr3 = cr3;
-    asm volatile("mov %0, %%cr3" :: "r"(th_cr3));
-
-    uint64_t* rsp = (uint64_t*)cpu->user_rsp;
-    rsp --;
-    *rsp = cpu->rip;
-    cpu->user_rsp = (uint64_t)rsp;
-
-    asm volatile("mov %0, %%cr3" :: "r"(current_cr3));
+static void switch_to_current_cr3(uint64_t current_cr3){
+    asm volatile("mov %0, %%cr3"::"r"(current_cr3));
 }
 
-static void ev_awake_handler(uint64_t cr3, event_t event){
-    if(event.thread->thread_state == THREAD_STATE_WAITING){
-        ev_push_eip(cr3, &event.thread->cpu_state);
-        event.thread->cpu_state.rip = event.handler;
-        thread_awake(event.thread);
-    }
-}
-
-static void ev_awake_thread(pcb_event_handler_t* ev, thread_t* thread){
-    if(ev->mouse_handler.thread == thread){
-        ev->mouse_handler.is_waiting = 0;
-    }
-    if(ev->keyboard_handler.thread == thread){
-        ev->keyboard_handler.is_waiting = 0;
+static void ev_awake_thread(pcb_event_handler_t* ev){
+    if(ev->is_waiting) {
+        ev->is_waiting = 0;
+        thread_awake(ev->thread);
     }
 }
 
 void ev_syscall_keyboard_handler(key_info_t k){
+    pcb_t* active_pcb = get_active_pcb();
     if(!active_pcb){
         return;
     }
     pcb_t* pcb = active_pcb;
     uint8_t indx = get_process_index(pcb);
-    pcb_event_handler_t* ev = events_handlers + indx;
-    if(ev->keyboard_handler.args && ev->keyboard_handler.handler){
-        if(ev->keyboard_handler.is_waiting){
-            ev_copy_args(pcb, ev->keyboard_handler.args, &k, sizeof(key_info_t));
-            ev_awake_handler(pcb->cr3, ev->keyboard_handler);
-            ev_awake_thread(ev, ev->keyboard_handler.thread);
+    pcb_event_handler_t* ev = event_handlers + indx;
+    if(ev->queue){
+        uint64_t current_cr3 = switch_to_process_cr3(active_pcb);
+    
+        event_queue_t* ev_queue = ev->queue;
+        event_t* ev_event = ev_queue->events + ev_queue->write_index;
+        ev_event->type = KEYBOARD_EVENT;
+        ev_event->keyboard_info = k;
+        int next_write_index = (ev_queue->write_index + 1) % ev_queue->capacity;
+        if(next_write_index != ev_queue->read_index){
+            ev_queue->write_index  = next_write_index;
         }
+
+        switch_to_current_cr3(current_cr3);
+
+        ev_awake_thread(ev);
     }
 }
 
 void ev_syscall_mouse_handler(mouse_info_t m){
+    pcb_t* active_pcb = get_running_pcb_at(m.mouse_x, m.mouse_y);
     if(!active_pcb){
         return;
     }
     pcb_t* pcb = active_pcb;
     uint8_t indx = get_process_index(pcb);
-    pcb_event_handler_t* ev = events_handlers + indx;
-    if(ev->mouse_handler.args && ev->mouse_handler.handler){
-        if(ev->mouse_handler.is_waiting){
-            ev_copy_args(pcb, ev->mouse_handler.args, &m, sizeof(mouse_info_t));
-            ev_awake_handler(pcb->cr3, ev->mouse_handler);
-            ev_awake_thread(ev, ev->mouse_handler.thread);
+    pcb_event_handler_t* ev = event_handlers + indx;
+    if(ev->queue){
+        uint64_t current_cr3 = switch_to_process_cr3(active_pcb);
+
+        event_queue_t* ev_queue = ev->queue;
+        event_t* ev_event = ev_queue->events + ev_queue->write_index;
+        ev_event->type = MOUSE_EVENT;
+        ev_event->mouse_info = m;
+        int next_write_index = (ev_queue->write_index + 1) % ev_queue->capacity;
+        if(next_write_index != ev_queue->read_index){
+            ev_queue->write_index  = next_write_index;
         }
+
+        switch_to_current_cr3(current_cr3);
+
+        ev_awake_thread(ev);
     }
 }

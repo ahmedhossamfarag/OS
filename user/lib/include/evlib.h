@@ -1,6 +1,7 @@
 #include <stdint.h>
 
 typedef enum{
+	NO_EVENT = 0,
     MOUSE_EVENT = 1,
     KEYBOARD_EVENT = 2
 } event_type_t;
@@ -46,9 +47,27 @@ typedef struct{
     uint16_t mouse_y;
 } mouse_info_t;
 
+typedef struct{
+    event_type_t type;
+    union{
+        mouse_info_t mouse_info;
+        key_info_t keyboard_info;
+    };
+} event_t;
 
-uint8_t event_register(uint8_t type, void (*handler)(), void* args);
+typedef struct{
+    event_t* events;
+    int capacity;
+    int read_index;
+    int write_index;
+} event_queue_t;
+
+event_queue_t* event_queue_new(uint32_t capacity);
+
+uint8_t event_queue_register(event_queue_t* queue);
 
 void event_wait();
 
-uint8_t event_deregister(uint8_t type);
+uint8_t event_queue_deregister();
+
+event_t event_queue_deque(event_queue_t* queue);

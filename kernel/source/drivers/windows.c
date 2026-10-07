@@ -127,6 +127,8 @@ static void draw_window_switch(window_t* window, bounds_t* abs_bounds){
 static void windows_redraw(bounds_t* bounds){
     cursor_write_back();
 
+    graphics_clear_region(bounds->locationx, bounds->locationy, bounds->width, bounds->height, 0);
+
     for (void** w = windows_vec->begin; w < windows_vec->end; w++)
     {
         window_t* window = *w;
@@ -234,4 +236,26 @@ void redraw_window_region(window_t* window, bounds_t* bounds){
         
         graphics_update_region(abs_bounds.locationx, abs_bounds.locationy, abs_bounds.width, abs_bounds.height);
     }
+}
+
+window_t *get_active_window()
+{
+    return active_window;
+}
+
+window_t *get_window_at(int32_t x, int32_t y)
+{
+    for (void** w = windows_vec->end - 1; w >= windows_vec->begin; w--) {
+        window_t *window = *w;
+        bounds_t bounds = window->bounds;
+        if (
+            x >= bounds.locationx && 
+            x < bounds.locationx + bounds.width && 
+            y >= bounds.locationy && 
+            y < bounds.locationy + bounds.height
+        ) {
+            return window;
+        }
+    }
+    return 0;
 }

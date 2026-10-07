@@ -56,6 +56,32 @@ void graphics_clear(uint32_t color){
     }
 }
 
+void graphics_clear_region(int32_t x, int32_t y, uint32_t w, uint32_t h, uint32_t color){
+    if (x >= (int32_t)width || y >= (int32_t)height || x + w <= 0 || y + h <= 0) return;
+    uint32_t offsetx= 0, offsety = 0;
+    if (x < 0) {
+        offsetx = -x;
+        x = 0;
+    }
+    if (y < 0) {
+        offsety = -y;
+        y = 0;
+    }
+    uint32_t cw = w - offsetx;
+    uint32_t ch = h - offsety;
+    cw = math_min(cw, width - x);
+    ch = math_min(ch, height - y);
+    for (uint32_t row = 0; row < ch; row++)
+    {
+        uint32_t offset = ((y + row) * pixels_per_scanline) + x;
+        uint32_t* src = back_buffer + offset;
+        for (uint32_t col = 0; col < cw; col++)
+        {
+            *src = color;
+            src++;
+        }
+    }
+}
 
 void graphics_update(){
     vga_copy_buffer(back_buffer);

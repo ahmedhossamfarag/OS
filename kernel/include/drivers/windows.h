@@ -31,3 +31,7 @@ uint8_t update_window_bounds(window_t* window, bounds_t* bounds);
 void redraw_window(window_t* window);
 
 void redraw_window_region(window_t* window, bounds_t* bounds);
+
+window_t* get_active_window();
+
+window_t* get_window_at(int32_t x, int32_t y);

@@ -23,9 +23,9 @@ syscall_map:
     .quad 0 #0x13
     .quad memory_init_handler #0x14
     .quad 0 #0x15
-    .quad register_event_handler #0x16
+    .quad register_event_queue #0x16
     .quad wait_event_handler    #0x17
-    .quad deregister_event_handler #0x18
+    .quad deregister_event_queue #0x18
     .quad 0 #0x19
     .quad register_window_handler #0x1A
     .quad deregister_window_handler #0x1B

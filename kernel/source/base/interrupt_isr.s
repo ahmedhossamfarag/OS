@@ -1,9 +1,9 @@
-.macro isr fname
-    .global isr_\fname
-    isr_\fname:
-        call \fname
-        iretq 
-.endm
+; .macro isr fname
+;     .global isr_\fname
+;     isr_\fname:
+;         call \fname
+;         iretq 
+; .endm
 
 .macro isr_state fname 
     .global isr_\fname
@@ -67,10 +67,21 @@
     pop %rax
 .endm
 
-.macro isr_error fname 
+; .macro isr_error fname 
+;     .global isr_\fname
+;     isr_\fname:
+;         call \fname    # Call the C handler
+;         add $8, %rsp                # Adjust the stack pointer to remove the error code
+;         iretq                   # Return from interrupt
+; .endm
+
+.macro isr_state_error fname
     .global isr_\fname
     isr_\fname:
+        save_regs                  # Save all general-purpose registers
+        mov %rsp, %rdi          # Pass the stack pointer as an argument to the C handler
         call \fname    # Call the C handler
+        restore_regs                   # Restore general-purpose registers
         add $8, %rsp                # Adjust the stack pointer to remove the error code
         iretq                   # Return from interrupt
 .endm
@@ -82,19 +93,19 @@ isr_default:
 
 isr_state exception_handler
 
-isr pic_handler
+isr_state pic_handler
     
-isr keyboard_handler
+isr_state keyboard_handler
 
-isr mouse_handler
+isr_state mouse_handler
 
-isr rtc_handler
+isr_state rtc_handler
 
-isr fpu_handler
+isr_state fpu_handler
 
-isr ata_handler
+isr_state ata_handler
 
-isr_error page_fault_handler
+isr_state_error page_fault_handler
 
 isr_state timer_handler
 
@@ -103,15 +114,15 @@ isr_state lapic_timer_handler
 
 isr_state apic_timer_handler
 
-isr apic_keyboard_handler
+isr_state apic_keyboard_handler
 
-isr apic_mouse_handler
+isr_state apic_mouse_handler
 
-isr apic_rtc_handler
+isr_state apic_rtc_handler
 
-isr apic_fpu_handler
+isr_state apic_fpu_handler
 
-isr apic_ata_handler
+isr_state apic_ata_handler
 
 isr_state schedule_thread
 
@@ -125,6 +136,6 @@ isr_state schedule_thread_terminated
 
 isr_state syscall_handler
 
-isr_error error_exception_handler
+isr_state_error error_exception_handler
 
-isr_error gp_fault_handler
+isr_state_error gp_fault_handler

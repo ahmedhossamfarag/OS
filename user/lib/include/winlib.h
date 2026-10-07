@@ -17,10 +17,10 @@ typedef struct {
 
 window_t* create_window(int32_t x, int32_t y, uint32_t width, uint32_t height, uint32_t bgcolor);
 
-window_t* register_window(window_t* window);
+void* register_window(window_t* window);
 
-uint8_t deregister_window(window_t* window);
+uint8_t deregister_window(void* window_handle);
 
-uint8_t redraw_window(window_t* window);
+uint8_t redraw_window(void* window_handle);
 
-uint8_t update_window_bounds(window_t* window, bounds_t* bounds);
+uint8_t update_window_bounds(void* window_handle, bounds_t* bounds);
