@@ -188,3 +188,65 @@ void array_delete(array_t* arr, void (*free)(char*,uint64_t)){
 }
 
 #pragma endregion
+
+#pragma region Vector
+
+vector_t* vector_new(uint32_t capacity, char* (*alloc)(uint64_t)){
+    vector_t* vec = (vector_t*) alloc(sizeof(vector_t));
+    if(!vec){
+        return 0;
+    }
+    vec->capacity = capacity;
+    vec->begin = vec->end = (void**) alloc(capacity * sizeof(void*));
+    return vec;
+}
+
+uint8_t vector_contains(vector_t* vec, void* item){
+    for (void** p = vec->begin; p < vec->end; p++)
+    {
+        if(*p == item){
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void** vector_add(vector_t* vec, void* item){
+    if(vec->end - vec->begin < vec->capacity){
+        void** pntr = vec->end;
+        *pntr = item;
+        vec->end ++;
+        return pntr;
+    }
+    return 0;
+}
+
+void** vector_get(vector_t* vec, void* item){
+    for (void** p = vec->begin; p < vec->end; p++)
+    {
+        if(*p == item){
+            return p;
+        }
+    }
+    return 0;
+}
+
+uint8_t vector_remove(vector_t* vec, void* item){
+    void** item_pntr = vector_get(vec, item);
+    if(item_pntr){
+        for (void** p = item_pntr; p < vec->end - 1; p++)
+        {
+            *p = *(p+1);
+        }
+        vec->end --;
+        return 1;
+    }
+    return 0;
+}
+
+void vector_delete(vector_t* vec, void (*free)(char*,uint64_t)){
+    free((char*)vec->begin, vec->capacity * sizeof(void*));
+    free((char*)vec, sizeof(vector_t));
+}
+
+#pragma endregion

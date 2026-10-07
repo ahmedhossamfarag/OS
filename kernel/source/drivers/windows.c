@@ -7,14 +7,14 @@
 
 window_t* windows;
 
-queue_t* windows_queue;
+vector_t* windows_vec;
 
 window_t* active_window;
 
 
 void windows_init(){
     windows = (window_t*) alloc(MAX_WINDOWS * sizeof(window_t));
-    windows_queue = queue_new(MAX_WINDOWS, alloc);
+    windows_vec = vector_new(MAX_WINDOWS, alloc);
     active_window = 0;
 }
 
@@ -127,9 +127,9 @@ static void draw_window_switch(window_t* window, bounds_t* abs_bounds){
 static void windows_redraw(bounds_t* bounds){
     cursor_write_back();
 
-    for (uint32_t i = 0; i < windows_queue->size; i++)
+    for (void** w = windows_vec->begin; w < windows_vec->end; w++)
     {
-        window_t* window = windows_queue->data[(windows_queue->head + i) % windows_queue->capacity];
+        window_t* window = *w;
         bounds_t intersection = interset_bounds(&window->bounds, bounds);
         if (intersection.width > 0 && intersection.height > 0)
             draw_window_switch(window, &intersection);
@@ -160,7 +160,7 @@ window_t* register_window(window_t* window){
     *window_pntr = *window;
     window_pntr->owner = get_current_thread();
 
-    queue_inque(windows_queue, window_pntr);
+    vector_add(windows_vec, window_pntr);
 
     active_window = window_pntr;
 
@@ -172,7 +172,7 @@ window_t* register_window(window_t* window){
 uint8_t unregister_window(window_t* window){
     if (owns_window(window)){
         window->owner = 0;
-        queue_remove(windows_queue, window);
+        vector_remove(windows_vec, window);
         if (active_window == window) {
             active_window = 0;
         }
@@ -183,8 +183,8 @@ uint8_t unregister_window(window_t* window){
 
 uint8_t window_focus(window_t* window){
     if (owns_window(window) && active_window != window){
-        queue_remove(windows_queue, window);
-        queue_inque(windows_queue, window);
+        vector_remove(windows_vec, window);
+        vector_add(windows_vec, window);
         active_window = window;
         draw_window(window);
     }
@@ -194,8 +194,8 @@ uint8_t window_focus(window_t* window){
 uint8_t update_window_bounds(window_t* window, bounds_t* bounds){
     if (owns_window(window)){
         window->bounds = *bounds;
-        queue_remove(windows_queue, window);
-        queue_inque(windows_queue, window);
+        vector_remove(windows_vec, window);
+        vector_add(windows_vec, window);
         active_window = window;
         bounds_t joined_bounds = join_bounds(&window->bounds, bounds);
         windows_redraw(&joined_bounds);
@@ -218,9 +218,9 @@ void redraw_window_region(window_t* window, bounds_t* bounds){
 
         bounds_t abs_bounds = absolute_bounds(window, bounds);
         uint8_t drawing = 0;
-        for (uint32_t i = 0; i < windows_queue->size; i++)
+        for (void** pntr = windows_vec->begin; pntr < windows_vec->end; pntr++)
         {
-            window_t* w = windows_queue->data[(windows_queue->head + i) % windows_queue->capacity];
+            window_t* w = *pntr;
             if (w == window || drawing)
             {
                 drawing = 1;

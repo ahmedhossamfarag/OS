@@ -70,3 +70,25 @@ void array_delete(array_t* arr, void (*free)(char*,uint64_t));
 
 #pragma endregion
 
+
+#pragma region Vector
+
+typedef struct{
+    uint32_t capacity;
+    void** begin;
+    void** end;
+} vector_t;
+
+vector_t* vector_new(uint32_t capacity, char* (*alloc)(uint64_t));
+
+uint8_t vector_contains(vector_t* vec, void* item);
+
+void** vector_add(vector_t* vec, void* item);
+
+void** vector_get(vector_t* vec, void* item);
+
+uint8_t vector_remove(vector_t* vec, void* item);
+
+void vector_delete(vector_t* vec, void (*free)(char*,uint64_t));
+
+#pragma endregion
