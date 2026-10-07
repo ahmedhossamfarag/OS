@@ -43,7 +43,9 @@ vbox-create:
 		--memory 2048 \
 		--cpus 4 \
 		--ioapic on \
-		--firmware efi32 \
+		--firmware efi64 \
+		--pae on \
+		--longmode on \
 		--boot1 disk \
 		--boot2 none \
 		--boot3 none \
