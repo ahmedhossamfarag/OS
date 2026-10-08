@@ -57,9 +57,11 @@ void syscall_handler(cpu_state_t* state){
         state->rax = 0;
         return;
     }
-    uint64_t handler = (uint64_t)syscall_map[n];
-    handler = MEMORY_PHYS_TO_VIRT(handler);
-    ((void (*)(cpu_state_t*))handler)(state);
+    
+    // uint64_t handler = (uint64_t)syscall_map[n];
+    // handler = MEMORY_PHYS_TO_VIRT(handler);
+    // ((void (*)(cpu_state_t*))handler)(state);
+    syscall_map[n](state);
 }
 
 void error_exception_handler(){

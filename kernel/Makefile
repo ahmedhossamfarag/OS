@@ -32,16 +32,11 @@ all: kernel_o
 kernel_o: kernel_entry.o virtual_mapping.o main.o ap_setup.o font_bitmap.o ${C_OBJ} ${ASM_OBJ}
 	x86_64-elf-gcc -T link.ld -o kernel.o \
 		-ffreestanding -O2 -nostdlib -mno-red-zone \
-		-fPIE -pie \
 		$^ -lgcc
 
 
 # Build the kernel binary
-kernel_bin: kernel_entry.o virtual_mapping.o  main.o ap_setup.o font_bitmap.o ${C_OBJ} ${ASM_OBJ}
-	x86_64-elf-gcc -T bios_link.ld -o kernel.o \
-		-ffreestanding -O2 -nostdlib -mno-red-zone \
-		-fPIE -pie \
-		$^ -lgcc
+kernel_bin: kernel_o
 	objcopy -O binary kernel.o kernel.bin
 
 
