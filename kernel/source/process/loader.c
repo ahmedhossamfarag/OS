@@ -38,7 +38,7 @@ static void loader_free(){
 static void loader_error(){
     loader_free();
     if(args.cr3){
-        free_pagging_dir((uint64_t*)args.cr3);
+        free_user_paging((uint64_t*)args.cr3);
     }
     if(args.error_proc){
         args.error_proc();
@@ -84,7 +84,7 @@ void load_program(SUCC_ERR)
     args.error_proc = error_proc;
     args.root_dir = args.filefs = 0;
     args.file = 0;
-    args.cr3 = (uint64_t)get_available_pagging_dir();
+    args.cr3 = (uint64_t)get_available_user_paging();
     if(args.cr3){
         file_open(0, 0, &args.root_dir, open_file, loader_error);
     }

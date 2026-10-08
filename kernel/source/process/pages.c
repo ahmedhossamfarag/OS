@@ -2,12 +2,13 @@
 #include "memory.h"
 #include "info.h"
 
+static uint64_t segment_no = 0;
 static uint8_t* pg_arr;
 
 static void pages_alloc_kernel(){
     pg_arr[0] = 0;
 
-    for (uint32_t i = KERNEL_OFFSET / SEGMENT_SIZE; i <= KERNEL_END / SEGMENT_SIZE; i++)
+    for (uint32_t i = KERNEL_START / SEGMENT_SIZE; i <= KERNEL_END / SEGMENT_SIZE; i++)
     {
         pg_arr[i] = 0;
     }
@@ -19,12 +20,12 @@ static void pages_alloc_kernel(){
         pg_arr[i] = 0;
     }
     
-    for (uint32_t i = DRIVERS_OFFSET / SEGMENT_SIZE; i < SEGMENT_NO; i++)
+    for (uint32_t i = DRIVERS_OFFSET / SEGMENT_SIZE; i < segment_no; i++)
     {
         pg_arr[i] = 0;
     }
 
-    for (uint32_t i = info_get_memory_size() / SEGMENT_SIZE; i < SEGMENT_NO; i++)
+    for (uint32_t i = info_get_memory_size() / SEGMENT_SIZE; i < segment_no; i++)
     {
         pg_arr[i] = 0;
     }
@@ -32,9 +33,11 @@ static void pages_alloc_kernel(){
 }
 
 void pages_init(){
-    pg_arr = (uint8_t*) alloc(SEGMENT_NO);
+    segment_no = info_get_memory_size() / SEGMENT_SIZE;
 
-    for (int i = 0; i < SEGMENT_NO; i++)
+    pg_arr = (uint8_t*) alloc(segment_no);
+
+    for (int i = 0; i < segment_no; i++)
     {
         pg_arr[i] = 1;
     }
@@ -43,7 +46,7 @@ void pages_init(){
 }
 
 uint64_t pages_alloc(){
-    for (int i = 0; i < SEGMENT_NO; i++)
+    for (int i = 0; i < segment_no; i++)
     {
         if(pg_arr[i]){
             pg_arr[i] = 0;
@@ -55,7 +58,7 @@ uint64_t pages_alloc(){
 
 uint64_t pages_alloc_next(uint64_t seg){
     seg /= SEGMENT_SIZE;
-    for (int i = seg; i < SEGMENT_NO; i++)
+    for (int i = seg; i < segment_no; i++)
     {
         if(pg_arr[i]){
             pg_arr[i] = 0;
@@ -67,14 +70,14 @@ uint64_t pages_alloc_next(uint64_t seg){
 
 void pages_free(uint64_t seg){
     seg /= SEGMENT_SIZE;
-    if(seg > 0 && seg < SEGMENT_NO){
+    if(seg > 0 && seg < segment_no){
         pg_arr[seg] = 1;
     }
 }
 
 uint32_t pages_nfree_segments(){
     uint32_t n = 0;
-    for (int i = 0; i < SEGMENT_NO; i++)
+    for (int i = 0; i < segment_no; i++)
     {
         n += pg_arr[i];
     }

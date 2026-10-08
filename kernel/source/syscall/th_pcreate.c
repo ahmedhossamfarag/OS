@@ -23,7 +23,7 @@ static void pcreate_error(){
         free((char*)args.data, (uint64_t)args.n_sectors * SectorSize);
     }
     if(args.cr3){
-        free_pagging_dir((uint64_t*) args.cr3);
+        free_user_paging((uint64_t*) args.cr3);
     }
     disk_queue->handler->cpu_state.rax = 0;
     thread_awake(disk_queue->handler);
@@ -69,7 +69,7 @@ static void pcreate_proc(){
         return;
     }
 
-    args.cr3 = (uint64_t) get_available_pagging_dir();
+    args.cr3 = (uint64_t) get_available_user_paging();
 
     if(!args.cr3){
         pcreate_error();

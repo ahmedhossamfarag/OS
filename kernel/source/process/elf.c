@@ -105,7 +105,7 @@ uint32_t elf_get_num_entries(Elf64_Shdr* shdr){
 static inline uint8_t elf_check_mregion(uint64_t offset, uint64_t size){
     #define between(x, a, b) ((x) >= (a) && (x) <= (b))
     #define intersect(x,y,a,b) (between(x, a, b) || between(y, a, b) || between(a, x, y)) 
-    if(intersect(offset, offset+size, KERNEL_OFFSET, KERNEL_END-1)) return 0;
+    if(intersect(offset, offset+size, KERNEL_START, KERNEL_END-1)) return 0;
     if(intersect(offset, offset+size, DRIVERS_OFFSET, 0xFFFFFFFF)) return 0;
     return 1;
 }

@@ -2,31 +2,29 @@
 #include "interrupt.h"
 #include "pages.h"
 #include "libc.h"
+#include "info.h"
+#include "memory.h"
 
 
-uint64_t *default_dir;
+uint64_t *default_paging;
 
-uint64_t *user_dirs[N_DIRS];
-uint8_t user_dir_available[N_DIRS];
+uint64_t *user_paging[PAGING_N_TABLES];
+uint8_t user_paging_available[PAGING_N_TABLES];
 
 extern void isr_page_fault_handler();
 
 
 // Allocate one 4 KiB page for a paging structure.
-static uint64_t *alloc_page_table(uint64_t *align)
+static uint64_t *alloc_page_table()
 {
-    uint64_t *table = (uint64_t *)*align;
-
-    *align += PAGE_4K;
+    uint64_t *table = (uint64_t*) alloc_align(PAGE_4K, PAGE_4K);
 
     return table;
 }
 
-void pagging_init()
+void paging_init()
 {
     pages_init();
-
-    uint64_t align = FIRST_DIR_ALIGN;
 
     /*
      * ----------------------------------------------------------------------
@@ -44,19 +42,19 @@ void pagging_init()
     uint64_t *pml4;
     uint64_t *pdpt;
 
-    pml4 = alloc_page_table(&align);
-    pdpt = alloc_page_table(&align);
+    pml4 = alloc_page_table();
+    pdpt = alloc_page_table();
 
     mem_set((char*)pml4, 0, PAGE_SIZE);
     mem_set((char*)pdpt, 0, PAGE_SIZE);
 
-    default_dir = pml4;
+    default_paging = pml4;
 
     pml4[0] = ((uint64_t)pdpt) | KERNEL_PRIVILEGE;
 
     for (uint32_t pdpt_index = 0; pdpt_index < NUM_PDPT_ENTRIES; pdpt_index++)
     {
-        uint64_t *pd = alloc_page_table(&align);
+        uint64_t *pd = alloc_page_table();
 
         mem_set((char*)pd, 0, PAGE_SIZE);
 
@@ -91,24 +89,24 @@ void pagging_init()
 
     uint64_t frame = 0;
 
-    for (uint8_t j = 0; j < N_DIRS; j++)
+    for (uint8_t j = 0; j < PAGING_N_TABLES; j++)
     {
         uint64_t *user_pml4;
         uint64_t *user_pdpt;
 
-        user_pml4 = alloc_page_table(&align);
-        user_pdpt = alloc_page_table(&align);
+        user_pml4 = alloc_page_table();
+        user_pdpt = alloc_page_table();
 
         mem_set((char*)user_pml4, 0, PAGE_SIZE);
         mem_set((char*)user_pdpt, 0, PAGE_SIZE);
 
-        user_dirs[j] = user_pml4;
+        user_paging[j] = user_pml4;
 
         user_pml4[0] = ((uint64_t)user_pdpt) | USER_PRIVILEGE;
 
         for (uint32_t pdpt_index = 0; pdpt_index < NUM_PDPT_ENTRIES; pdpt_index++)
         {
-            uint64_t *pd = alloc_page_table(&align);
+            uint64_t *pd = alloc_page_table();
 
             mem_set((char*)pd, 0, PAGE_SIZE);
 
@@ -145,7 +143,7 @@ void pagging_init()
             }
         }
 
-        user_dir_available[j] = 1;
+        user_paging_available[j] = 1;
     }
 
 
@@ -167,9 +165,9 @@ void enable_paging()
     /*
      * CR3 must contain the PHYSICAL address of the PML4.
      *
-     * default_dir is currently identity mapped.
+     * default_paging is currently identity mapped.
      */
-    uint64_t cr3 = (uint64_t)default_dir;
+    uint64_t cr3 = (uint64_t)default_paging;
 
     asm volatile (
         "mov %0, %%cr3"
@@ -225,20 +223,20 @@ void enable_paging()
 }
 
 
-uint64_t *get_default_pagging_dir()
+uint64_t *get_default_paging()
 {
-    return default_dir;
+    return default_paging;
 }
 
 
-uint64_t *get_available_pagging_dir()
+uint64_t *get_available_user_paging()
 {
-    for (uint8_t i = 0; i < N_DIRS; i++)
+    for (uint8_t i = 0; i < PAGING_N_TABLES; i++)
     {
-        if (user_dir_available[i])
+        if (user_paging_available[i])
         {
-            user_dir_available[i] = 0;
-            return user_dirs[i];
+            user_paging_available[i] = 0;
+            return user_paging[i];
         }
     }
 
@@ -246,13 +244,13 @@ uint64_t *get_available_pagging_dir()
 }
 
 
-void free_pagging_dir(uint64_t *dir)
+void free_user_paging(uint64_t *dir)
 {
-    for (uint8_t i = 0; i < N_DIRS; i++)
+    for (uint8_t i = 0; i < PAGING_N_TABLES; i++)
     {
-        if (dir == user_dirs[i])
+        if (dir == user_paging[i])
         {
-            user_dir_available[i] = 1;
+            user_paging_available[i] = 1;
             return;
         }
     }

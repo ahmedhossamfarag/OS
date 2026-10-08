@@ -1,6 +1,3 @@
-#define MemoryBeginAddress 0xB100000
-#define MemoryEnd 0x10000000 - 0x100
-#define MemorySize MemoryEnd - MemoryBeginAddress
 #define NULL 0
 
 #include <stdint.h>

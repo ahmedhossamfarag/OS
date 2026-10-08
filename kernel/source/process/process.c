@@ -20,7 +20,7 @@ void* pstate_lock;
 static void default_process_init(){
     default_process = (pcb_t*) alloc(sizeof(pcb_t));
 
-    default_process->cr3 = (uint64_t) get_default_pagging_dir();
+    default_process->cr3 = (uint64_t) get_default_paging();
     default_process->process_state = PROCESS_STATE_RUNNING;
     default_process->n_active_threads = MAX_N_THREAD;
     for (uint8_t i = 0; i < MAX_N_THREAD; i++)
@@ -143,7 +143,7 @@ static void process_free_thread(pcb_t* process){
     process->n_active_threads --;
     if(!process->n_active_threads){
         process->process_state = PROCESS_STATE_TERMINATED;
-        free_pagging_dir((uint64_t*)process->cr3);
+        free_user_paging((uint64_t*)process->cr3);
     }
 }
 

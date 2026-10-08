@@ -36,7 +36,7 @@ void init()
     pic_init();
     interrupt_handler_init();
     gdt_init();
-    pagging_init();
+    paging_init();
     apic_init();
     scheduler_init();
     syscall_init();
@@ -70,7 +70,7 @@ extern uint8_t _ap_setup_end[];
 
 void ap_setup()
 {
-    extern uint64_t* default_dir;
+    extern uint64_t* default_paging;
 
     uint8_t* code_offset = (uint8_t*)0xA000;
     uint64_t* stack_size_pntr = (uint64_t*)0xA100;
@@ -80,7 +80,7 @@ void ap_setup()
     mem_copy((char*)_ap_setup_start, (char*)code_offset, _ap_setup_end - _ap_setup_start);
 
     *start_pntr = (uint64_t) ap_start;
-    *dir_pntr = (uint64_t) default_dir & 0xFFFFFFFF;
+    *dir_pntr = (uint64_t) default_paging & 0xFFFFFFFF;
 
     for (uint8_t apic_id = 1; apic_id < info_get_processor_no(); apic_id++)
     {

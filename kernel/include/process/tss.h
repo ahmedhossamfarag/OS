@@ -1,6 +1,4 @@
 #define KERNEL_DATA_SEGMENT 0x10
-#define KERNEL_STACK_SIZE 0X1000
-#define KERNEK_STACK_POINTER(i) 0XB000000 - (i * KERNEL_STACK_SIZE)
 #define TSS_INDEX(i) (5 + i)
 #define TSS_SELECTOR(i) TSS_INDEX(i) * 16
 #include <stdint.h>

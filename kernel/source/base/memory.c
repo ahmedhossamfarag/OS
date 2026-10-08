@@ -11,10 +11,10 @@ static void* lock;
 
 void memory_init()
 {
-	head = MemoryBeginAddress;
+	head = MEMORY_BEGIN_ADDRESS;
 	uint64_t* headpntr = (uint64_t*) head;
-	*headpntr = MemoryEnd;
-	*(headpntr+1) = MemorySize;
+	*headpntr = MEMORY_END;
+	*(headpntr+1) = MEMORY_SIZE;
 }
 
 static char* malloc(uint64_t size)
@@ -28,7 +28,7 @@ static char* malloc(uint64_t size)
 		return NULL;
 
 	// head points to the end of memory
-	if(head == MemoryEnd)
+	if(head == MEMORY_END)
 		return NULL;
 
 	// the pointer to the block before
@@ -39,7 +39,7 @@ static char* malloc(uint64_t size)
 	uint64_t current_size = *(current_block+1);
 
 	// loop untill first fit or end
-	while(current_size < size && *current_block != MemoryEnd){
+	while(current_size < size && *current_block != MEMORY_END){
 		block_before = current_block;
 		current_block = (uint64_t*)(*current_block);
 		current_size = *(current_block+1);
@@ -84,7 +84,7 @@ static char* malloc_align(uint64_t size, uint64_t align)
 		return NULL;
 
 	// head points to the end of memory
-	if(head == MemoryEnd)
+	if(head == MEMORY_END)
 		return NULL;
 
 	// the pointer to the block before
@@ -98,7 +98,7 @@ static char* malloc_align(uint64_t size, uint64_t align)
 	#define avl_sz() (current_size - (curr_blk_align - (uint64_t)current_block))
 
 	// loop untill first fit or end
-	while(avl_sz() < size && *current_block != MemoryEnd){
+	while(avl_sz() < size && *current_block != MEMORY_END){
 		block_before = current_block;
 		current_block = (uint64_t*)(*current_block);
 		current_size = *(current_block+1);
@@ -157,10 +157,10 @@ static void mfree(char* ptr, uint64_t size)
 	if(free_block == NULL || size == 0)
 		return;
 
-	if((uint64_t)free_block < MemoryBeginAddress || (uint64_t)free_block >= MemoryEnd)
+	if((uint64_t)free_block < MEMORY_BEGIN_ADDRESS || (uint64_t)free_block >= MEMORY_END)
 		return;
 
-	if((uint64_t)free_block + (uint64_t)size >= MemoryEnd){
+	if((uint64_t)free_block + (uint64_t)size >= MEMORY_END){
 		return;
 	}
 
@@ -186,10 +186,10 @@ static void mfree(char* ptr, uint64_t size)
 	if(current_block == &head)
 	{ 
 		// head points to the end
-		if(head == MemoryEnd)
+		if(head == MEMORY_END)
 		{
 			// free block not exceed memory end
-			if((uint64_t)free_block + size <= MemoryEnd){
+			if((uint64_t)free_block + size <= MEMORY_END){
 				*free_block  = *current_block;
 				*(free_block+1) = size;
 				*current_block = (uint64_t)free_block;

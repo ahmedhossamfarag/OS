@@ -2,9 +2,8 @@
 #define NUM_PAGES 512   // Corresponds to 2MB of address space with 4KB pages
 #define NUM_PDPT_ENTRIES 4   // Corresponds to 4GB of address space with 4KB pages
 
-#define FIRST_DIR_ALIGN 0XB001000
-#define PROCESS_N_PD_ENTRIES 0x4
-#define N_DIRS 8
+#define PROCESS_N_PD_ENTRIES 0x8    // Corresponds to 16MB of address space with 2MB pages
+#define PAGING_N_TABLES 8           // Number of user paging tables
 
 #define KERNEL_PRIVILEGE 3
 #define USER_PRIVILEGE 7
@@ -62,15 +61,15 @@ typedef struct {
 } page_table_t;
 
 
-void pagging_init();
+void paging_init();
 
 void enable_paging();
 
-uint64_t* get_default_pagging_dir();
+uint64_t* get_default_paging();
 
-uint64_t* get_available_pagging_dir();
+uint64_t* get_available_user_paging();
 
-void free_pagging_dir(uint64_t* dir);
+void free_user_paging(uint64_t* dir);
 
 uint64_t virtual_to_physical(uint64_t virtual_address, uint64_t* paging_dir);
 
