@@ -87,7 +87,7 @@ void ap_setup()
 
     for (uint8_t apic_id = 1; apic_id < info_get_processor_no(); apic_id++)
     {
-        *stack_size_pntr = KERNEK_STACK_POINTER(apic_id);
+        *stack_size_pntr = KERNEL_STACK_POINTER(apic_id);
 
         apic_send_init_ipi(apic_id);
         apic_delay(1);

@@ -21,7 +21,7 @@ void tss_init(){
             *c = 0;
         }
         
-        tss[i].rsp0 = KERNEK_STACK_POINTER(i);        // Set the kernel stack pointer
+        tss[i].rsp0 = KERNEL_STACK_POINTER(i);        // Set the kernel stack pointer
 
         set_gdt_entry(TSS_INDEX(i), base, limit, 0x89, 0x00);  // 0x89 is the access byte for TSS
     }

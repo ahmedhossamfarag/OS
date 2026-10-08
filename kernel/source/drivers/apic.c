@@ -1,6 +1,7 @@
 #include "apic.h"
 #include "interrupt.h"
 #include "pic.h"
+#include "info.h"
 
 uint8_t apic_detected;
 
@@ -22,8 +23,8 @@ void initialize_lapic(){
 
 void apic_init()
 {
-    lapic = (volatile uint32_t *)APIC_BASE;
-    ioapic = (volatile uint32_t *)IOAPIC_BASE;
+    lapic = (volatile uint32_t *) MEMORY_PHYS_TO_VIRT(APIC_BASE);
+    ioapic = (volatile uint32_t *) MEMORY_PHYS_TO_VIRT(IOAPIC_BASE);
     apic_detected = 0;
 
     if(detect_apic()){

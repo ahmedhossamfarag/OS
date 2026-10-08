@@ -2,6 +2,7 @@
 #include "low_level.h"
 #include "ethernet.h"
 #include "hda.h"
+#include "info.h"
 
 uint32_t pci_config_address(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset)
 {
@@ -28,6 +29,9 @@ void pci_hda_device_init(uint8_t bus, uint8_t device, uint8_t function)
     uint32_t bar_value = pci_read_config(bus, device, function, PCI_BAR0);
     hda_memory_bar = bar_value & ~0x0F;
 
+    // Map hda memory bar to virtual memory
+    hda_memory_bar = MEMORY_PHYS_TO_VIRT(hda_memory_bar);
+
     hda_irq = pci_read_config(bus, device, function, PCI_INTERRUPT_LINE);
 }
 
@@ -44,6 +48,8 @@ void pci_ethernet_device_init(uint8_t bus, uint8_t device, uint8_t function)
     uint32_t bar_value = pci_read_config(bus, device, function, PCI_BAR0);
     ethernet_memory_bar = bar_value & ~0x0F;
 
+    // Map ethernet memory bar to virtual memory
+    ethernet_memory_bar = MEMORY_PHYS_TO_VIRT(ethernet_memory_bar);
     
     ethernet_irq = pci_read_config(bus, device, function, PCI_INTERRUPT_LINE);
 }

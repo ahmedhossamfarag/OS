@@ -14,7 +14,8 @@ uint8_t* font_map;
 void vga_init()
 {
     graphics_info_t* g = info_get_graphics();
-    framebuffer = (uint32_t*)g->FameBufferBase;
+    uint64_t framebuffer_phys_addr = g->FameBufferBase;
+    framebuffer = (uint32_t*) MEMORY_PHYS_TO_VIRT(framebuffer_phys_addr);
     pitch = g->PixelsPerScanLine * 4;
     width = g->Width;
     height = g->Height;
