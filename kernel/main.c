@@ -26,40 +26,6 @@
 #include "windows.h"
 #include "mouse.h"
 
-void default_virtual_memory_mapping(uint64_t* pml4){
-    uint64_t align = KERNEL_END;
-    uint32_t pml4_index = (MEMORY_VIRTUAL_START >> 39) & 0x1FF;
-    uint64_t* pdpt = (uint64_t*) align;
-    align += PAGE_SIZE;
-    pml4[pml4_index] = ((uint64_t)pdpt) | KERNEL_PRIVILEGE;
-
-    for (
-        uint32_t pdpt_index = (MEMORY_VIRTUAL_START >> 30) & 0x1FF;
-        pdpt_index < ENTRIES_PER_TABLE; 
-        pdpt_index++
-    ) {
-        uint64_t* pd = (uint64_t*) align;
-        align += PAGE_SIZE;
-        pdpt[pdpt_index] = ((uint64_t)pd) | KERNEL_PRIVILEGE;
-
-        for (
-            uint32_t pd_index = (MEMORY_VIRTUAL_START >> 21) & 0x1FF; 
-            pd_index < ENTRIES_PER_TABLE; 
-            pd_index++
-        ) {
-            uint64_t virtual_address =
-                ((uint64_t)pml4_index << 39) |
-                ((uint64_t)pdpt_index << 30) |
-                ((uint64_t)pd_index   << 21) |
-                0xFFFF000000000000ULL;
-            uint64_t physical_address = MEMORY_VIRT_TO_PHYS(virtual_address);
-            pd[pd_index] =
-                physical_address |
-                KERNEL_PRIVILEGE |
-                PAGE_PS;
-        }
-    }
-}
 
 void init()
 {

@@ -29,7 +29,7 @@ GCC_INCLUDE := -Iinclude/base -Iinclude/drivers -Iinclude/process -Iinclude/lib 
 all: kernel_o
 
 # Build the kernel binary
-kernel_o: kernel_entry.o main.o ap_setup.o font_bitmap.o ${C_OBJ} ${ASM_OBJ}
+kernel_o: kernel_entry.o virtual_mapping.o main.o ap_setup.o font_bitmap.o ${C_OBJ} ${ASM_OBJ}
 	x86_64-elf-gcc -T link.ld -o kernel.o \
 		-ffreestanding -O2 -nostdlib -mno-red-zone \
 		-fPIE -pie \
@@ -37,7 +37,7 @@ kernel_o: kernel_entry.o main.o ap_setup.o font_bitmap.o ${C_OBJ} ${ASM_OBJ}
 
 
 # Build the kernel binary
-kernel_bin: kernel_entry.o main.o ap_setup.o font_bitmap.o ${C_OBJ} ${ASM_OBJ}
+kernel_bin: kernel_entry.o virtual_mapping.o  main.o ap_setup.o font_bitmap.o ${C_OBJ} ${ASM_OBJ}
 	x86_64-elf-gcc -T bios_link.ld -o kernel.o \
 		-ffreestanding -O2 -nostdlib -mno-red-zone \
 		-fPIE -pie \
