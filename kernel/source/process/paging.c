@@ -1,4 +1,4 @@
-#include "pagging.h"
+#include "paging.h"
 #include "interrupt.h"
 #include "pages.h"
 #include "libc.h"

@@ -11,7 +11,7 @@
 #include "tss.h"
 #include "resources.h"
 #include "libc.h"
-#include "pagging.h"
+#include "paging.h"
 #include "interrupt_handler.h"
 #include "loader.h"
 #include "apic.h"

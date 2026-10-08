@@ -1,5 +1,5 @@
 #include "loader.h"
-#include "pagging.h"
+#include "paging.h"
 #include "scheduler.h"
 #include "ata.h"
 #include "memory.h"

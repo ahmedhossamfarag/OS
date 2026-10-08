@@ -1,7 +1,7 @@
 #include "th_syscall.h"
 #include "resources.h"
 #include "file_system.h"
-#include "pagging.h"
+#include "paging.h"
 
 extern void linker_load_elf(char* file, uint64_t cr3, uint64_t* entry, uint64_t* membegin, SUCC_ERR);
 

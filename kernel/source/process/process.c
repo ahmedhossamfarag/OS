@@ -1,6 +1,6 @@
 #include "process.h"
 #include "memory.h"
-#include "pagging.h"
+#include "paging.h"
 #include "info.h"
 #include "dslib.h"
 #include "resources.h"

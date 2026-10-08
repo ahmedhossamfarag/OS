@@ -2,7 +2,7 @@
 #include "info.h"
 #include "apic.h"
 #include "int_map.h"
-#include "pagging.h"
+#include "paging.h"
 
 void thread_create_handler(cpu_state_t* state){
     state->rax = add_new_thread(get_current_process(), state->rax, state->rbx, state->rdx);
