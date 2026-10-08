@@ -17,10 +17,14 @@
 .global _start
 .type _start, @function
 _start:
-	mov %rax, bl_magic
-	mov %rbx, boot_info_ptr
-	mov %rcx, memory_info_ptr
-	mov %rdx, graphics_info_ptr
+	leaq bl_magic(%rip), %rdi
+	mov %rax, (%rdi)
+	leaq boot_info_ptr(%rip), %rdi
+	mov %rbx, (%rdi)
+	leaq memory_info_ptr(%rip), %rdi
+	mov %rcx, (%rdi)
+	leaq graphics_info_ptr(%rip), %rdi
+	mov %rdx, (%rdi)
 	mov $0xB000000, %rsp
 	call kernel_main
 	cli

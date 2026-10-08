@@ -22,6 +22,40 @@ static uint64_t *alloc_page_table()
     return table;
 }
 
+
+static void virtual_memory_mapping(uint64_t* pml4){
+    uint32_t pml4_index = (MEMORY_VIRTUAL_START >> 39) & 0x1FF;
+    uint64_t* pdpt = alloc_page_table();
+    mem_set((char*)pdpt, 0, PAGE_SIZE);
+    pml4[pml4_index] = ((uint64_t)pdpt) | KERNEL_PRIVILEGE;
+
+    for (
+        uint32_t pdpt_index = (MEMORY_VIRTUAL_START >> 30) & 0x1FF;
+        pdpt_index < ENTRIES_PER_TABLE; 
+        pdpt_index++
+    ) {
+        uint64_t* pd = alloc_page_table();
+        mem_set((char*)pd, 0, PAGE_SIZE);
+        pdpt[pdpt_index] = ((uint64_t)pd) | KERNEL_PRIVILEGE;
+
+        for (
+            uint32_t pd_index = (MEMORY_VIRTUAL_START >> 21) & 0x1FF; 
+            pd_index < ENTRIES_PER_TABLE; 
+            pd_index++
+        ) {
+            uint64_t virtual_address =
+                ((uint64_t)pml4_index << 39) |
+                ((uint64_t)pdpt_index << 30) |
+                ((uint64_t)pd_index   << 21);
+            uint64_t physical_address = MEMORY_VIRT_TO_PHYS(virtual_address);
+            pd[pd_index] =
+                physical_address |
+                KERNEL_PRIVILEGE |
+                PAGE_PS;
+        }
+    }
+}
+
 void paging_init()
 {
     pages_init();
@@ -74,6 +108,8 @@ void paging_init()
             ((uint64_t)pd) |
             KERNEL_PRIVILEGE;
     }
+
+    virtual_memory_mapping(pml4);
 
     /*
      * ----------------------------------------------------------------------
@@ -142,6 +178,8 @@ void paging_init()
                 KERNEL_PRIVILEGE;
             }
         }
+
+        virtual_memory_mapping(user_pml4);
 
         user_paging_available[j] = 1;
     }

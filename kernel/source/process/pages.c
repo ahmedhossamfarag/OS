@@ -2,7 +2,7 @@
 #include "memory.h"
 #include "info.h"
 
-static uint64_t segment_no = 0;
+static int segment_no = 0;
 static uint8_t* pg_arr;
 
 static void pages_alloc_kernel(){

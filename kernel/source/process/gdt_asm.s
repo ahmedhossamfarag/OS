@@ -1,9 +1,10 @@
 .global enable_gdt_asm
 enable_gdt_asm:
     pushq $0x10
-    leaq reload_segments, %rax
+    leaq reload_segments(%rip), %rax
     push %rax
-    lgdt gdtp
+    leaq gdtp(%rip), %rax
+    lgdt (%rax)
     lretq
     hlt
 

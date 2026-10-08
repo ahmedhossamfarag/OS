@@ -17,7 +17,8 @@
         mov %rax, %fs
         mov %rax, %gs
 
-        call \fname    # Call the C handler
+        leaq \fname(%rip), %rax # Get the address of the C handler
+        call *%rax              # Call the C handler
 
         restore_regs                   # Restore general-purpose registers
         iretq                   # Return from interrupt
@@ -80,7 +81,8 @@
     isr_\fname:
         save_regs                  # Save all general-purpose registers
         mov %rsp, %rdi          # Pass the stack pointer as an argument to the C handler
-        call \fname    # Call the C handler
+        leaq \fname(%rip), %rax # Get the address of the C handler
+        call *%rax              # Call the C handler
         restore_regs                   # Restore general-purpose registers
         add $8, %rsp                # Adjust the stack pointer to remove the error code
         iretq                   # Return from interrupt
