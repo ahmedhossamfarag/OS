@@ -75,7 +75,6 @@ extern void isr_lapic_timer_handler();
 
 void enable_lapic_timer(uint32_t initial, uint32_t mode){
     if(!apic_detected) return;
-    idt_set_entry(TIMER_INT, (uint64_t)isr_lapic_timer_handler);
     set_lapic(LAPIC_LVT_TIMER, TIMER_INT | mode);
     set_lapic(LAPIC_TIMER_DIV, LAPIC_TIMER_DIV_16);
     set_lapic(LAPIC_TIMER_INIT, initial);

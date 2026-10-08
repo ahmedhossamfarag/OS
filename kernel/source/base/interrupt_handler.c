@@ -6,6 +6,7 @@
 #include "strlib.h"
 #include "syscall_map.h"
 #include "scheduler.h"
+#include "info.h"
 
 extern void isr_syscall_handler();
 
@@ -56,7 +57,9 @@ void syscall_handler(cpu_state_t* state){
         state->rax = 0;
         return;
     }
-    syscall_map[n](state);
+    uint64_t handler = (uint64_t)syscall_map[n];
+    handler = MEMORY_PHYS_TO_VIRT(handler);
+    ((void (*)(cpu_state_t*))handler)(state);
 }
 
 void error_exception_handler(){

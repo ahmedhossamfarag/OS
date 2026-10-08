@@ -36,12 +36,15 @@ void gdt_init() {
     gdtp.limit = (sizeof(gdt_entry_t) * GDT_N_ENTRIES) - 1;
     gdtp.base = (uint64_t)gdt;
 
+
+    // Map the GDT to the virtual address space
+    gdtp.base = MEMORY_PHYS_TO_VIRT(gdtp.base);
+
 }
 
 extern void enable_gdt_asm();
 
 void enable_gdt(){
-
     // Load the GDT
     // asm volatile ("lgdt %0" : : "m" (gdtp));
     enable_gdt_asm();

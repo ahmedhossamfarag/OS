@@ -70,10 +70,10 @@ void jump_to_virtual_kerenl_address()
 void setup()
 {
     disable_interrupt();
+    enable_paging();
     enable_gdt();
     enable_idt();
     enable_apic();
-    enable_paging();
     enable_interrupt();
 }
 
@@ -130,10 +130,10 @@ int kernel_main()
 {
     init();
     setup();
+    jump_to_virtual_kerenl_address();
     ap_setup();
     vga_print_clear(0);
     println("Welcome To kernel");
-
     
     load_program(loader_success, loader_error);
 

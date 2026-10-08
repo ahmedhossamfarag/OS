@@ -46,7 +46,8 @@ static void virtual_memory_mapping(uint64_t* pml4){
             uint64_t virtual_address =
                 ((uint64_t)pml4_index << 39) |
                 ((uint64_t)pdpt_index << 30) |
-                ((uint64_t)pd_index   << 21);
+                ((uint64_t)pd_index   << 21) |
+                0xFFFF000000000000ULL;
             uint64_t physical_address = MEMORY_VIRT_TO_PHYS(virtual_address);
             pd[pd_index] =
                 physical_address |

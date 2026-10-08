@@ -2,7 +2,7 @@
 #define KERNEL_STACK 0xB000000
 #define KERNEL_END 0x10000000
 
-#define MEMORY_VIRTUAL_START 0xFFFC00000000ULL  // Corresponding to 16GB of address space remaining till paging ends
+#define MEMORY_VIRTUAL_START 0xFFFFFFFC00000000ULL  // Corresponding to 16GB of address space remaining till paging ends
 #define MEMORY_VIRT_TO_PHYS(x) ((x) - MEMORY_VIRTUAL_START)
 #define MEMORY_PHYS_TO_VIRT(x) ((x) + MEMORY_VIRTUAL_START)
 
