@@ -17,9 +17,9 @@ extern void isr_page_fault_handler();
 // Allocate one 4 KiB page for a paging structure.
 static uint64_t *alloc_page_table()
 {
-    uint64_t *table = (uint64_t*) alloc_align(PAGE_4K, PAGE_4K);
-
-    return table;
+    uint64_t virt_page = (uint64_t) alloc_align(PAGE_4K, PAGE_4K);
+    uint64_t phys_page = MEMORY_VIRT_TO_PHYS(virt_page);
+    return (uint64_t*) phys_page;
 }
 
 

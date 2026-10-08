@@ -1,3 +1,5 @@
+.set MEMORY_VIRTUAL_START, 0xFFFFFFFC00000000
+
 .set FLAGS,    0x1FFF  /* this is the Multiboot 'flag' field */
 .set MAGIC,    0x1BADB002       /* 'magic number' lets bootloader find the header */
 .set CHECKSUM, -(MAGIC + FLAGS) /* checksum of above, to prove we are multiboot */
@@ -26,12 +28,23 @@ _start:
 	leaq graphics_info_ptr(%rip), %rdi
 	mov %rdx, (%rdi)
 	mov $0xB000000, %rsp
+	mov %cr3, %rdi
+	call default_virtual_memory_mapping
+	call virtual_kernel
 	call kernel_main
 	cli
 1:	hlt
 	jmp 1b
 
 .size _start, . - _start
+
+virtual_kernel:
+		pop %rax
+        movabs $MEMORY_VIRTUAL_START, %rcx
+        add %rcx, %rax
+        add %rcx, %rsp
+        push %rax
+        ret
 
 .section .data
 .global bl_magic

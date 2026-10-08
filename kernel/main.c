@@ -26,6 +26,41 @@
 #include "windows.h"
 #include "mouse.h"
 
+void default_virtual_memory_mapping(uint64_t* pml4){
+    uint64_t align = KERNEL_END;
+    uint32_t pml4_index = (MEMORY_VIRTUAL_START >> 39) & 0x1FF;
+    uint64_t* pdpt = (uint64_t*) align;
+    align += PAGE_SIZE;
+    pml4[pml4_index] = ((uint64_t)pdpt) | KERNEL_PRIVILEGE;
+
+    for (
+        uint32_t pdpt_index = (MEMORY_VIRTUAL_START >> 30) & 0x1FF;
+        pdpt_index < ENTRIES_PER_TABLE; 
+        pdpt_index++
+    ) {
+        uint64_t* pd = (uint64_t*) align;
+        align += PAGE_SIZE;
+        pdpt[pdpt_index] = ((uint64_t)pd) | KERNEL_PRIVILEGE;
+
+        for (
+            uint32_t pd_index = (MEMORY_VIRTUAL_START >> 21) & 0x1FF; 
+            pd_index < ENTRIES_PER_TABLE; 
+            pd_index++
+        ) {
+            uint64_t virtual_address =
+                ((uint64_t)pml4_index << 39) |
+                ((uint64_t)pdpt_index << 30) |
+                ((uint64_t)pd_index   << 21) |
+                0xFFFF000000000000ULL;
+            uint64_t physical_address = MEMORY_VIRT_TO_PHYS(virtual_address);
+            pd[pd_index] =
+                physical_address |
+                KERNEL_PRIVILEGE |
+                PAGE_PS;
+        }
+    }
+}
+
 void init()
 {
     info_init();
@@ -48,24 +83,7 @@ void init()
     mouse_init();
 }
 
-/**
- * Jump to virtual kernel address
- */
-__attribute__((noinline))
-void jump_to_virtual_kerenl_address()
-{
-    asm (
-        "pop %%rax\n\t"
-        "movabs %0, %%rcx\n\t"
-        "add %%rcx, %%rax\n\t"
-        "add %%rcx, %%rsp\n\t"
-        "push %%rax\n\t"
-        "ret\n\t"
-        :
-        : "i"(MEMORY_VIRTUAL_START)
-        : "rax", "rcx", "memory"
-    );
-}
+
 
 void setup()
 {
@@ -130,7 +148,6 @@ int kernel_main()
 {
     init();
     setup();
-    jump_to_virtual_kerenl_address();
     ap_setup();
     vga_print_clear(0);
     println("Welcome To kernel");

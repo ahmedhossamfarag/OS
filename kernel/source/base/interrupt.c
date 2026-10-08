@@ -11,9 +11,6 @@ idt_entry_t* idt;
 idt_pointer_t idt_ptr;
 
 void idt_set_entry(int n, uint64_t handler) {
-    // Map handler to the virtual address space
-    handler = MEMORY_PHYS_TO_VIRT(handler);
-
     idt[n].offset_low = handler & 0xFFFF;
     idt[n].selector = 0x10; // Kernel code segment
     idt[n].ist = 0;
@@ -25,9 +22,6 @@ void idt_set_entry(int n, uint64_t handler) {
 
 
 void idt_set_user_entry(int n, uint64_t handler){
-    // Map handler to the virtual address space
-    handler = MEMORY_PHYS_TO_VIRT(handler);
-    
     idt[n].offset_low = handler & 0xFFFF;
     idt[n].selector = 0x10; // Kernel code segment
     idt[n].ist = 0;
@@ -63,9 +57,6 @@ void idt_init() {
     idt_ptr.base = (uint64_t)&idt[0];
 
     
-    // Map the IDT to the virtual address space
-    idt_ptr.base = MEMORY_PHYS_TO_VIRT(idt_ptr.base);
-
     map_idt_isr();
 }
 
