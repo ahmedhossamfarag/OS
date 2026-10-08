@@ -1,3 +1,4 @@
+.section .data
 .global syscall_map
 
 syscall_map:

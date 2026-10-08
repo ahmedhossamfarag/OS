@@ -48,6 +48,25 @@ void init()
     mouse_init();
 }
 
+/**
+ * Jump to virtual kernel address
+ */
+__attribute__((noinline))
+void jump_to_virtual_kerenl_address()
+{
+    asm (
+        "pop %%rax\n\t"
+        "movabs %0, %%rcx\n\t"
+        "add %%rcx, %%rax\n\t"
+        "add %%rcx, %%rsp\n\t"
+        "push %%rax\n\t"
+        "ret\n\t"
+        :
+        : "i"(MEMORY_VIRTUAL_START)
+        : "rax", "rcx", "memory"
+    );
+}
+
 void setup()
 {
     disable_interrupt();
@@ -115,7 +134,7 @@ int kernel_main()
     vga_print_clear(0);
     println("Welcome To kernel");
 
-
+    
     load_program(loader_success, loader_error);
 
     while (1);

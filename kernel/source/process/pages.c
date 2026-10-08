@@ -2,7 +2,7 @@
 #include "memory.h"
 #include "info.h"
 
-static int segment_no = 0;
+static uint32_t segment_no;
 static uint8_t* pg_arr;
 
 static void pages_alloc_kernel(){
@@ -37,7 +37,7 @@ void pages_init(){
 
     pg_arr = (uint8_t*) alloc(segment_no);
 
-    for (int i = 0; i < segment_no; i++)
+    for (uint32_t i = 0; i < segment_no; i++)
     {
         pg_arr[i] = 1;
     }
@@ -46,7 +46,7 @@ void pages_init(){
 }
 
 uint64_t pages_alloc(){
-    for (int i = 0; i < segment_no; i++)
+    for (uint32_t i = 0; i < segment_no; i++)
     {
         if(pg_arr[i]){
             pg_arr[i] = 0;
@@ -58,7 +58,7 @@ uint64_t pages_alloc(){
 
 uint64_t pages_alloc_next(uint64_t seg){
     seg /= SEGMENT_SIZE;
-    for (int i = seg; i < segment_no; i++)
+    for (uint32_t i = seg; i < segment_no; i++)
     {
         if(pg_arr[i]){
             pg_arr[i] = 0;
@@ -77,7 +77,7 @@ void pages_free(uint64_t seg){
 
 uint32_t pages_nfree_segments(){
     uint32_t n = 0;
-    for (int i = 0; i < segment_no; i++)
+    for (uint32_t i = 0; i < segment_no; i++)
     {
         n += pg_arr[i];
     }

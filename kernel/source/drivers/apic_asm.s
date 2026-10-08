@@ -7,10 +7,16 @@ disable_pic:
 
 .global detect_apic
 detect_apic:
+    push %rbx
+    push %rcx
+    push %rdx
     mov $1, %rax
     cpuid
     mov %rdx, %rax
     and $0x200, %rax
+    pop %rdx
+    pop %rcx
+    pop %rbx
     ret
 
 .global enable_lapic
