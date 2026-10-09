@@ -1,3 +1,5 @@
+.set KERNEL_STACK, 0xB000000
+
 .set FLAGS,    0x1FFF  /* this is the Multiboot 'flag' field */
 .set MAGIC,    0x1BADB002       /* 'magic number' lets bootloader find the header */
 .set CHECKSUM, -(MAGIC + FLAGS) /* checksum of above, to prove we are multiboot */
@@ -25,7 +27,7 @@ _start:
 	mov %rcx, (%rdi)
 	leaq graphics_info_ptr(%rip), %rdi
 	mov %rdx, (%rdi)
-	mov $0xB000000, %rsp
+	mov $KERNEL_STACK, %rsp
 	mov %cr3, %rdi
 	leaq default_virtual_memory_mapping(%rip), %rax
 	call *%rax
