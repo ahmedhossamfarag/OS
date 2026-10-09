@@ -74,6 +74,8 @@ uint32_t get_ioapic(uint32_t offset);
 
 void ioapic_init();
 
+void ioapic_set_irq(uint8_t irq, uint32_t vector, uint32_t apic_id);
+
 void enable_apic();
 
 #pragma region ICR

@@ -1,6 +1,7 @@
 #include "hda.h"
 #include "memory.h"
 #include "pic.h"
+#include "apic.h"
 #include "interrupt.h"
 
 extern uint16_t hda_vendorId;
@@ -9,7 +10,7 @@ extern uint64_t hda_memory_bar;
 extern uint8_t hda_irq;
 static uint8_t iss; // num of in streams
 static uint8_t oss; // num of out streams
-static uint8_t bss; // num of pidirecion streams
+static uint8_t bss; // num of bidirecion streams
 static uint32_t x;
 static uint32_t y;
 static uint32_t z;
@@ -20,6 +21,12 @@ static uint16_t rirb_sz; // rirp size
 static uint16_t codec_id;
 static hda_corb_entry_t* corb;
 static hda_rirb_entry_t* rirb;
+static hda_bdl_entry_t** iss_bdls;
+static hda_bdl_entry_t** oss_bdls;
+
+static uint8_t dac_node;
+static uint8_t adc_node;
+static uint8_t pin_node;
 
 #define wait(x) for (int i = 0; i < x; i++)
 
@@ -82,7 +89,7 @@ static void hda_get_params(){
         if(rirp_sz_cap & (1 << i)) rirb_sz = i;
     }
     
-    
+
 }
 
 static void hda_init_corb_rirb(){
@@ -108,52 +115,77 @@ static void hda_init_corb_rirb(){
 
 hda_rirb_entry_t hda_send_corb_verb(hda_corb_entry_t cmd){
     uint16_t corbwp = hda_read_word(HDA_CORBWP) & 0xFF;
-    // uint16_t corbrp = hda_read_word(HDA_CORBRP) & 0xFF;
-    uint16_t rirbrp = hda_read_word(HDA_RIRBWP) & 0xFF;
-
+    
     corbwp = (corbwp + 1) % corb_sz;
     corb[corbwp] = cmd;
     hda_write_word(HDA_CORBWP, corbwp);
 
-    do{
-    while (rirbrp == (hda_read_word(HDA_RIRBWP) & 0xFF)) wait(1000);
-    rirbrp = (rirbrp + 1) % rirb_sz;
-    }while(rirb[rirbrp].solicited);
+    // Wait until RIRB write pointer moves
+    uint16_t initial_rirbwp = hda_read_word(HDA_RIRBWP) & 0xFF;
+    uint16_t rirbwp;
+    
+    int timeout = 100000;
+    do {
+        rirbwp = hda_read_word(HDA_RIRBWP) & 0xFF;
+        if (rirbwp != initial_rirbwp) break;
+        wait(10);
+        timeout--;
+    } while (timeout > 0);
 
+    uint16_t rirbrp = (initial_rirbwp) % rirb_sz;
     return rirb[rirbrp];
 }
 
 uint8_t hda_send_imm_cmd(uint8_t codes_addr, uint8_t node_id, uint32_t verb, uint32_t* response){
     uint32_t cmd = (codes_addr << 28) | (node_id << 20) | verb;
+    
+    // 1. Ensure ICB is clear before sending a new command
+    if (hda_read_word(HDA_ICS) & 0x1) {
+        // Clear stuck ICB/IRV if necessary
+        hda_write_word(HDA_ICS, 0x3); 
+    }
+
     hda_write_dword(HDA_ICW, cmd);
+    
+    // 2. Set ICB (Bit 0) to trigger execution
     hda_write_word(HDA_ICS, 0x1);
 
     int i = 0;
-    while(hda_read_word(HDA_ICS) != 0x2){
+    // 3. Wait until ICB (Bit 0) clears to 0 (meaning hardware finished)
+    while((hda_read_word(HDA_ICS) & 0x1) != 0){
         wait(1000);
-        i ++;
-        if(i >= 5){
+        i++;
+        if(i >= 50){ // Increased timeout slightly
             return 0;
         }
     }
 
+    // 4. Check if Response Valid (IRV - Bit 1) is set
+    if (!(hda_read_word(HDA_ICS) & 0x2)) {
+        return 0; // No valid response
+    }
+
     *response = hda_read_dword(HDA_ICR);
+    
+    // 5. Clear IRV by writing 1 to it so it's ready for the next command
+    hda_write_word(HDA_ICS, 0x2);
+
     return 1;
 }
 
-uint8_t hda_get_node_id(uint8_t codes_addr, uint8_t type, uint8_t* id){
+uint8_t hda_get_node_id(uint8_t codec_addr, uint8_t type, uint8_t* id){
     uint32_t res;
-    if(hda_send_imm_cmd(codes_addr, 0, 0xF0004, &res)){
+    if(hda_send_imm_cmd(codec_addr, 0, 0xF0004, &res)){
         uint8_t nnodes = res & 0xFF;
         uint8_t node0 = (res >> 16) & 0xFF;
         for (uint8_t i = 0; i < nnodes; i++)
         {
-            if(hda_send_imm_cmd(codes_addr, node0 + i, 0xF0004, &res)){
+            if(hda_send_imm_cmd(codec_addr, node0 + i, 0xF0004, &res)){
                 uint8_t nwidgets = res & 0xFF;
                 uint8_t widget0 = (res >> 16) & 0xFF;
                 for (uint8_t j = 0; j < nwidgets; j++)
                 {
-                    if(hda_send_imm_cmd(codes_addr, widget0 + j, 0xF0009, &res)){
+                    if(hda_send_imm_cmd(codec_addr, widget0 + j, 0xF0009, &res)){
                         uint8_t t = (res >> 20) & 0xF;
                         if(t == type){
                             *id = widget0 + j;
@@ -170,23 +202,24 @@ uint8_t hda_get_node_id(uint8_t codes_addr, uint8_t type, uint8_t* id){
 }
 
 void hda_init_bdl(){
-    #define N_BDL 2
-    #define BUFFER_LN 0x1000
-    #define SD_FMT 0x11
+    uint32_t cbl = BDL_BUFFER_LN * HDA_N_BDL;
 
-    uint32_t cbl = BUFFER_LN * N_BDL;
+    iss_bdls = (hda_bdl_entry_t**)alloc(iss*sizeof(hda_bdl_entry_t*));
 
     for (uint8_t i = 0; i < iss; i++)
     {
-        hda_bdl_entry_t* bdl = (hda_bdl_entry_t*)alloc_align(N_BDL*sizeof(hda_bdl_entry_t), 128);
-        for (uint8_t i = 0; i < N_BDL; i++)
+        hda_bdl_entry_t* bdl = (hda_bdl_entry_t*)alloc_align(HDA_N_BDL*sizeof(hda_bdl_entry_t), 128);
+        for (uint8_t j = 0; j < HDA_N_BDL; j++)
         {
-            bdl[i].address = (uint64_t) alloc_align(BUFFER_LN, 128) & 0xFFFFFFFF;
-            bdl[i].length = BUFFER_LN;
-            bdl[i].ioc = 1;
+            bdl[j].address = (uint64_t) alloc_align(BDL_BUFFER_LN, 128) & 0xFFFFFFFF;
+            bdl[j].length = BDL_BUFFER_LN;
+            bdl[j].ioc = 1;
         }
+
+        iss_bdls[i] = bdl;
+        
         hda_write_dword(HDA_ISDnBDPL(i), (uint64_t)bdl & 0xFFFFFFFF);
-        hda_write_word(HDA_ISDnLVI(i), N_BDL-1);
+        hda_write_word(HDA_ISDnLVI(i), HDA_N_BDL-1);
         hda_write_dword(HDA_ISDnCBL(i), cbl);
         hda_write_word(HDA_ISDnFMT(i), SD_FMT);
 
@@ -194,17 +227,22 @@ void hda_init_bdl(){
     }
     
 
+    oss_bdls = (hda_bdl_entry_t**)alloc(oss*sizeof(hda_bdl_entry_t*));
+
     for (uint8_t i = 0; i < oss; i++)
     {
-        hda_bdl_entry_t* bdl = (hda_bdl_entry_t*)alloc_align(N_BDL*sizeof(hda_bdl_entry_t), 128);
-        for (uint8_t i = 0; i < N_BDL; i++)
+        hda_bdl_entry_t* bdl = (hda_bdl_entry_t*)alloc_align(HDA_N_BDL*sizeof(hda_bdl_entry_t), 128);
+        for (uint8_t j = 0; j < HDA_N_BDL; j++)
         {
-            bdl[i].address = (uint64_t)alloc_align(BUFFER_LN, 128) & 0xFFFFFFFF;
-            bdl[i].length = BUFFER_LN;
-            bdl[i].ioc = 1;
+            bdl[j].address = (uint64_t)alloc_align(BDL_BUFFER_LN, 128) & 0xFFFFFFFF;
+            bdl[j].length = BDL_BUFFER_LN;
+            bdl[j].ioc = 1;
         }
+
+        oss_bdls[i] = bdl;
+
         hda_write_dword(HDA_OSDnBDPL(i), (uint64_t)bdl & 0xFFFFFFFF);
-        hda_write_word(HDA_OSDnLVI(i), N_BDL-1);
+        hda_write_word(HDA_OSDnLVI(i), HDA_N_BDL-1);
         hda_write_dword(HDA_OSDnCBL(i), cbl);
         hda_write_word(HDA_OSDnFMT(i), SD_FMT);  
 
@@ -213,49 +251,255 @@ void hda_init_bdl(){
     
 }
 
-uint8_t hda_run_stream(uint8_t codes_addr, uint8_t stream_id, uint8_t type){
-    uint8_t node_id;
-    if(hda_get_node_id(codes_addr, type, &node_id)){
-        uint32_t res;
-        if(hda_send_imm_cmd(codes_addr, node_id, 0x70600 | stream_id, &res)){
-            if(type){
-                hda_write_word(HDA_ISDnCTL(stream_id-1), 0x1E);
-            }else{
-                hda_write_word(HDA_OSDnCTL(stream_id-1), 0x1E);
-            }
-            return 1;
+uint8_t hda_run_stream(uint8_t codec_addr, uint8_t stream_tag, uint8_t type) {
+    // Ensure stream tag is valid (1 to 15)
+    if (stream_tag == 0 || stream_tag > 15) return 0;
+
+    if(!type && !dac_node){
+        if (!hda_get_node_id(codec_addr, AC_WID_AUD_OUT, &dac_node)) {
+            return 0; // DAC node not found
         }
     }
-    return 0;
+
+    if(type && !adc_node){
+        if (!hda_get_node_id(codec_addr, AC_WID_AUD_IN, &adc_node)) {
+            return 0; // ADC node not found
+        }
+    }
+
+    uint8_t node_id = type ? adc_node : dac_node;
+
+    // 1. Tell the Codec which stream tag and channel to listen to
+    // Verb 0x70600: bits 4-7 = stream tag, bits 0-3 = channel (channel 0)
+    uint32_t codec_cmd = 0x70600 | (stream_tag << 4) | 0x0;
+    uint32_t res;
+    if (!hda_send_imm_cmd(codec_addr, node_id, codec_cmd, &res)) {
+        return 0; // Failed to configure codec converter stream
+    }
+
+    // Select stream register offset (Output vs Input)
+    // Assuming stream_tag 1 maps to index 0
+    uint8_t idx = stream_tag - 1;
+    uint32_t ctl_reg = type ? HDA_ISDnCTL(idx) : HDA_OSDnCTL(idx);
+
+    // 2. Stream Reset Sequence (Mandatory by HDA Spec)
+    // Set SRST (Bit 0 = 1)
+    uint32_t val = hda_read_dword(ctl_reg);
+    hda_write_dword(ctl_reg, val | 0x1);
+    
+    // Wait for SRST to set (Bit 0 == 1)
+    int timeout = 1000;
+    while (!(hda_read_dword(ctl_reg) & 0x1) && timeout--) { wait(10); }
+
+    // Clear SRST (Bit 0 = 0) and set Stream Tag in Control Byte 2 (Bits 20-23)
+    val = hda_read_dword(ctl_reg);
+    val &= ~0x1;                    // Clear SRST
+    val &= ~(0xF << 20);            // Clear old stream tag bits
+    val |= (stream_tag << 20);      // Set new stream tag
+    hda_write_dword(ctl_reg, val);
+
+    // Wait for SRST to clear (Bit 0 == 0)
+    timeout = 1000;
+    while ((hda_read_dword(ctl_reg) & 0x1) && timeout--) { wait(10); }
+
+    // 3. Start the Stream: Set RUN (Bit 1) and Interrupt Enables (IOCE, FEIE, DEIE)
+    val = hda_read_dword(ctl_reg);
+    val |= 0x1E; // Set bits 1, 2, 3, 4 (RUN, IOC, FIFO Error, Descriptor Error)
+    hda_write_dword(ctl_reg, val);
+
+    return 1;
+}
+
+uint8_t hda_configure_codec_path(uint8_t codec_addr) {
+    uint32_t res;
+    uint8_t status;
+
+    // 1. Get DAC and Pin Complex node IDs using our widget type definitions
+    if (!dac_node && !hda_get_node_id(codec_addr, AC_WID_AUD_OUT, &dac_node)) return 0;
+    if (!adc_node && !hda_get_node_id(codec_addr, AC_WID_AUD_IN, &adc_node)) return 0;
+
+    // 2. Power up Audio Function Group (Node 0x01 typically) and widgets to Full On (0x0)
+    status = hda_send_imm_cmd(codec_addr, AFG_NODE_ID, 0x70500 | 0x0, &res); // AFG Power
+    if (!status) return status;
+
+    status = hda_send_imm_cmd(codec_addr, dac_node, 0x70500 | 0x0, &res); // DAC Power
+    if (!status) return status;
+    status = hda_send_imm_cmd(codec_addr, pin_node, 0x70500 | 0x0, &res); // Pin Power
+    if (!status) return status;
+
+    // 3. Connect DAC output to the Pin Complex input connection list (Index 0)
+    // Verb 0x70100 + connection index
+    status = hda_send_imm_cmd(codec_addr, pin_node, 0x70100 | 0x0, &res);
+    if (!status) return status;
+
+    // 4. Unmute DAC Output Amplifier (Verb 0x30000 + Payload)
+    // Payload format: Bit 15 = Output/Input (1=Output), Bit 13 = L Unmute (0=Unmute), Bit 12 = R Unmute (0=Unmute), Bits 0-6 = Gain
+    status = hda_send_imm_cmd(codec_addr, dac_node, 0x30000 | 0xB07F, &res); // Unmute DAC output, max gain
+    if (!status) return status;
+
+    // 5. Unmute Pin Complex Output Amplifier and set Pin Control to Output Enabled (Bit 6 = Out, Bit 7 = Headphone/Line Out)
+    status = hda_send_imm_cmd(codec_addr, pin_node, 0x30000 | 0xB07F, &res); // Unmute Pin output
+    if (!status) return status;
+    status = hda_send_imm_cmd(codec_addr, pin_node, 0x70700 | 0x40, &res);   // Set Pin Control: Out enable
+    if (!status) return status;
+
+    return status;
 }
 
 void hda_handler(){
+    // 1. Read Global Interrupt Status
+    uint32_t intsts = hda_read_dword(HDA_INTSTS);
+    
+    // Check if controller caused it (bit 31)
+    if (intsts & (1 << 31)) {
+        // Check RIRB interrupt (bit 4 of RIRBSTS or check INTSTS bits)
+        uint8_t rirbsts = hda_read_byte(HDA_RIRBSTS);
+        if (rirbsts & 0x01) { // RIRB interrupt flag
+            // Clear RIRB interrupt status by writing 1 back to it
+            hda_write_byte(HDA_RIRBSTS, rirbsts | 0x01);
+        }
+
+        // Check Stream interrupts (Bits 0-spatial for streams)
+        // Iterate through ISS and OSS to clear stream status (SD_STS)
+        for (uint8_t i = 0; i < iss; i++) {
+            uint8_t sdsts = hda_read_byte(HDA_ISDnSTS(i));
+            if (sdsts & 0x1C) { // Buffer completion, FIFO error, descriptor error
+                hda_write_byte(HDA_ISDnSTS(i), sdsts); // Clear by writing back
+            }
+        }
+        for (uint8_t i = 0; i < oss; i++) {
+            uint8_t sdsts = hda_read_byte(HDA_OSDnSTS(i));
+            if (sdsts & 0x1C) {
+                hda_write_byte(HDA_OSDnSTS(i), sdsts);
+            }
+        }
+    }
     pic_sendEOI(hda_irq);
-    asm("sti");
+    apic_sendEOI();
 }
+
+uint8_t hda_is_output_stream_running(uint8_t stream_id) {
+    // stream_id is 1-indexed (e.g., 1, 2, 3...)
+    // Convert to 0-indexed for macro lookup: stream_id - 1
+    uint8_t index = stream_id - 1;
+    
+    // Read the Output Stream Control register (OSDnCTL)
+    uint32_t ctl_reg = hda_read_dword(HDA_OSDnCTL(index));
+    
+    // Check if the RUN bit (Bit 1, value 0x2) is set
+    if (ctl_reg & 0x2) {
+        return 1; // Stream is active/running
+    }
+    
+    return 0; // Stream is stopped
+}
+
+uint8_t hda_stop_stream(uint8_t stream_id, uint8_t type) {
+    uint8_t idx = stream_id - 1;
+    uint32_t ctl_reg = type ? HDA_ISDnCTL(idx) : HDA_OSDnCTL(idx);
+
+    // 1. Read current control register value
+    uint32_t val = hda_read_dword(ctl_reg);
+
+    // 2. Clear the RUN bit (Bit 1)
+    val &= ~0x2; 
+    hda_write_dword(ctl_reg, val);
+
+    // 3. Wait for hardware confirmation (RUN bit drops to 0)
+    int timeout = 1000; 
+    while ((hda_read_dword(ctl_reg) & 0x2) && timeout > 0) {
+        wait(10); 
+        timeout--;
+    }
+
+    if (timeout == 0) {
+        return 0; // Timeout: Failed to stop cleanly
+    }
+
+    return 1; // Stream stopped successfully
+}
+
+void hda_fill_test_waveform(void* buffer, uint32_t size) {
+    int16_t* samples = (int16_t*)buffer;
+    uint32_t num_samples = size / sizeof(int16_t);
+    
+    // Generate a simple 1kHz square wave pattern at 48kHz sample rate
+    for (uint32_t i = 0; i < num_samples; i++) {
+        // Toggle high/low every 24 samples for a audible tone
+        samples[i] = ((i / 24) % 2 == 0) ? 10000 : -10000;
+    }
+}
+
+void hda_test_playback() {
+    void* buffer = (void*) oss_bdls[0][0].address;
+    // Step 1: Fill our test output buffer with audio samples
+    if (buffer) {
+        hda_fill_test_waveform(buffer, BDL_BUFFER_LN);
+    }
+
+    // Step 2: Configure the codec hardware path (DAC -> Pin -> Speakers)
+    // Assuming codec_id was detected during initialization
+    uint8_t status = hda_configure_codec_path(codec_id);
+
+    if (!status) {
+        // Failed to configure codec path
+        return;
+    }
+
+    // Step 3: Run Output Stream ID 1
+    // Type 0 = Output Stream, Stream ID = 1
+    if (hda_run_stream(codec_id, 1, 0)) {
+        // Stream successfully started and DMA engine is now pulling from BDL buffers!
+        print("Stream started!\n");
+    }
+}
+
+
 
 void hda_init()
 {
-    idt_set_entry(PIC_M_OFFSET + hda_irq, (uint64_t)hda_handler);
+    // idt_set_entry(PIC_M_OFFSET + hda_irq, (uint64_t)hda_handler);
     irq_clear_mask(hda_irq);
+    ioapic_set_irq(hda_irq, PIC_M_OFFSET + hda_irq, 0);
 
-    // reset
-    hda_write_dword(HDA_GCTL, HDA_GCTL_CRST);
+    // Assert reset: CRST = 0
+    hda_write_dword(HDA_GCTL,
+                hda_read_dword(HDA_GCTL) & ~HDA_GCTL_CRST);
+    do{
+        wait(1000);
+    } while ((hda_read_dword(HDA_GCTL) & HDA_GCTL_CRST));
+
+    // Deassert reset: CRST = 1
+    hda_write_dword(HDA_GCTL,
+                    hda_read_dword(HDA_GCTL) | HDA_GCTL_CRST);
+
     do{
         wait(1000);
     } while (!(hda_read_dword(HDA_GCTL) & HDA_GCTL_CRST));
 
-    codec_id = hda_read_word(HDA_STATESTS);
+
+   uint16_t statests = hda_read_word(HDA_STATESTS);
+    for (int i = 0; i < 4; i++) {
+        if (statests & (1 << i)) {
+            codec_id = i; // This is your active codec address (0 to 3)
+            break;
+        }
+    }
     
     // wake enabled
     hda_write_word(HDA_WAKEEN, 0xFFFF);
 
     // interrupts
-    hda_write_dword(HDA_INTCTL, 0x3FFFFFFF);
+    hda_write_dword(HDA_INTCTL, (1 << 31) | 0x3FFFFFFF);
 
     hda_get_params();
 
     hda_init_corb_rirb();
 
     hda_init_bdl();
+
+    hda_get_node_id(codec_id, AC_WID_AUD_OUT, &dac_node);
+    hda_get_node_id(codec_id, AC_WID_AUD_IN, &adc_node);
+    hda_get_node_id(codec_id, AC_WID_PIN, &pin_node);
+
 }

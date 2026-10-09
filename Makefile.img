@@ -44,14 +44,18 @@ copy: mount filesystem
 	sudo losetup -d /dev/$(LOOPN)
 
 run: copy
-	sudo qemu-system-x86_64 \
+	env XDG_RUNTIME_DIR=/run/user/1000 \
+    PULSE_SERVER=unix:/run/user/1000/pulse/native \
+	qemu-system-x86_64 \
 	-monitor stdio \
     -drive format=raw,file=$(DISK_IMAGE) \
     -pflash $(OVMF_CODE) \
     -pflash $(OVMF_VARS) \
     -m 2048M \
 	-smp 4 \
-    -net none
+    -audiodev wav,id=audio0,path=hda-test.wav \
+  	-device intel-hda \
+  	-device hda-duplex,audiodev=audio0
 
 clean:
 	sudo umount $(MOUNT) || true
@@ -59,3 +63,4 @@ clean:
 	sudo losetup -d /dev/$(LOOPN) || true
 	rm -fr $(DISK_IMAGE)
 	rm -fr $(BOOT)
+	rm -fr hda-test.wav

@@ -15,6 +15,25 @@ uint32_t pci_read_config(uint8_t bus, uint8_t device, uint8_t function, uint8_t 
     return inl(PCI_CONFIG_DATA) >> shift[offset & 0x3];
 }
 
+void pci_enable_bus_master(uint8_t bus, uint8_t device, uint8_t function)
+{
+    // Read the entire 32-bit dword containing offset 0x04 (Command & Status register)
+    uint32_t dword = pci_read_config(bus, device, function, PCI_COMMAND);
+    
+    // Command register is the lower 16 bits (offset 0x04)
+    uint16_t cmd = dword & 0xFFFF;
+    
+    // Enable Memory Space (bit 1) and Bus Master (bit 2)
+    cmd |= (1 << 1) | (1 << 2);
+    
+    // Merge back into the 32-bit dword and write it back using outl
+    dword = (dword & 0xFFFF0000) | cmd;
+    
+    uint32_t addr = pci_config_address(bus, device, function, PCI_COMMAND);
+    outl(PCI_CONFIG_ADDRESS, addr);
+    outl(PCI_CONFIG_DATA, dword);
+}
+
 uint16_t hda_vendorId;
 uint16_t hda_deviceId;
 uint64_t hda_memory_bar;
@@ -29,6 +48,8 @@ void pci_hda_device_init(uint8_t bus, uint8_t device, uint8_t function)
     hda_memory_bar = bar_value & ~0x0F;
 
     hda_irq = pci_read_config(bus, device, function, PCI_INTERRUPT_LINE);
+
+    pci_enable_bus_master(bus, device, function);
 }
 
 uint16_t ethernet_vendorId;
@@ -46,6 +67,8 @@ void pci_ethernet_device_init(uint8_t bus, uint8_t device, uint8_t function)
 
     
     ethernet_irq = pci_read_config(bus, device, function, PCI_INTERRUPT_LINE);
+
+    pci_enable_bus_master(bus, device, function);
 }
 
 void pci_init()
@@ -75,5 +98,8 @@ void pci_init()
         }
     }
     // ethernet_init();
-    hda_init();
+    
+    if(hda_memory_bar){
+        hda_init();
+    }
 }

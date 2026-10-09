@@ -69,3 +69,7 @@ sudo qemu-system-x86_64 \
 
 sudo modprobe -r kvm_intel 
 sudo modprobe -r kvm
+
+export XDG_RUNTIME_DIR="/run/user/$UID"
+export PIPEWIRE_RUNTIME_DIR="$XDG_RUNTIME_DIR"
+export PULSE_SERVER="unix:$XDG_RUNTIME_DIR/pulse/native"

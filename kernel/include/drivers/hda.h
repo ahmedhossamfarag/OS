@@ -37,14 +37,14 @@
 
 #define HDA_DPIBLBASE 0x70 // DMA Pos Buffer Lower Base // 4 bytes
 
-#define HDA_ISDnCTL(n)    (0x80 + n*0x20) // Input Stream Descriptor n // 2 bytes
-#define HDA_ISDnSTS(n)    (0x83 + n*0x20) // ISDn Status // 1 byte
-#define HDA_ISDnLPIB(n)   (0x84 + n*0x20) // ISDn Link Pos in Curr Buffer // 4 bytes
-#define HDA_ISDnCBL(n)    (0x88 + n*0x20) // ISDn Cyclic Buffer Length // 4 bytes
-#define HDA_ISDnLVI(n)    (0x8C + n*0x20) // ISDn Last Valid Indx // 2 bytes
-#define HDA_ISDnFIFOS(n)  (0x90 + n*0x20) // ISDn FIFO Size // 2 bytes
-#define HDA_ISDnFMT(n)    (0x92 + n*0x20) // ISDn Format // 2 bytes
-#define HDA_ISDnBDPL(n)   (0x98 + n*0x20) // ISDn Buffer Descriptor List Pointer Lower // 4 bytes
+#define HDA_ISDnCTL(n)    (x+0x80 + n*0x20) // Input Stream Descriptor n // 2 bytes
+#define HDA_ISDnSTS(n)    (x+0x83 + n*0x20) // ISDn Status // 1 byte
+#define HDA_ISDnLPIB(n)   (x+0x84 + n*0x20) // ISDn Link Pos in Curr Buffer // 4 bytes
+#define HDA_ISDnCBL(n)    (x+0x88 + n*0x20) // ISDn Cyclic Buffer Length // 4 bytes
+#define HDA_ISDnLVI(n)    (x+0x8C + n*0x20) // ISDn Last Valid Indx // 2 bytes
+#define HDA_ISDnFIFOS(n)  (x+0x90 + n*0x20) // ISDn FIFO Size // 2 bytes
+#define HDA_ISDnFMT(n)    (x+0x92 + n*0x20) // ISDn Format // 2 bytes
+#define HDA_ISDnBDPL(n)   (x+0x98 + n*0x20) // ISDn Buffer Descriptor List Pointer Lower // 4 bytes
 
 
 #define HDA_OSDnCTL(n)    (x+0x00 + n*0x20) // Output Stream Descriptor n // 2 bytes
@@ -67,6 +67,22 @@
 #define HDA_ICW     0x60 // Immediate Command Write // 4 bytes
 #define HDA_ICR     0x64 // Immediate Command Read // 4 bytes
 #define HDA_ICS     0x68 // Immediate Command Status // 2 byte
+
+#define AC_WID_AUD_OUT      0x0
+#define AC_WID_AUD_IN       0x1
+#define AC_WID_AUD_MIXER    0x2
+#define AC_WID_AUD_SEL      0x3
+#define AC_WID_PIN          0x4
+#define AC_WID_POWER        0x5
+#define AC_WID_VOL_KNB      0x6
+#define AC_WID_BEEP         0x7
+#define AC_WID_VENDOR       0xF
+
+#define AFG_NODE_ID 0x01    // Audio Function Group
+
+#define HDA_N_BDL 2
+#define BDL_BUFFER_LN 0x1000
+#define SD_FMT 0x11
 
 #pragma endregion
 
