@@ -80,7 +80,7 @@
 
 #define AFG_NODE_ID 0x01    // Audio Function Group
 
-#define HDA_N_BDL 2
+#define HDA_N_BDL 1
 #define BDL_BUFFER_LN 0x1000
 #define SD_FMT 0x11
 

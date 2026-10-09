@@ -139,3 +139,5 @@ isr_state syscall_handler
 isr_state_error error_exception_handler
 
 isr_state_error gp_fault_handler
+
+isr_state hda_handler

@@ -3,6 +3,7 @@
 #include "pic.h"
 #include "apic.h"
 #include "interrupt.h"
+#include "libc.h"
 
 extern uint16_t hda_vendorId;
 extern uint16_t hda_deviceId;
@@ -27,6 +28,17 @@ static hda_bdl_entry_t** oss_bdls;
 static uint8_t dac_node;
 static uint8_t adc_node;
 static uint8_t pin_node;
+
+static struct {
+    uint8_t stream_id;
+    uint8_t type;
+    uint8_t* buffer;
+    uint64_t cr3;
+    uint32_t size;
+    uint32_t read_offset; // Output stream
+    uint32_t write_offset; // Input stream
+    uint8_t is_running;
+} hda_args;
 
 #define wait(x) for (int i = 0; i < x; i++)
 
@@ -173,34 +185,6 @@ uint8_t hda_send_imm_cmd(uint8_t codes_addr, uint8_t node_id, uint32_t verb, uin
     return 1;
 }
 
-uint8_t hda_get_node_id(uint8_t codec_addr, uint8_t type, uint8_t* id){
-    uint32_t res;
-    if(hda_send_imm_cmd(codec_addr, 0, 0xF0004, &res)){
-        uint8_t nnodes = res & 0xFF;
-        uint8_t node0 = (res >> 16) & 0xFF;
-        for (uint8_t i = 0; i < nnodes; i++)
-        {
-            if(hda_send_imm_cmd(codec_addr, node0 + i, 0xF0004, &res)){
-                uint8_t nwidgets = res & 0xFF;
-                uint8_t widget0 = (res >> 16) & 0xFF;
-                for (uint8_t j = 0; j < nwidgets; j++)
-                {
-                    if(hda_send_imm_cmd(codec_addr, widget0 + j, 0xF0009, &res)){
-                        uint8_t t = (res >> 20) & 0xF;
-                        if(t == type){
-                            *id = widget0 + j;
-                            return 1;
-                        }
-                    }
-                }
-            
-            }
-        }
-        
-    }
-    return 0;
-}
-
 void hda_init_bdl(){
     uint32_t cbl = BDL_BUFFER_LN * HDA_N_BDL;
 
@@ -249,6 +233,90 @@ void hda_init_bdl(){
         hda_write_dword(HDA_OSDnCTL(i), (i+1) << 20);
     }
     
+}
+
+uint8_t hda_get_node_id(uint8_t codec_addr, uint8_t type, uint8_t* id){
+    uint32_t res;
+    if(hda_send_imm_cmd(codec_addr, 0, 0xF0004, &res)){
+        uint8_t nnodes = res & 0xFF;
+        uint8_t node0 = (res >> 16) & 0xFF;
+        for (uint8_t i = 0; i < nnodes; i++)
+        {
+            if(hda_send_imm_cmd(codec_addr, node0 + i, 0xF0004, &res)){
+                uint8_t nwidgets = res & 0xFF;
+                uint8_t widget0 = (res >> 16) & 0xFF;
+                for (uint8_t j = 0; j < nwidgets; j++)
+                {
+                    if(hda_send_imm_cmd(codec_addr, widget0 + j, 0xF0009, &res)){
+                        uint8_t t = (res >> 20) & 0xF;
+                        if(t == type){
+                            *id = widget0 + j;
+                            return 1;
+                        }
+                    }
+                }
+            
+            }
+        }
+        
+    }
+    return 0;
+}
+
+uint8_t hda_configure_codec_path(uint8_t codec_addr) {
+    uint32_t res;
+    uint8_t status;
+
+    // 1. Get DAC, ADC, and Pin Complex node IDs
+    if (!dac_node && !hda_get_node_id(codec_addr, AC_WID_AUD_OUT, &dac_node)) return 0;
+    if (!adc_node && !hda_get_node_id(codec_addr, AC_WID_AUD_IN, &adc_node)) return 0;
+    if (!pin_node && !hda_get_node_id(codec_addr, AC_WID_PIN, &pin_node)) return 0;
+
+    // 2. Power up Audio Function Group (Node 0x01) and all relevant widgets to Full On (0x0)
+    status = hda_send_imm_cmd(codec_addr, AFG_NODE_ID, 0x70500 | 0x0, &res); // AFG Power
+    if (!status) return status;
+
+    status = hda_send_imm_cmd(codec_addr, dac_node, 0x70500 | 0x0, &res); // DAC Power
+    if (!status) return status;
+    status = hda_send_imm_cmd(codec_addr, adc_node, 0x70500 | 0x0, &res); // ADC Power
+    if (!status) return status;
+    status = hda_send_imm_cmd(codec_addr, pin_node, 0x70500 | 0x0, &res); // Pin Power
+    if (!status) return status;
+
+    // --- OUTPUT PATH CONFIGURATION ---
+
+    // 3. Connect DAC output to the Pin Complex input connection list (Index 0)
+    status = hda_send_imm_cmd(codec_addr, pin_node, 0x70100 | 0x0, &res);
+    if (!status) return status;
+
+    // 4. Unmute DAC Output Amplifier
+    status = hda_send_imm_cmd(codec_addr, dac_node, 0x30000 | 0xB07F, &res); 
+    if (!status) return status;
+
+    // 5. Unmute Pin Complex Output Amplifier and set Pin Control to Output Enabled
+    status = hda_send_imm_cmd(codec_addr, pin_node, 0x30000 | 0xB07F, &res); 
+    if (!status) return status;
+    status = hda_send_imm_cmd(codec_addr, pin_node, 0x70700 | 0x40, &res);   // Out enable
+    if (!status) return status;
+
+    // --- INPUT PATH CONFIGURATION ---
+
+    // 6. Connect Pin Complex (or mixer/source) to the ADC input connection list (Index 0)
+    // Verb 0x70100 sets the connection select for the widget
+    status = hda_send_imm_cmd(codec_addr, adc_node, 0x70100 | 0x0, &res);
+    if (!status) return status;
+
+    // 7. Unmute ADC Input Amplifier (Bit 15 = 0 for Input amplifier)
+    // Payload format: Bit 15 = 0 (Input), Bit 13 = L Unmute, Bit 12 = R Unmute, Bits 0-6 = Gain
+    status = hda_send_imm_cmd(codec_addr, adc_node, 0x30000 | 0x007F, &res); // Unmute ADC input, max gain
+    if (!status) return status;
+
+    // 8. Set Pin Control for Input (Microphone/Line-In) Enabled (Bit 5 = In) and set VREF if needed
+    // Bit 5 = Input Enable, Bits 0-2 = VREF (e.g., 0x2 for 50% VREF for microphones)
+    status = hda_send_imm_cmd(codec_addr, pin_node, 0x70700 | 0x24, &res);   // In enable + VREF 50%
+    if (!status) return status;
+
+    return status;
 }
 
 uint8_t hda_run_stream(uint8_t codec_addr, uint8_t stream_tag, uint8_t type) {
@@ -310,74 +378,6 @@ uint8_t hda_run_stream(uint8_t codec_addr, uint8_t stream_tag, uint8_t type) {
     return 1;
 }
 
-uint8_t hda_configure_codec_path(uint8_t codec_addr) {
-    uint32_t res;
-    uint8_t status;
-
-    // 1. Get DAC and Pin Complex node IDs using our widget type definitions
-    if (!dac_node && !hda_get_node_id(codec_addr, AC_WID_AUD_OUT, &dac_node)) return 0;
-    if (!adc_node && !hda_get_node_id(codec_addr, AC_WID_AUD_IN, &adc_node)) return 0;
-
-    // 2. Power up Audio Function Group (Node 0x01 typically) and widgets to Full On (0x0)
-    status = hda_send_imm_cmd(codec_addr, AFG_NODE_ID, 0x70500 | 0x0, &res); // AFG Power
-    if (!status) return status;
-
-    status = hda_send_imm_cmd(codec_addr, dac_node, 0x70500 | 0x0, &res); // DAC Power
-    if (!status) return status;
-    status = hda_send_imm_cmd(codec_addr, pin_node, 0x70500 | 0x0, &res); // Pin Power
-    if (!status) return status;
-
-    // 3. Connect DAC output to the Pin Complex input connection list (Index 0)
-    // Verb 0x70100 + connection index
-    status = hda_send_imm_cmd(codec_addr, pin_node, 0x70100 | 0x0, &res);
-    if (!status) return status;
-
-    // 4. Unmute DAC Output Amplifier (Verb 0x30000 + Payload)
-    // Payload format: Bit 15 = Output/Input (1=Output), Bit 13 = L Unmute (0=Unmute), Bit 12 = R Unmute (0=Unmute), Bits 0-6 = Gain
-    status = hda_send_imm_cmd(codec_addr, dac_node, 0x30000 | 0xB07F, &res); // Unmute DAC output, max gain
-    if (!status) return status;
-
-    // 5. Unmute Pin Complex Output Amplifier and set Pin Control to Output Enabled (Bit 6 = Out, Bit 7 = Headphone/Line Out)
-    status = hda_send_imm_cmd(codec_addr, pin_node, 0x30000 | 0xB07F, &res); // Unmute Pin output
-    if (!status) return status;
-    status = hda_send_imm_cmd(codec_addr, pin_node, 0x70700 | 0x40, &res);   // Set Pin Control: Out enable
-    if (!status) return status;
-
-    return status;
-}
-
-void hda_handler(){
-    // 1. Read Global Interrupt Status
-    uint32_t intsts = hda_read_dword(HDA_INTSTS);
-    
-    // Check if controller caused it (bit 31)
-    if (intsts & (1 << 31)) {
-        // Check RIRB interrupt (bit 4 of RIRBSTS or check INTSTS bits)
-        uint8_t rirbsts = hda_read_byte(HDA_RIRBSTS);
-        if (rirbsts & 0x01) { // RIRB interrupt flag
-            // Clear RIRB interrupt status by writing 1 back to it
-            hda_write_byte(HDA_RIRBSTS, rirbsts | 0x01);
-        }
-
-        // Check Stream interrupts (Bits 0-spatial for streams)
-        // Iterate through ISS and OSS to clear stream status (SD_STS)
-        for (uint8_t i = 0; i < iss; i++) {
-            uint8_t sdsts = hda_read_byte(HDA_ISDnSTS(i));
-            if (sdsts & 0x1C) { // Buffer completion, FIFO error, descriptor error
-                hda_write_byte(HDA_ISDnSTS(i), sdsts); // Clear by writing back
-            }
-        }
-        for (uint8_t i = 0; i < oss; i++) {
-            uint8_t sdsts = hda_read_byte(HDA_OSDnSTS(i));
-            if (sdsts & 0x1C) {
-                hda_write_byte(HDA_OSDnSTS(i), sdsts);
-            }
-        }
-    }
-    pic_sendEOI(hda_irq);
-    apic_sendEOI();
-}
-
 uint8_t hda_is_output_stream_running(uint8_t stream_id) {
     // stream_id is 1-indexed (e.g., 1, 2, 3...)
     // Convert to 0-indexed for macro lookup: stream_id - 1
@@ -419,46 +419,151 @@ uint8_t hda_stop_stream(uint8_t stream_id, uint8_t type) {
     return 1; // Stream stopped successfully
 }
 
-void hda_fill_test_waveform(void* buffer, uint32_t size) {
-    int16_t* samples = (int16_t*)buffer;
-    uint32_t num_samples = size / sizeof(int16_t);
-    
-    // Generate a simple 1kHz square wave pattern at 48kHz sample rate
-    for (uint32_t i = 0; i < num_samples; i++) {
-        // Toggle high/low every 24 samples for a audible tone
-        samples[i] = ((i / 24) % 2 == 0) ? 10000 : -10000;
-    }
+uint32_t get_current_buffer_index(uint8_t stream_idx, uint8_t is_input) {
+    // Read current byte offset processed by DMA
+    uint32_t lpib = is_input ? hda_read_dword(HDA_ISDnLPIB(stream_idx)) 
+                             : hda_read_dword(HDA_OSDnLPIB(stream_idx));
+
+    // Determine which BDL entry this offset falls into
+    // BDL_BUFFER_LN is the size of each individual buffer descriptor block
+    uint32_t bdl_index = lpib / BDL_BUFFER_LN;
+    return bdl_index % HDA_N_BDL;
 }
 
-void hda_test_playback() {
-    void* buffer = (void*) oss_bdls[0][0].address;
-    // Step 1: Fill our test output buffer with audio samples
-    if (buffer) {
-        hda_fill_test_waveform(buffer, BDL_BUFFER_LN);
+uint8_t hda_play_sound(void* buffer, uint32_t size, uint64_t cr3) {
+    if(!buffer || size < BDL_BUFFER_LN) return 0;
+    if (hda_args.is_running) return 0;
+
+    hda_args.stream_id = 1;
+    hda_args.type = 0;
+    hda_args.buffer = buffer;
+    hda_args.cr3 = cr3;
+    hda_args.size = size - (size % BDL_BUFFER_LN);
+
+    void* bdl_buffer = (void*) oss_bdls[0][0].address;
+
+    mem_copy((char*) buffer, (char*) bdl_buffer, BDL_BUFFER_LN);
+
+    hda_args.read_offset = 0;
+    hda_args.write_offset = 0;
+
+    if(hda_run_stream(codec_id, hda_args.stream_id, hda_args.type)){
+        hda_args.is_running = 1;
+        return 1;
     }
 
-    // Step 2: Configure the codec hardware path (DAC -> Pin -> Speakers)
-    // Assuming codec_id was detected during initialization
-    uint8_t status = hda_configure_codec_path(codec_id);
+    return 0;
+}
 
-    if (!status) {
-        // Failed to configure codec path
+uint8_t hda_record_sound(void* buffer, uint32_t size, uint64_t cr3) {
+    if(!buffer || size < BDL_BUFFER_LN) return 0;
+    if (hda_args.is_running) return 0;
+
+    hda_args.stream_id = 1;
+    hda_args.type = 1;
+    hda_args.buffer = buffer;
+    hda_args.cr3 = cr3;
+    hda_args.size = size - (size % BDL_BUFFER_LN);
+
+    hda_args.read_offset = 0;
+    hda_args.write_offset = 0;
+
+    if(hda_run_stream(codec_id, hda_args.stream_id, hda_args.type)){
+        hda_args.is_running = 1;
+        return 1;
+    }
+
+    return 0;
+}
+
+void handle_read_complete(){
+    if(!hda_args.is_running) return;
+
+    if (hda_args.read_offset + BDL_BUFFER_LN >= hda_args.size) {
+        hda_stop_stream(hda_args.stream_id, hda_args.type);
+        hda_args.is_running = 0;
         return;
     }
 
-    // Step 3: Run Output Stream ID 1
-    // Type 0 = Output Stream, Stream ID = 1
-    if (hda_run_stream(codec_id, 1, 0)) {
-        // Stream successfully started and DMA engine is now pulling from BDL buffers!
-        print("Stream started!\n");
-    }
+    uint64_t current_cr3;
+    asm volatile("mov %%cr3, %0" : "=r"(current_cr3));
+    asm volatile("mov %0, %%cr3" : : "r"(hda_args.cr3));
+
+    hda_args.read_offset += BDL_BUFFER_LN;
+    hda_args.buffer += BDL_BUFFER_LN;
+
+    void* bdl_buffer = (void*) oss_bdls[0][0].address;
+    mem_copy((char*) hda_args.buffer, (char*) bdl_buffer, BDL_BUFFER_LN);
+
+    asm volatile("mov %0, %%cr3" : : "r"(current_cr3));
 }
 
+void handle_write_complete(){
+    if(!hda_args.is_running) return;
 
+    uint64_t current_cr3;
+    asm volatile("mov %%cr3, %0" : "=r"(current_cr3));
+    asm volatile("mov %0, %%cr3" : : "r"(hda_args.cr3));
+
+    void* bdl_buffer = (void*) iss_bdls[0][0].address;
+    mem_copy((char*) bdl_buffer, (char*) hda_args.buffer, BDL_BUFFER_LN);
+
+    asm volatile("mov %0, %%cr3" : : "r"(current_cr3));
+
+    if (hda_args.write_offset + BDL_BUFFER_LN >= hda_args.size) {
+        hda_stop_stream(hda_args.stream_id, hda_args.type);
+        hda_args.is_running = 0;
+        return;
+    }
+
+    hda_args.write_offset += BDL_BUFFER_LN;
+    hda_args.buffer += BDL_BUFFER_LN;
+
+}
+
+void hda_handler(){
+    // 1. Read Global Interrupt Status
+    uint32_t intsts = hda_read_dword(HDA_INTSTS);
+    
+    // Check if controller caused it (bit 31)
+    if (intsts & (1 << 31)) {
+        // Check RIRB interrupt (bit 4 of RIRBSTS or check INTSTS bits)
+        uint8_t rirbsts = hda_read_byte(HDA_RIRBSTS);
+        if (rirbsts & 0x01) { // RIRB interrupt flag
+            // Clear RIRB interrupt status by writing 1 back to it
+            hda_write_byte(HDA_RIRBSTS, rirbsts | 0x01);
+        }
+
+        // Check Stream interrupts (Bits 0-spatial for streams)
+        // Iterate through ISS and OSS to clear stream status (SD_STS)
+        for (uint8_t i = 0; i < iss; i++) {
+            uint8_t sdsts = hda_read_byte(HDA_ISDnSTS(i));
+            if (sdsts & 0x1C) { // Buffer completion, FIFO error, descriptor error
+                if (sdsts & 0x4) { // Buffer completion
+                    handle_write_complete();
+                }
+                hda_write_byte(HDA_ISDnSTS(i), sdsts); // Clear by writing back
+            }
+        }
+        for (uint8_t i = 0; i < oss; i++) {
+            uint8_t sdsts = hda_read_byte(HDA_OSDnSTS(i));
+            if (sdsts & 0x1C) {
+                if (sdsts & 0x4) {
+                    handle_read_complete();
+                }
+                hda_write_byte(HDA_OSDnSTS(i), sdsts);
+            }
+        }
+    }
+    pic_sendEOI(hda_irq);
+    apic_sendEOI();
+}
+
+extern void isr_hda_handler();
 
 void hda_init()
 {
-    // idt_set_entry(PIC_M_OFFSET + hda_irq, (uint64_t)hda_handler);
+    idt_set_entry(PIC_M_OFFSET + hda_irq, (uint64_t)isr_hda_handler);
     irq_clear_mask(hda_irq);
     ioapic_set_irq(hda_irq, PIC_M_OFFSET + hda_irq, 0);
 
@@ -502,4 +607,5 @@ void hda_init()
     hda_get_node_id(codec_id, AC_WID_AUD_IN, &adc_node);
     hda_get_node_id(codec_id, AC_WID_PIN, &pin_node);
 
+    hda_configure_codec_path(codec_id);
 }
