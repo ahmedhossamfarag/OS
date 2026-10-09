@@ -72,6 +72,3 @@ uint64_t* get_available_user_paging();
 void free_user_paging(uint64_t* dir);
 
 uint64_t virtual_to_physical(uint64_t virtual_address, uint64_t* paging_dir);
-
-/* INT 14 */
-void page_fault_handler();

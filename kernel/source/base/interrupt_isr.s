@@ -93,38 +93,85 @@ isr_default:
     nop
     iretq
 
+
+
+;# X86 Interrupt Service Routines
+
 isr_state exception_handler
+
+isr_state divide_error_handler
+
+isr_state debug_exception_handler
+
+isr_state nmi_handler
+
+isr_state breakpoint_handler
+
+isr_state overflow_handler
+
+isr_state bound_range_exceeded_handler
+
+isr_state invalid_opcode_handler
+
+isr_state device_not_available_handler
+
+isr_state_error double_fault_handler
+
+isr_state coprocessor_segment_overrun_handler
+
+isr_state_error invalid_TSS_handler
+
+isr_state_error segment_not_present_handler
+
+isr_state_error stack_segment_fault_handler
+
+isr_state_error general_protection_fault_handler
+
+isr_state_error page_fault_handler
+
+isr_state x87_floating_point_handler
+
+isr_state_error alignment_check_handler
+
+isr_state machine_check_handler
+
+isr_state simd_exception_handler
+
+isr_state virtualization_exception_handler
+
+;# PIC Interrupt Service Routines
 
 isr_state pic_handler
     
+isr_state timer_handler
+
 isr_state keyboard_handler
 
-isr_state mouse_handler
-
 isr_state rtc_handler
+
+isr_state mouse_handler
 
 isr_state fpu_handler
 
 isr_state ata_handler
 
-isr_state_error page_fault_handler
-
-isr_state timer_handler
-
 isr_state lapic_timer_handler
 
+;# APIC Interrupt Service Routines
 
 isr_state apic_timer_handler
 
 isr_state apic_keyboard_handler
 
-isr_state apic_mouse_handler
-
 isr_state apic_rtc_handler
+
+isr_state apic_mouse_handler
 
 isr_state apic_fpu_handler
 
 isr_state apic_ata_handler
+
+;# Scheduler Interrupt Service Routines
 
 isr_state schedule_thread
 
@@ -136,8 +183,6 @@ isr_state schedule_process_terminated
 
 isr_state schedule_thread_terminated
 
+;# System Call Interrupt Service Routines
+
 isr_state syscall_handler
-
-isr_state_error error_exception_handler
-
-isr_state_error gp_fault_handler

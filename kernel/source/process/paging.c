@@ -4,6 +4,7 @@
 #include "libc.h"
 #include "info.h"
 #include "memory.h"
+#include <process.h>
 
 
 uint64_t *default_paging;
@@ -391,30 +392,4 @@ uint64_t virtual_to_physical(uint64_t virtual_address, uint64_t *paging_dir)
         pd_entry & PAGE_2M_ADDR_MASK;
 
     return physical_base | offset;
-}
-
-
-/* INT 14 */
-void page_fault_handler(uint64_t error_code) {
-    uint64_t faulting_address;
-    asm volatile("mov %%cr2, %0" : "=r"(faulting_address));
-
-    asm volatile("hlt"); // Halt the CPU for debugging purposes
-
-    // Analyze the faulting address and error code
-    if (!(error_code & 0x1)) {
-        // Page not present
-    } else {
-        // Page protection violation
-        if (error_code & 0x2) {
-            // Write operation
-        } else {
-            // Read operation
-        }
-        if (error_code & 0x4) {
-            // Fault occurred in user mode
-        } else {
-            // Fault occurred in kernel mode
-        }
-    }
 }

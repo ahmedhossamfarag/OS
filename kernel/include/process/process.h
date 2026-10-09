@@ -32,6 +32,12 @@ typedef struct {
     uint64_t rip, cs, rflags, user_rsp, user_ss;
 } cpu_state_t;
 
+typedef struct {
+    uint64_t ds, es, fs, gs;
+    uint64_t rdi, rsi, rbp, rsp, rbx, rdx, rcx, rax;
+    uint64_t error_code, rip, cs, rflags, user_rsp, user_ss;
+} cpu_error_state_t;
+
 
 typedef struct{
     uint64_t tid;

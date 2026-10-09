@@ -3,9 +3,6 @@
 #include "info.h"
 
 extern void isr_exception_handler();
-extern void isr_default();
-extern void isr_gp_fault_handler();
-extern void isr_error_exception_handler();
 
 idt_entry_t* idt;
 idt_pointer_t idt_ptr;
@@ -36,17 +33,6 @@ void map_idt_isr(){
     {
         idt_set_entry(i, (uint64_t)(isr_exception_handler));
     }
-    
-    // Set IDT entries for exceptions with error codes
-    idt_set_entry(8, (uint64_t)(isr_error_exception_handler));
-    idt_set_entry(10, (uint64_t)(isr_error_exception_handler));
-    idt_set_entry(11, (uint64_t)(isr_error_exception_handler));
-    idt_set_entry(12, (uint64_t)(isr_error_exception_handler));
-    idt_set_entry(13, (uint64_t)(isr_gp_fault_handler)); // General Protection Fault
-    idt_set_entry(14, (uint64_t)(isr_error_exception_handler));
-    idt_set_entry(17, (uint64_t)(isr_error_exception_handler));
-    idt_set_entry(21, (uint64_t)(isr_error_exception_handler));
-
 }
 
 
