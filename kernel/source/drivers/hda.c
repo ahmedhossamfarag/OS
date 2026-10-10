@@ -27,7 +27,8 @@ static hda_bdl_entry_t** oss_bdls;
 
 static uint8_t dac_node;
 static uint8_t adc_node;
-static uint8_t pin_node;
+static uint8_t out_pin_node;
+static uint8_t in_pin_node;
 
 static struct {
     uint8_t stream_id;
@@ -235,7 +236,7 @@ void hda_init_bdl(){
     
 }
 
-uint8_t hda_get_node_id(uint8_t codec_addr, uint8_t type, uint8_t* id){
+uint8_t hda_get_node_ids(uint8_t codec_addr){
     uint32_t res;
     if(hda_send_imm_cmd(codec_addr, 0, 0xF0004, &res)){
         uint8_t nnodes = res & 0xFF;
@@ -249,10 +250,22 @@ uint8_t hda_get_node_id(uint8_t codec_addr, uint8_t type, uint8_t* id){
                 {
                     if(hda_send_imm_cmd(codec_addr, widget0 + j, 0xF0009, &res)){
                         uint8_t t = (res >> 20) & 0xF;
-                        if(t == type){
-                            *id = widget0 + j;
-                            return 1;
+                        switch (t)
+                        {
+                        case AC_WID_AUD_OUT:
+                            dac_node = widget0 + j;
+                            break;
+                        case AC_WID_AUD_IN:
+                            adc_node = widget0 + j;
+                            break;
+                        case AC_WID_PIN:
+                            if (out_pin_node) {in_pin_node = widget0 + j;}
+                            else {out_pin_node = widget0 + j;}
+                            break;
+                        default:
+                            break;
                         }
+                        if(dac_node && adc_node && out_pin_node && in_pin_node) return 1;
                     }
                 }
             
@@ -260,7 +273,12 @@ uint8_t hda_get_node_id(uint8_t codec_addr, uint8_t type, uint8_t* id){
         }
         
     }
-    return 0;
+
+    if (!in_pin_node) {in_pin_node = out_pin_node;}
+
+    if (!dac_node || !adc_node || !out_pin_node || !in_pin_node) return 0;
+
+    return 1;
 }
 
 uint8_t hda_configure_codec_path(uint8_t codec_addr) {
@@ -268,9 +286,7 @@ uint8_t hda_configure_codec_path(uint8_t codec_addr) {
     uint8_t status;
 
     // 1. Get DAC, ADC, and Pin Complex node IDs
-    if (!dac_node && !hda_get_node_id(codec_addr, AC_WID_AUD_OUT, &dac_node)) return 0;
-    if (!adc_node && !hda_get_node_id(codec_addr, AC_WID_AUD_IN, &adc_node)) return 0;
-    if (!pin_node && !hda_get_node_id(codec_addr, AC_WID_PIN, &pin_node)) return 0;
+    if (!dac_node || !adc_node || !out_pin_node || !in_pin_node) return 0;
 
     // 2. Power up Audio Function Group (Node 0x01) and all relevant widgets to Full On (0x0)
     status = hda_send_imm_cmd(codec_addr, AFG_NODE_ID, 0x70500 | 0x0, &res); // AFG Power
@@ -280,23 +296,25 @@ uint8_t hda_configure_codec_path(uint8_t codec_addr) {
     if (!status) return status;
     status = hda_send_imm_cmd(codec_addr, adc_node, 0x70500 | 0x0, &res); // ADC Power
     if (!status) return status;
-    status = hda_send_imm_cmd(codec_addr, pin_node, 0x70500 | 0x0, &res); // Pin Power
+    status = hda_send_imm_cmd(codec_addr, out_pin_node, 0x70500 | 0x0, &res); // OutPin Power
+    if (!status) return status;
+    status = hda_send_imm_cmd(codec_addr, in_pin_node, 0x70500 | 0x0, &res); // InPin Power
     if (!status) return status;
 
     // --- OUTPUT PATH CONFIGURATION ---
 
     // 3. Connect DAC output to the Pin Complex input connection list (Index 0)
-    status = hda_send_imm_cmd(codec_addr, pin_node, 0x70100 | 0x0, &res);
+    status = hda_send_imm_cmd(codec_addr, out_pin_node, 0x70100 | 0x0, &res);
     if (!status) return status;
 
     // 4. Unmute DAC Output Amplifier
     status = hda_send_imm_cmd(codec_addr, dac_node, 0x30000 | 0xB07F, &res); 
     if (!status) return status;
 
-    // 5. Unmute Pin Complex Output Amplifier and set Pin Control to Output Enabled
-    status = hda_send_imm_cmd(codec_addr, pin_node, 0x30000 | 0xB07F, &res); 
+    // 5. Unmute Out Pin Complex Output Amplifier and set Pin Control to Output Enabled
+    status = hda_send_imm_cmd(codec_addr, out_pin_node, 0x30000 | 0xB07F, &res); 
     if (!status) return status;
-    status = hda_send_imm_cmd(codec_addr, pin_node, 0x70700 | 0x40, &res);   // Out enable
+    status = hda_send_imm_cmd(codec_addr, out_pin_node, 0x70700 | 0x40, &res);   // Out enable
     if (!status) return status;
 
     // --- INPUT PATH CONFIGURATION ---
@@ -308,12 +326,14 @@ uint8_t hda_configure_codec_path(uint8_t codec_addr) {
 
     // 7. Unmute ADC Input Amplifier (Bit 15 = 0 for Input amplifier)
     // Payload format: Bit 15 = 0 (Input), Bit 13 = L Unmute, Bit 12 = R Unmute, Bits 0-6 = Gain
-    status = hda_send_imm_cmd(codec_addr, adc_node, 0x30000 | 0x007F, &res); // Unmute ADC input, max gain
+    status = hda_send_imm_cmd(codec_addr, adc_node, 0x30000 | 0x707F, &res); // Unmute ADC input, max gain
     if (!status) return status;
 
-    // 8. Set Pin Control for Input (Microphone/Line-In) Enabled (Bit 5 = In) and set VREF if needed
+    // 8. Unmute In Pin Set Pin Control for Input (Microphone/Line-In) Enabled (Bit 5 = In) and set VREF if needed
     // Bit 5 = Input Enable, Bits 0-2 = VREF (e.g., 0x2 for 50% VREF for microphones)
-    status = hda_send_imm_cmd(codec_addr, pin_node, 0x70700 | 0x24, &res);   // In enable + VREF 50%
+    status = hda_send_imm_cmd(codec_addr, in_pin_node,0x30000 | 0xB07F, &res);   
+    if (!status) return status;
+    status = hda_send_imm_cmd(codec_addr, in_pin_node, 0x70700 | 0x20, &res);   // In enable + VREF 50%
     if (!status) return status;
 
     return status;
@@ -324,15 +344,11 @@ uint8_t hda_run_stream(uint8_t codec_addr, uint8_t stream_tag, uint8_t type) {
     if (stream_tag == 0 || stream_tag > 15) return 0;
 
     if(!type && !dac_node){
-        if (!hda_get_node_id(codec_addr, AC_WID_AUD_OUT, &dac_node)) {
-            return 0; // DAC node not found
-        }
+        return 0;
     }
 
     if(type && !adc_node){
-        if (!hda_get_node_id(codec_addr, AC_WID_AUD_IN, &adc_node)) {
-            return 0; // ADC node not found
-        }
+        return 0;
     }
 
     uint8_t node_id = type ? adc_node : dac_node;
@@ -348,7 +364,7 @@ uint8_t hda_run_stream(uint8_t codec_addr, uint8_t stream_tag, uint8_t type) {
     // Select stream register offset (Output vs Input)
     // Assuming stream_tag 1 maps to index 0
     uint8_t idx = stream_tag - 1;
-    uint32_t ctl_reg = type ? HDA_ISDnCTL(idx) : HDA_OSDnCTL(idx);
+    uint32_t ctl_reg = type ? (uint32_t)HDA_ISDnCTL(idx) : (uint32_t)HDA_OSDnCTL(idx);
 
     // 2. Stream Reset Sequence (Mandatory by HDA Spec)
     // Set SRST (Bit 0 = 1)
@@ -394,9 +410,25 @@ uint8_t hda_is_output_stream_running(uint8_t stream_id) {
     return 0; // Stream is stopped
 }
 
+uint8_t hda_is_input_stream_running(uint8_t stream_id) {
+    // stream_id is 1-indexed (e.g., 1, 2, 3...)
+    // Convert to 0-indexed for macro lookup: stream_id - 1
+    uint8_t index = stream_id - 1;
+    
+    // Read the Input Stream Control register (ISDnCTL)
+    uint32_t ctl_reg = hda_read_dword(HDA_ISDnCTL(index));
+    
+    // Check if the RUN bit (Bit 1, value 0x2) is set
+    if (ctl_reg & 0x2) {
+        return 1; // Stream is active/running
+    }
+    
+    return 0; // Stream is stopped
+}
+
 uint8_t hda_stop_stream(uint8_t stream_id, uint8_t type) {
     uint8_t idx = stream_id - 1;
-    uint32_t ctl_reg = type ? HDA_ISDnCTL(idx) : HDA_OSDnCTL(idx);
+    uint32_t ctl_reg = type ? (uint32_t)HDA_ISDnCTL(idx) : (uint32_t)HDA_OSDnCTL(idx);
 
     // 1. Read current control register value
     uint32_t val = hda_read_dword(ctl_reg);
@@ -603,9 +635,7 @@ void hda_init()
 
     hda_init_bdl();
 
-    hda_get_node_id(codec_id, AC_WID_AUD_OUT, &dac_node);
-    hda_get_node_id(codec_id, AC_WID_AUD_IN, &adc_node);
-    hda_get_node_id(codec_id, AC_WID_PIN, &pin_node);
+    hda_get_node_ids(codec_id);
 
     hda_configure_codec_path(codec_id);
 }

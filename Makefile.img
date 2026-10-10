@@ -53,7 +53,7 @@ run: copy
     -pflash $(OVMF_VARS) \
     -m 2048M \
 	-smp 4 \
-    -audiodev wav,id=audio0,path=hda-test.wav \
+    -audiodev pa,id=audio0 \
   	-device intel-hda \
   	-device hda-duplex,audiodev=audio0
 

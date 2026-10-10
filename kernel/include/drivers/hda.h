@@ -37,14 +37,14 @@
 
 #define HDA_DPIBLBASE 0x70 // DMA Pos Buffer Lower Base // 4 bytes
 
-#define HDA_ISDnCTL(n)    (x+0x80 + n*0x20) // Input Stream Descriptor n // 2 bytes
-#define HDA_ISDnSTS(n)    (x+0x83 + n*0x20) // ISDn Status // 1 byte
-#define HDA_ISDnLPIB(n)   (x+0x84 + n*0x20) // ISDn Link Pos in Curr Buffer // 4 bytes
-#define HDA_ISDnCBL(n)    (x+0x88 + n*0x20) // ISDn Cyclic Buffer Length // 4 bytes
-#define HDA_ISDnLVI(n)    (x+0x8C + n*0x20) // ISDn Last Valid Indx // 2 bytes
-#define HDA_ISDnFIFOS(n)  (x+0x90 + n*0x20) // ISDn FIFO Size // 2 bytes
-#define HDA_ISDnFMT(n)    (x+0x92 + n*0x20) // ISDn Format // 2 bytes
-#define HDA_ISDnBDPL(n)   (x+0x98 + n*0x20) // ISDn Buffer Descriptor List Pointer Lower // 4 bytes
+#define HDA_ISDnCTL(n)    (0x80 + n*0x20) // Input Stream Descriptor n // 2 bytes
+#define HDA_ISDnSTS(n)    (0x83 + n*0x20) // ISDn Status // 1 byte
+#define HDA_ISDnLPIB(n)   (0x84 + n*0x20) // ISDn Link Pos in Curr Buffer // 4 bytes
+#define HDA_ISDnCBL(n)    (0x88 + n*0x20) // ISDn Cyclic Buffer Length // 4 bytes
+#define HDA_ISDnLVI(n)    (0x8C + n*0x20) // ISDn Last Valid Indx // 2 bytes
+#define HDA_ISDnFIFOS(n)  (0x90 + n*0x20) // ISDn FIFO Size // 2 bytes
+#define HDA_ISDnFMT(n)    (0x92 + n*0x20) // ISDn Format // 2 bytes
+#define HDA_ISDnBDPL(n)   (0x98 + n*0x20) // ISDn Buffer Descriptor List Pointer Lower // 4 bytes
 
 
 #define HDA_OSDnCTL(n)    (x+0x00 + n*0x20) // Output Stream Descriptor n // 2 bytes
