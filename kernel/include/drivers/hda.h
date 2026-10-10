@@ -78,6 +78,9 @@
 #define AC_WID_BEEP         0x7
 #define AC_WID_VENDOR       0xF
 
+#define PIN_INPUT_CAP       0x20
+#define PIN_OUTPUT_CAP      0x10
+
 #define AFG_NODE_ID 0x01    // Audio Function Group
 
 #define HDA_N_BDL 1

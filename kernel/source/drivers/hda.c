@@ -236,6 +236,52 @@ void hda_init_bdl(){
     
 }
 
+uint8_t hda_get_node_connection_entry_id(uint8_t codec_addr, uint8_t node_id, uint8_t entry_indx){
+    uint32_t res;
+    // Read node connection list length.
+    if (hda_send_imm_cmd(codec_addr, node_id, 0xF000E, &res)){
+
+        if(entry_indx >= res) return 0;
+
+        // Read the first connection list entry.
+        if (hda_send_imm_cmd(codec_addr, node_id, 0xF0200, &res)){
+            return res & 0xFF;
+        }
+    }
+
+    return 0;
+}
+
+uint8_t hda_get_node_connection_entry_index(uint8_t codec_addr, uint8_t node_id, uint8_t entry_id){
+    uint32_t res;
+    // Read node connection list length.
+    if (hda_send_imm_cmd(codec_addr, node_id, 0xF000E, &res)){
+        uint8_t list_length = res & 0xFF;
+
+        for (uint8_t i = 0; i < list_length; i++) {
+            if(hda_send_imm_cmd(codec_addr, node_id, 0xF0200 | i, &res)){
+                if ((res & 0xFF) == entry_id) {
+                    return i;
+                }
+            }
+        }
+    }
+
+    return -1;
+}
+
+uint8_t hda_check_node_capability(uint8_t codec_addr, uint8_t node_id, uint8_t capability){
+    uint32_t res;
+    if(hda_send_imm_cmd(codec_addr, node_id, 0xF000C, &res)){
+        uint8_t node_capability = res & 0xFF;
+        if(node_capability & capability){
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 uint8_t hda_get_node_ids(uint8_t codec_addr){
     uint32_t res;
     if(hda_send_imm_cmd(codec_addr, 0, 0xF0004, &res)){
@@ -259,8 +305,11 @@ uint8_t hda_get_node_ids(uint8_t codec_addr){
                             adc_node = widget0 + j;
                             break;
                         case AC_WID_PIN:
-                            if (out_pin_node) {in_pin_node = widget0 + j;}
-                            else {out_pin_node = widget0 + j;}
+                            if (hda_check_node_capability(codec_addr, widget0 + j, PIN_INPUT_CAP)) {
+                                in_pin_node = widget0 + j;
+                            } else if (hda_check_node_capability(codec_addr, widget0 + j, PIN_OUTPUT_CAP)) {
+                                out_pin_node = widget0 + j;
+                            }
                             break;
                         default:
                             break;
@@ -304,6 +353,7 @@ uint8_t hda_configure_codec_path(uint8_t codec_addr) {
     // --- OUTPUT PATH CONFIGURATION ---
 
     // 3. Connect DAC output to the Pin Complex input connection list (Index 0)
+    // This assumes the DAC is connected to the first input of the Pin Complex (index 0)
     status = hda_send_imm_cmd(codec_addr, out_pin_node, 0x70100 | 0x0, &res);
     if (!status) return status;
 
@@ -321,6 +371,7 @@ uint8_t hda_configure_codec_path(uint8_t codec_addr) {
 
     // 6. Connect Pin Complex (or mixer/source) to the ADC input connection list (Index 0)
     // Verb 0x70100 sets the connection select for the widget
+    // This assumes the ADC is connected to the first input of the Pin Complex (index 0)
     status = hda_send_imm_cmd(codec_addr, adc_node, 0x70100 | 0x0, &res);
     if (!status) return status;
 
