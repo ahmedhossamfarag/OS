@@ -117,3 +117,10 @@ typedef struct
 
 
 void hda_init();
+
+
+uint8_t hda_play_sound(void* buffer, uint32_t size, uint64_t cr3, void (*on_complete)());
+
+uint8_t hda_record_sound(void* buffer, uint32_t size, uint64_t cr3, void (*on_complete)());
+
+void hda_clear_args();

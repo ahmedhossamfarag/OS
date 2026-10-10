@@ -39,6 +39,7 @@ static struct {
     uint32_t read_offset; // Output stream
     uint32_t write_offset; // Input stream
     uint8_t is_running;
+    void (*on_complete)();
 } hda_args;
 
 #define wait(x) for (int i = 0; i < x; i++)
@@ -513,7 +514,7 @@ uint32_t get_current_buffer_index(uint8_t stream_idx, uint8_t is_input) {
     return bdl_index % HDA_N_BDL;
 }
 
-uint8_t hda_play_sound(void* buffer, uint32_t size, uint64_t cr3) {
+uint8_t hda_play_sound(void* buffer, uint32_t size, uint64_t cr3, void (*on_complete)()) {
     if(!buffer || size < BDL_BUFFER_LN) return 0;
     if (hda_args.is_running) return 0;
 
@@ -522,6 +523,7 @@ uint8_t hda_play_sound(void* buffer, uint32_t size, uint64_t cr3) {
     hda_args.buffer = buffer;
     hda_args.cr3 = cr3;
     hda_args.size = size - (size % BDL_BUFFER_LN);
+    hda_args.on_complete = on_complete;
 
     void* bdl_buffer = (void*) oss_bdls[0][0].address;
 
@@ -538,7 +540,7 @@ uint8_t hda_play_sound(void* buffer, uint32_t size, uint64_t cr3) {
     return 0;
 }
 
-uint8_t hda_record_sound(void* buffer, uint32_t size, uint64_t cr3) {
+uint8_t hda_record_sound(void* buffer, uint32_t size, uint64_t cr3, void (*on_complete)()) {
     if(!buffer || size < BDL_BUFFER_LN) return 0;
     if (hda_args.is_running) return 0;
 
@@ -547,6 +549,7 @@ uint8_t hda_record_sound(void* buffer, uint32_t size, uint64_t cr3) {
     hda_args.buffer = buffer;
     hda_args.cr3 = cr3;
     hda_args.size = size - (size % BDL_BUFFER_LN);
+    hda_args.on_complete = on_complete;
 
     hda_args.read_offset = 0;
     hda_args.write_offset = 0;
@@ -559,12 +562,31 @@ uint8_t hda_record_sound(void* buffer, uint32_t size, uint64_t cr3) {
     return 0;
 }
 
+void hda_clear_args(){
+    if(hda_args.is_running){
+        hda_stop_stream(hda_args.stream_id, hda_args.type);
+        hda_args.is_running = 0;
+    }
+
+    hda_args.on_complete = 0;
+    hda_args.buffer = 0;
+    hda_args.size = 0;
+    hda_args.read_offset = 0;
+    hda_args.write_offset = 0;
+    hda_args.stream_id = 0;
+    hda_args.type = 0;
+    hda_args.cr3 = 0;
+}
+
 void handle_read_complete(){
     if(!hda_args.is_running) return;
 
     if (hda_args.read_offset + BDL_BUFFER_LN >= hda_args.size) {
         hda_stop_stream(hda_args.stream_id, hda_args.type);
         hda_args.is_running = 0;
+        if (hda_args.on_complete){
+            hda_args.on_complete();
+        }
         return;
     }
 
@@ -596,6 +618,9 @@ void handle_write_complete(){
     if (hda_args.write_offset + BDL_BUFFER_LN >= hda_args.size) {
         hda_stop_stream(hda_args.stream_id, hda_args.type);
         hda_args.is_running = 0;
+        if (hda_args.on_complete){
+            hda_args.on_complete();
+        }
         return;
     }
 

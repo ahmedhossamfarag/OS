@@ -32,3 +32,7 @@ syscall_map:
     .quad redraw_window_handler #0x1C
     .quad update_window_bounds_handler #0x1D
     .quad 0 #0x1E
+    .quad play_sound_handler #0x1F
+    .quad record_sound_handler #0x20
+    .quad clear_sound_handler #0x21
+    .quad 0 #0x22
