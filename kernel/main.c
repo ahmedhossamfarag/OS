@@ -12,6 +12,7 @@
 #include "resources.h"
 #include "libc.h"
 #include "paging.h"
+#include "pages.h"
 #include "interrupt_handler.h"
 #include "loader.h"
 #include "apic.h"
@@ -47,6 +48,8 @@ void init()
     graphics_init();
     windows_init();
     mouse_init();
+    pci_init();
+    pages_alloc_drivers();
 }
 
 
@@ -118,9 +121,7 @@ int kernel_main()
     vga_print_clear(0);
     println("Welcome To kernel");
 
-    pci_init();
-
-    // load_program(loader_success, loader_error);
+    load_program(loader_success, loader_error);
 
     while (1);
 
