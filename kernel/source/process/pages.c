@@ -32,12 +32,14 @@ static void pages_alloc_kernel(){
 void pages_alloc_drivers(){
     if(apic_available()){
         uint64_t base = apic_get_phys_memo_base();
-        pg_arr[base / SEGMENT_SIZE] = 0;
+        if ((base / SEGMENT_SIZE) < segment_no) 
+            pg_arr[base / SEGMENT_SIZE] = 0;
     }
 
     if(hda_available()){
         uint64_t base = hda_get_phys_memo_base();
-        pg_arr[base / SEGMENT_SIZE] = 0;
+        if ((base / SEGMENT_SIZE) < segment_no) 
+            pg_arr[base / SEGMENT_SIZE] = 0;
     }
 }
 

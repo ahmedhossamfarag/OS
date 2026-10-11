@@ -4,6 +4,7 @@
 #include "apic.h"
 #include "interrupt.h"
 #include "libc.h"
+#include "info.h"
 
 extern uint16_t hda_vendorId;
 extern uint16_t hda_deviceId;
@@ -116,8 +117,8 @@ static void hda_init_corb_rirb(){
     corb = (hda_corb_entry_t*) alloc_align(corb_sz*sizeof(hda_corb_entry_t), 128);
     rirb = (hda_rirb_entry_t*) alloc_align(rirb_sz*sizeof(hda_rirb_entry_t), 128);
 
-    hda_write_dword(HDA_CORBADDR, (uint64_t)corb & 0xFFFFFFFF); // write corb address
-    hda_write_dword(HDA_RIRBADDR, (uint64_t)rirb & 0xFFFFFFFF); // write rib address
+    hda_write_dword(HDA_CORBADDR, MEMORY_VIRT_TO_PHYS((uint64_t)corb) & 0xFFFFFFFF); // write corb address
+    hda_write_dword(HDA_RIRBADDR, MEMORY_VIRT_TO_PHYS((uint64_t)rirb) & 0xFFFFFFFF); // write rib address
 
     hda_write_word(HDA_CORBWP, 0); // reset corb write pointer
     hda_write_word(HDA_CORBRP, 1 << 15); // reset corb read pointer
@@ -197,14 +198,15 @@ void hda_init_bdl(){
         hda_bdl_entry_t* bdl = (hda_bdl_entry_t*)alloc_align(HDA_N_BDL*sizeof(hda_bdl_entry_t), 128);
         for (uint8_t j = 0; j < HDA_N_BDL; j++)
         {
-            bdl[j].address = (uint64_t) alloc_align(BDL_BUFFER_LN, 128) & 0xFFFFFFFF;
+            uint64_t virt_addr = (uint64_t) alloc_align(BDL_BUFFER_LN, 128);
+            bdl[j].address = MEMORY_VIRT_TO_PHYS(virt_addr) & 0xFFFFFFFF;
             bdl[j].length = BDL_BUFFER_LN;
             bdl[j].ioc = 1;
         }
 
         iss_bdls[i] = bdl;
         
-        hda_write_dword(HDA_ISDnBDPL(i), (uint64_t)bdl & 0xFFFFFFFF);
+        hda_write_dword(HDA_ISDnBDPL(i), MEMORY_VIRT_TO_PHYS((uint64_t)bdl) & 0xFFFFFFFF);
         hda_write_word(HDA_ISDnLVI(i), HDA_N_BDL-1);
         hda_write_dword(HDA_ISDnCBL(i), cbl);
         hda_write_word(HDA_ISDnFMT(i), SD_FMT);
@@ -220,14 +222,15 @@ void hda_init_bdl(){
         hda_bdl_entry_t* bdl = (hda_bdl_entry_t*)alloc_align(HDA_N_BDL*sizeof(hda_bdl_entry_t), 128);
         for (uint8_t j = 0; j < HDA_N_BDL; j++)
         {
-            bdl[j].address = (uint64_t)alloc_align(BDL_BUFFER_LN, 128) & 0xFFFFFFFF;
+            uint64_t virt_addr = (uint64_t) alloc_align(BDL_BUFFER_LN, 128);
+            bdl[j].address = MEMORY_VIRT_TO_PHYS(virt_addr) & 0xFFFFFFFF;
             bdl[j].length = BDL_BUFFER_LN;
             bdl[j].ioc = 1;
         }
 
         oss_bdls[i] = bdl;
 
-        hda_write_dword(HDA_OSDnBDPL(i), (uint64_t)bdl & 0xFFFFFFFF);
+        hda_write_dword(HDA_OSDnBDPL(i), MEMORY_VIRT_TO_PHYS((uint64_t)bdl) & 0xFFFFFFFF);
         hda_write_word(HDA_OSDnLVI(i), HDA_N_BDL-1);
         hda_write_dword(HDA_OSDnCBL(i), cbl);
         hda_write_word(HDA_OSDnFMT(i), SD_FMT);  
@@ -525,7 +528,7 @@ uint8_t hda_play_sound(void* buffer, uint32_t size, uint64_t cr3, void (*on_comp
     hda_args.size = size - (size % BDL_BUFFER_LN);
     hda_args.on_complete = on_complete;
 
-    void* bdl_buffer = (void*) oss_bdls[0][0].address;
+    void* bdl_buffer = (void*) MEMORY_PHYS_TO_VIRT(oss_bdls[0][0].address);
 
     mem_copy((char*) buffer, (char*) bdl_buffer, BDL_BUFFER_LN);
 
@@ -597,7 +600,7 @@ void handle_read_complete(){
     hda_args.read_offset += BDL_BUFFER_LN;
     hda_args.buffer += BDL_BUFFER_LN;
 
-    void* bdl_buffer = (void*) oss_bdls[0][0].address;
+    void* bdl_buffer = (void*) MEMORY_PHYS_TO_VIRT(oss_bdls[0][0].address);
     mem_copy((char*) hda_args.buffer, (char*) bdl_buffer, BDL_BUFFER_LN);
 
     asm volatile("mov %0, %%cr3" : : "r"(current_cr3));
@@ -610,7 +613,7 @@ void handle_write_complete(){
     asm volatile("mov %%cr3, %0" : "=r"(current_cr3));
     asm volatile("mov %0, %%cr3" : : "r"(hda_args.cr3));
 
-    void* bdl_buffer = (void*) iss_bdls[0][0].address;
+    void* bdl_buffer = (void*) MEMORY_PHYS_TO_VIRT(iss_bdls[0][0].address);
     mem_copy((char*) bdl_buffer, (char*) hda_args.buffer, BDL_BUFFER_LN);
 
     asm volatile("mov %0, %%cr3" : : "r"(current_cr3));
@@ -721,5 +724,5 @@ uint8_t hda_available(){
 }
 
 uint64_t hda_get_phys_memo_base(){
-    return hda_memory_bar;
+    return MEMORY_VIRT_TO_PHYS(hda_memory_bar);
 }

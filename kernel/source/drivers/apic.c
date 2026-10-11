@@ -39,7 +39,7 @@ uint8_t apic_available(){
 }
 
 uint64_t apic_get_phys_memo_base(){
-    return (uint64_t)lapic;
+    return MEMORY_VIRT_TO_PHYS((uint64_t)lapic);
 }
 
 void enable_apic(){
