@@ -2,8 +2,6 @@
 #include "low_level.h"
 #include "memory.h"
 #include "libc.h"
-#include "vga_print.h"
-#include "strlib.h"
 
 extern uint16_t ethernet_vendorId;
 extern uint16_t ethernet_deviseId;
@@ -12,6 +10,7 @@ extern uint8_t ethernet_irq;
 e1000_tx_desc_t *tx_desc;
 e1000_rx_desc_t *rx_desc;
 uint32_t tx_next_desc;
+uint32_t rx_next_desc;
 
 void ethernet_write_reg(uint32_t reg, uint32_t value)
 {
@@ -46,8 +45,8 @@ void ethernet_rx_init(uint64_t receive_desc_address, uint32_t receive_desc_lengt
     ethernet_write_reg(RDBAH, receive_desc_address >> 32);
     ethernet_write_reg(RDLEN, receive_desc_length);
     ethernet_write_reg(RDH, 0);
-    ethernet_write_reg(RDT, receive_desc_length - 1);
-    ethernet_write_reg(RCTL, RCTL_EN | RCTL_BAM | RCTL_BSIZE_2048 | RCTL_SECRC);
+    ethernet_write_reg(RDT, N_DESC - 1);
+    ethernet_write_reg(RCTL, RCTL_EN | RCTL_BAM | RCTL_BSIZE_2048 | RCTL_SECRC | RCTL_UPE);
 }
 
 void ethernet_tx_init(uint64_t transmit_desc_address, uint32_t transmit_desc_length)
@@ -62,10 +61,13 @@ void ethernet_tx_init(uint64_t transmit_desc_address, uint32_t transmit_desc_len
 
 void ethernet_alloc_tx_desc(){
     tx_desc = (e1000_tx_desc_t *)alloc_align(sizeof(e1000_tx_desc_t) * N_DESC, 128);
-
     mem_set((char *)tx_desc, 0, sizeof(e1000_tx_desc_t) * N_DESC);
 
+    char *tx_buffer = (char *)alloc_align(RX_BUFFER_SIZE * N_DESC, 128);
+
     for(int i = 0; i < N_DESC; i++){
+        tx_desc[i].buffer_addr = (uint64_t)tx_buffer + i * RX_BUFFER_SIZE;
+        tx_desc[i].length = RX_BUFFER_SIZE;
         tx_desc[i].status = TXD_STAT_DD;
     }
 
@@ -87,6 +89,8 @@ void ethernet_alloc_rx_desc(){
     }
 
     ethernet_rx_init((uint64_t)rx_desc, sizeof(e1000_rx_desc_t) * N_DESC);
+
+    rx_next_desc = 0;
 }
 
 void ethernet_enable_interrupts()
@@ -103,16 +107,15 @@ uint8_t ethernet_send_packet(void *packet, uint32_t length)
 {
     e1000_tx_desc_t* desc = tx_desc + tx_next_desc;
 
-    print("Sending packet\n");
-    print("Status: ");
-    println(sxint(desc->status));
-    print("TCTL: ");
-    println(sxint(ethernet_read_reg(TCTL)));
-
     if (!(desc->status & TXD_STAT_DD))
         return 0;
 
-    desc->buffer_addr = (uint64_t)packet;
+    if (length > RX_BUFFER_SIZE){
+        return 0;
+    }
+
+    mem_copy((char*) packet, (char*) desc->buffer_addr, length);
+
     desc->length = length;
     desc->cmd = TXD_CMD_EOP | TXD_CMD_IFCS | TXD_CMD_RS;
     desc->status = 0;
@@ -125,40 +128,40 @@ uint8_t ethernet_send_packet(void *packet, uint32_t length)
 
     uint32_t timeout = 1000000;
     while(timeout--){
-        if(desc->status & TXD_STAT_DD){
+        if(((volatile e1000_tx_desc_t*)desc)->status & TXD_STAT_DD){
             tx_next_desc = next_desc;
             return 1;
         }
     }
-    print("Timeout\n");
+
     return 0;
 }
 
-void ethernet_test(){
-    #define RCTL_LBM_MASK (3u << 6)
+uint8_t ethernet_receive_packet(void *packet){
+    for (unsigned attempt = 0; attempt < 1000000; attempt++) {
+        volatile e1000_rx_desc_t *d = &rx_desc[rx_next_desc];
+        if (d->status & RXD_STAT_DD) {
+            if ((d->status & RXD_STAT_EOP) && d->errors == 0) {
+                mem_copy(
+                    (char*) rx_desc[rx_next_desc].buffer_addr, 
+                    (char*) packet, 
+                    rx_desc[rx_next_desc].length
+                );
+            }
 
-    uint32_t rctl = ethernet_read_reg(RCTL);
-    rctl &= ~RCTL_LBM_MASK;
-    rctl |= RCTL_LBM_MAC | RCTL_EN | RCTL_BAM | RCTL_SECRC;
-    ethernet_write_reg(RCTL, rctl);
+            // Recycle the descriptor after processing its packet.
+            d->status = 0;
+            d->errors = 0;
 
-    uint8_t* test_frame = (uint8_t*) alloc_align(60, 128);
+            ethernet_write_reg(RDT, rx_next_desc);
 
-    for (int i = 0; i < 6; i++)
-        test_frame[i] = 0xFF;          // Destination: broadcast
+            rx_next_desc = (rx_next_desc + 1) % N_DESC;
+            
+            return 1;
+        }
+    }
 
-    uint64_t mac = ethernet_read_mac();
-
-    mem_copy((char*)&test_frame[6], (char*) &mac, 6);    // Your NIC's source MAC
-
-    test_frame[12] = 0x88;             // Experimental EtherType
-    test_frame[13] = 0xB5;
-
-    mem_copy((char*)&test_frame[14], (char*) "Hello, world!", 13);  // Payload
-
-    uint8_t result = ethernet_send_packet(test_frame, 60);
-    print("Send result: ");
-    println(sxint(result));
+    return 0;
 }
 
 void ethernet_init()
@@ -167,40 +170,14 @@ void ethernet_init()
         return;
     }
 
-    print("Ethernet init\n");
-    print("Vendor ID: ");
-    println(sxint(ethernet_vendorId));
-    print("Device ID: ");
-    println(sxint(ethernet_deviseId));
-    print("Memory BAR: ");
-    println(sxint(ethernet_memory_bar));
-    print("IRQ: ");
-    println(sxint(ethernet_irq));
-
-    uint32_t ctrl = ethernet_read_reg(CTRL);
-    print("CTRL: ");
-    println(sxint(ctrl));
-
-    uint32_t status = ethernet_read_reg(STATUS);
-    print("STATUS: ");
-    println(sxint(status));
-
-    uint64_t mac = ethernet_read_mac();
-    print("MAC: ");
-    println(sxint(mac));
-
     ethernet_write_reg(CTRL, CTRL_RESET);
     uint32_t timeout = 1000;
     while ((ethernet_read_reg(CTRL) & CTRL_RESET) && timeout--);
-
-    print("Resetted");
 
     ethernet_alloc_tx_desc();
     ethernet_alloc_rx_desc();
     ethernet_enable_interrupts();
     ethernet_start();
-
-    ethernet_test();
 }
 
 uint8_t ethernet_available(){
