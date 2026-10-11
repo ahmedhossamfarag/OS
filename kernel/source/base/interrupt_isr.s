@@ -186,3 +186,7 @@ isr_state schedule_thread_terminated
 ;# System Call Interrupt Service Routines
 
 isr_state syscall_handler
+
+;# Drivers Interrupt Service Routines
+
+isr_state hda_handler

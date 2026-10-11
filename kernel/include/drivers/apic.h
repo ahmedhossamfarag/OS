@@ -49,6 +49,10 @@
 
 void apic_init();
 
+uint8_t apic_available();
+
+uint64_t apic_get_phys_memo_base();
+
 void set_lapic(uint32_t offset, uint32_t value);
 
 uint32_t get_lapic(uint32_t offset);
@@ -73,6 +77,8 @@ void set_ioapic(uint32_t offset, uint32_t value);
 uint32_t get_ioapic(uint32_t offset);
 
 void ioapic_init();
+
+void ioapic_set_irq(uint8_t irq, uint32_t vector, uint32_t apic_id);
 
 void enable_apic();
 

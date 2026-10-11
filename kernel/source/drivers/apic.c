@@ -34,6 +34,13 @@ void apic_init()
     }
 }
 
+uint8_t apic_available(){
+    return apic_detected;
+}
+
+uint64_t apic_get_phys_memo_base(){
+    return (uint64_t)lapic;
+}
 
 void enable_apic(){
     if(apic_detected){

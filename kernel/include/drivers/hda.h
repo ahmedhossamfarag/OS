@@ -68,6 +68,25 @@
 #define HDA_ICR     0x64 // Immediate Command Read // 4 bytes
 #define HDA_ICS     0x68 // Immediate Command Status // 2 byte
 
+#define AC_WID_AUD_OUT      0x0
+#define AC_WID_AUD_IN       0x1
+#define AC_WID_AUD_MIXER    0x2
+#define AC_WID_AUD_SEL      0x3
+#define AC_WID_PIN          0x4
+#define AC_WID_POWER        0x5
+#define AC_WID_VOL_KNB      0x6
+#define AC_WID_BEEP         0x7
+#define AC_WID_VENDOR       0xF
+
+#define PIN_INPUT_CAP       0x20
+#define PIN_OUTPUT_CAP      0x10
+
+#define AFG_NODE_ID 0x01    // Audio Function Group
+
+#define HDA_N_BDL 1
+#define BDL_BUFFER_LN 0x1000
+#define SD_FMT 0x11
+
 #pragma endregion
 
 #include <stdint.h>
@@ -98,3 +117,13 @@ typedef struct
 
 
 void hda_init();
+
+uint8_t hda_available();
+
+uint64_t hda_get_phys_memo_base();
+
+uint8_t hda_play_sound(void* buffer, uint32_t size, uint64_t cr3, void (*on_complete)());
+
+uint8_t hda_record_sound(void* buffer, uint32_t size, uint64_t cr3, void (*on_complete)());
+
+void hda_clear_args();

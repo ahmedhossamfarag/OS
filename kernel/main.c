@@ -117,8 +117,10 @@ int kernel_main()
     ap_setup();
     vga_print_clear(0);
     println("Welcome To kernel");
-    
-    load_program(loader_success, loader_error);
+
+    pci_init();
+
+    // load_program(loader_success, loader_error);
 
     while (1);
 
