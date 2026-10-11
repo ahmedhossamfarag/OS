@@ -97,9 +97,12 @@ void pci_init()
             }
         }
     }
-    // ethernet_init();
     
     if(hda_memory_bar){
         hda_init();
+    }
+
+    if(ethernet_memory_bar){
+        ethernet_init();
     }
 }

@@ -65,6 +65,7 @@
 #define RCTL_BSIZE_16384  (1 << 16) // Receive Buffer Size 16384
 #define RCTL_BSIZE_8192   (2 << 16) // Receive Buffer Size 8192
 #define RCTL_BSIZE_4096   (3 << 16) // Receive Buffer Size 4096
+#define RCTL_SECRC (1u << 26)  // Strip Ethernet CRC from received packets
 
 // TCTL Register Bits
 #define TCTL_EN           (1 << 1)  // Transmit Enable
@@ -73,10 +74,20 @@
 #define TCTL_COLD_SHIFT   12        // Collision Distance
 #define TCTL_SWXOFF       (1 << 22) // Software XOFF Transmission
 #define TCTL_RTLC         (1 << 24) // Re-transmit on Late Collision
+#define TCTL_CT(v)   ((uint32_t)(v) << TCTL_CT_SHIFT)  // Collision Threshold
+#define TCTL_COLD(v) ((uint32_t)(v) << TCTL_COLD_SHIFT) // Collision Distance
 
 // TX CMD
 #define TXD_CMD_EOP  0x01 // End of Packet
 #define TXD_CMD_RS   0x08 // Report Status
+#define TXD_CMD_IFCS 0x02  // Insert Ethernet FCS
+
+// TX STATUS
+#define TXD_STAT_DD  0x01  // Descriptor done
+
+// RX STATUS
+#define RXD_STAT_DD  0x01
+#define RXD_STAT_EOP 0x02
 
 // IMS/ICR/IMC Register Bits
 #define IMS_TXDW          (1 << 0)  // Transmit Descriptor Written Back
@@ -98,8 +109,9 @@
 
 #pragma endregion
 
-#define N_DESC 1
+#define N_DESC 8
 #define RX_RING_SIZE (N_DESC*16) // n descriptors, each 16 bytes
+#define RX_BUFFER_SIZE 0x1000
 
 #include <stdint.h>
 
@@ -127,4 +139,8 @@ typedef struct  {
 
 void ethernet_init();
 
-void ethernet_send_packet(void* packet, uint32_t length);
+uint8_t ethernet_available();
+
+uint64_t ethernet_get_phys_memo_base();
+
+uint8_t ethernet_send_packet(void* packet, uint32_t length);
