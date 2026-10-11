@@ -5,6 +5,8 @@
 
 void pages_init();
 
+void pages_alloc_drivers();
+
 uint64_t pages_alloc();
 
 uint64_t pages_alloc_next(uint64_t seg);

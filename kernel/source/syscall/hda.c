@@ -17,6 +17,11 @@ void awake_hda_waiting_thread(){
 }
 
 void play_sound_handler(cpu_state_t* state){
+    if(!hda_available()){
+        state->rax = 0;
+        return;
+    }
+
     thread_t* thread = get_current_thread();
 
     uint64_t* buffer = (uint64_t*) state->rdx;
@@ -39,6 +44,11 @@ void play_sound_handler(cpu_state_t* state){
 }
 
 void record_sound_handler(cpu_state_t* state){
+    if(!hda_available()){
+        state->rax = 0;
+        return;
+    }
+
     thread_t* thread = get_current_thread();
 
     uint64_t* buffer = (uint64_t*) state->rdx;
@@ -61,6 +71,10 @@ void record_sound_handler(cpu_state_t* state){
 }
 
 void clear_sound_handler(cpu_state_t*){
+    if(!hda_available()){
+        return;
+    }
+    
     thread_t* thread = get_current_thread();
     resource_lock_request(hda_lock, thread);
     hda_clear_args();

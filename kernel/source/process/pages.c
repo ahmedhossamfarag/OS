@@ -1,6 +1,8 @@
 #include "pages.h"
 #include "memory.h"
 #include "info.h"
+#include "apic.h"
+#include "hda.h"
 
 static uint8_t* pg_arr;
 
@@ -18,17 +20,24 @@ static void pages_alloc_kernel(){
     {
         pg_arr[i] = 0;
     }
-    
-    for (uint32_t i = DRIVERS_OFFSET / SEGMENT_SIZE; i < SEGMENT_NO; i++)
-    {
-        pg_arr[i] = 0;
-    }
 
     for (uint32_t i = info_get_memory_size() / SEGMENT_SIZE; i < SEGMENT_NO; i++)
     {
         pg_arr[i] = 0;
     }
     
+}
+
+void pages_alloc_drivers(){
+    if(apic_available()){
+        uint64_t base = apic_get_phys_memo_base();
+        pg_arr[base / SEGMENT_SIZE] = 0;
+    }
+
+    if(hda_available()){
+        uint64_t base = hda_get_phys_memo_base();
+        pg_arr[base / SEGMENT_SIZE] = 0;
+    }
 }
 
 void pages_init(){

@@ -715,3 +715,11 @@ void hda_init()
 
     hda_configure_codec_path(codec_id);
 }
+
+uint8_t hda_available(){
+    return hda_memory_bar != 0;
+}
+
+uint64_t hda_get_phys_memo_base(){
+    return hda_memory_bar;
+}

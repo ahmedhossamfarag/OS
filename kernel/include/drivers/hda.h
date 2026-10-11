@@ -118,6 +118,9 @@ typedef struct
 
 void hda_init();
 
+uint8_t hda_available();
+
+uint64_t hda_get_phys_memo_base();
 
 uint8_t hda_play_sound(void* buffer, uint32_t size, uint64_t cr3, void (*on_complete)());
 
