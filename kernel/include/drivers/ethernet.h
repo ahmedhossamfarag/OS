@@ -109,8 +109,8 @@
 
 #pragma endregion
 
-#define N_DESC 8
-#define RX_RING_SIZE (N_DESC*16) // n descriptors, each 16 bytes
+#define E1000_N_DESC 8
+#define RX_RING_SIZE (E1000_N_DESC*16) // n descriptors, each 16 bytes
 #define RX_BUFFER_SIZE 0x1000
 
 #include <stdint.h>

@@ -45,8 +45,8 @@ void ethernet_rx_init(uint64_t receive_desc_address, uint32_t receive_desc_lengt
     ethernet_write_reg(RDBAH, receive_desc_address >> 32);
     ethernet_write_reg(RDLEN, receive_desc_length);
     ethernet_write_reg(RDH, 0);
-    ethernet_write_reg(RDT, N_DESC - 1);
-    ethernet_write_reg(RCTL, RCTL_EN | RCTL_BAM | RCTL_BSIZE_2048 | RCTL_SECRC | RCTL_UPE);
+    ethernet_write_reg(RDT, E1000_N_DESC - 1);
+    ethernet_write_reg(RCTL, RCTL_EN | RCTL_BAM | RCTL_BSIZE_2048 | RCTL_SECRC);
 }
 
 void ethernet_tx_init(uint64_t transmit_desc_address, uint32_t transmit_desc_length)
@@ -60,35 +60,35 @@ void ethernet_tx_init(uint64_t transmit_desc_address, uint32_t transmit_desc_len
 }
 
 void ethernet_alloc_tx_desc(){
-    tx_desc = (e1000_tx_desc_t *)alloc_align(sizeof(e1000_tx_desc_t) * N_DESC, 128);
-    mem_set((char *)tx_desc, 0, sizeof(e1000_tx_desc_t) * N_DESC);
+    tx_desc = (e1000_tx_desc_t *)alloc_align(sizeof(e1000_tx_desc_t) * E1000_N_DESC, 128);
+    mem_set((char *)tx_desc, 0, sizeof(e1000_tx_desc_t) * E1000_N_DESC);
 
-    char *tx_buffer = (char *)alloc_align(RX_BUFFER_SIZE * N_DESC, 128);
+    char *tx_buffer = (char *)alloc_align(RX_BUFFER_SIZE * E1000_N_DESC, 128);
 
-    for(int i = 0; i < N_DESC; i++){
+    for(int i = 0; i < E1000_N_DESC; i++){
         tx_desc[i].buffer_addr = (uint64_t)tx_buffer + i * RX_BUFFER_SIZE;
         tx_desc[i].length = RX_BUFFER_SIZE;
         tx_desc[i].status = TXD_STAT_DD;
     }
 
-    ethernet_tx_init((uint64_t)tx_desc, sizeof(e1000_tx_desc_t) * N_DESC);
+    ethernet_tx_init((uint64_t)tx_desc, sizeof(e1000_tx_desc_t) * E1000_N_DESC);
     
     tx_next_desc = 0;
 }
 
 void ethernet_alloc_rx_desc(){
-    rx_desc = (e1000_rx_desc_t *)alloc_align(sizeof(e1000_rx_desc_t) * N_DESC, 128);
-    mem_set((char *)rx_desc, 0, sizeof(e1000_rx_desc_t) * N_DESC);
+    rx_desc = (e1000_rx_desc_t *)alloc_align(sizeof(e1000_rx_desc_t) * E1000_N_DESC, 128);
+    mem_set((char *)rx_desc, 0, sizeof(e1000_rx_desc_t) * E1000_N_DESC);
 
-    char *rx_buffer = (char *)alloc_align(RX_BUFFER_SIZE * N_DESC, 128);
+    char *rx_buffer = (char *)alloc_align(RX_BUFFER_SIZE * E1000_N_DESC, 128);
 
-    for(int i = 0; i < N_DESC; i++){
+    for(int i = 0; i < E1000_N_DESC; i++){
         rx_desc[i].buffer_addr = (uint64_t)rx_buffer + i * RX_BUFFER_SIZE;
         rx_desc[i].length = RX_BUFFER_SIZE;
         rx_desc[i].status = 0;
     }
 
-    ethernet_rx_init((uint64_t)rx_desc, sizeof(e1000_rx_desc_t) * N_DESC);
+    ethernet_rx_init((uint64_t)rx_desc, sizeof(e1000_rx_desc_t) * E1000_N_DESC);
 
     rx_next_desc = 0;
 }
@@ -123,7 +123,7 @@ uint8_t ethernet_send_packet(void *packet, uint32_t length)
     desc->css = 0;
     desc->cso = 0;
 
-    uint32_t next_desc = (tx_next_desc + 1) % N_DESC;
+    uint32_t next_desc = (tx_next_desc + 1) % E1000_N_DESC;
     ethernet_write_reg(TDT, next_desc);
 
     uint32_t timeout = 1000000;
@@ -155,7 +155,7 @@ uint8_t ethernet_receive_packet(void *packet){
 
             ethernet_write_reg(RDT, rx_next_desc);
 
-            rx_next_desc = (rx_next_desc + 1) % N_DESC;
+            rx_next_desc = (rx_next_desc + 1) % E1000_N_DESC;
             
             return 1;
         }
