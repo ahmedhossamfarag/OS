@@ -3,6 +3,9 @@
 #include "ethernet.h"
 #include "hda.h"
 #include "info.h"
+#include "pic.h"
+#include "apic.h"
+#include "interrupt.h"
 
 uint32_t pci_config_address(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset)
 {
@@ -77,6 +80,23 @@ void pci_ethernet_device_init(uint8_t bus, uint8_t device, uint8_t function)
     pci_enable_bus_master(bus, device, function);
 }
 
+void pci_sendEOI(uint8_t irq){
+    if (apic_available())
+        apic_sendEOI();
+    else
+        pic_sendEOI(irq);
+}
+
+void pci_handler(){
+    if (hda_irq && hda_interrupt_handler()){
+        pci_sendEOI(hda_irq);
+    } else if (ethernet_irq && ethernet_interrupt_handler()){
+        pci_sendEOI(ethernet_irq);
+    }
+}
+
+extern void isr_pci_handler();
+
 void pci_init()
 {
     for (int bus = 0; bus < 256; bus++)
@@ -103,9 +123,30 @@ void pci_init()
             }
         }
     }
-    // ethernet_init();
     
     if(hda_memory_bar){
+        // Set the ISR for the HDA IRQ
+        if (hda_irq){
+            idt_set_entry(PIC_M_OFFSET + hda_irq, (uint64_t)isr_pci_handler);
+            irq_clear_mask(hda_irq);
+            if (apic_available()){
+                ioapic_set_irq(hda_irq, PIC_M_OFFSET + hda_irq, 0);
+            }
+        }
+
         hda_init();
+    }
+
+    if(ethernet_memory_bar){
+        // Set up the ISR for the Ethernet IRQ
+        if (ethernet_irq){
+            idt_set_entry(PIC_M_OFFSET + ethernet_irq, (uint64_t)isr_pci_handler);
+            irq_clear_mask(ethernet_irq);
+            if (apic_available()){
+                ioapic_set_irq(ethernet_irq, PIC_M_OFFSET + ethernet_irq, 0);
+            }
+        }
+
+        ethernet_init();
     }
 }

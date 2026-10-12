@@ -65,6 +65,7 @@
 #define RCTL_BSIZE_16384  (1 << 16) // Receive Buffer Size 16384
 #define RCTL_BSIZE_8192   (2 << 16) // Receive Buffer Size 8192
 #define RCTL_BSIZE_4096   (3 << 16) // Receive Buffer Size 4096
+#define RCTL_SECRC (1u << 26)  // Strip Ethernet CRC from received packets
 
 // TCTL Register Bits
 #define TCTL_EN           (1 << 1)  // Transmit Enable
@@ -73,10 +74,20 @@
 #define TCTL_COLD_SHIFT   12        // Collision Distance
 #define TCTL_SWXOFF       (1 << 22) // Software XOFF Transmission
 #define TCTL_RTLC         (1 << 24) // Re-transmit on Late Collision
+#define TCTL_CT(v)   ((uint32_t)(v) << TCTL_CT_SHIFT)  // Collision Threshold
+#define TCTL_COLD(v) ((uint32_t)(v) << TCTL_COLD_SHIFT) // Collision Distance
 
 // TX CMD
 #define TXD_CMD_EOP  0x01 // End of Packet
 #define TXD_CMD_RS   0x08 // Report Status
+#define TXD_CMD_IFCS 0x02  // Insert Ethernet FCS
+
+// TX STATUS
+#define TXD_STAT_DD  0x01  // Descriptor done
+
+// RX STATUS
+#define RXD_STAT_DD  0x01
+#define RXD_STAT_EOP 0x02
 
 // IMS/ICR/IMC Register Bits
 #define IMS_TXDW          (1 << 0)  // Transmit Descriptor Written Back
@@ -86,6 +97,13 @@
 #define IMS_RXDMT0        (1 << 4)  // Receive Descriptor Minimum Threshold Reached
 #define IMS_RXO           (1 << 6)  // Receive Overrun
 #define IMS_RXT           (1 << 7)  // Receiver Timer Interrupt
+#define E1000_ICR_TXDW      (1 << 0) // Transmit Descriptor Written Back
+#define E1000_ICR_TXQE      (1 << 1) // Transmit Queue Empty
+#define E1000_ICR_LSC       (1 << 2) // Link Status Change
+#define E1000_ICR_RXSEQ     (1 << 3) // Receive Sequence Error
+#define E1000_ICR_RXDMT0    (1 << 4) // Receive Descriptor Minimum Threshold Reached
+#define E1000_ICR_RXO       (1 << 6) // Receive Overrun
+#define E1000_ICR_RXT0      (1 << 7) // Receiver Timer Interrupt
 
 // Other Constants
 #define E1000_RCTL_BSIZE_256   0x00030000
@@ -98,8 +116,9 @@
 
 #pragma endregion
 
-#define N_DESC 1
-#define RX_RING_SIZE (N_DESC*16) // n descriptors, each 16 bytes
+#define E1000_N_DESC 8
+#define RX_RING_SIZE (E1000_N_DESC*16) // n descriptors, each 16 bytes
+#define RX_BUFFER_SIZE 0x1000
 
 #include <stdint.h>
 
@@ -127,4 +146,10 @@ typedef struct  {
 
 void ethernet_init();
 
-void ethernet_send_packet(void* packet, uint32_t length);
+uint8_t ethernet_available();
+
+uint64_t ethernet_get_phys_memo_base();
+
+uint8_t ethernet_send_packet(void* packet, uint32_t length);
+
+uint8_t ethernet_interrupt_handler();

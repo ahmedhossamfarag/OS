@@ -632,7 +632,7 @@ void handle_write_complete(){
 
 }
 
-void hda_handler(){
+uint8_t hda_interrupt_handler(){
     // 1. Read Global Interrupt Status
     uint32_t intsts = hda_read_dword(HDA_INTSTS);
     
@@ -665,19 +665,15 @@ void hda_handler(){
                 hda_write_byte(HDA_OSDnSTS(i), sdsts);
             }
         }
-    }
-    pic_sendEOI(hda_irq);
-    apic_sendEOI();
-}
 
-extern void isr_hda_handler();
+        return 1;
+    }
+
+    return 0;
+}
 
 void hda_init()
 {
-    idt_set_entry(PIC_M_OFFSET + hda_irq, (uint64_t)isr_hda_handler);
-    irq_clear_mask(hda_irq);
-    ioapic_set_irq(hda_irq, PIC_M_OFFSET + hda_irq, 0);
-
     // Assert reset: CRST = 0
     hda_write_dword(HDA_GCTL,
                 hda_read_dword(HDA_GCTL) & ~HDA_GCTL_CRST);

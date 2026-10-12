@@ -189,4 +189,4 @@ isr_state syscall_handler
 
 ;# Drivers Interrupt Service Routines
 
-isr_state hda_handler
+isr_state pci_handler
