@@ -3,6 +3,7 @@
 #include "info.h"
 #include "apic.h"
 #include "hda.h"
+#include "ethernet.h"
 
 static uint8_t* pg_arr;
 
@@ -31,12 +32,20 @@ static void pages_alloc_kernel(){
 void pages_alloc_drivers(){
     if(apic_available()){
         uint64_t base = apic_get_phys_memo_base();
-        pg_arr[base / SEGMENT_SIZE] = 0;
+        if ((base / SEGMENT_SIZE) < SEGMENT_NO)
+            pg_arr[base / SEGMENT_SIZE] = 0;
     }
 
     if(hda_available()){
         uint64_t base = hda_get_phys_memo_base();
-        pg_arr[base / SEGMENT_SIZE] = 0;
+        if ((base / SEGMENT_SIZE) < SEGMENT_NO)
+            pg_arr[base / SEGMENT_SIZE] = 0;
+    }
+
+    if(ethernet_available()){
+        uint64_t base = ethernet_get_phys_memo_base();
+        if ((base / SEGMENT_SIZE) < SEGMENT_NO)
+            pg_arr[base / SEGMENT_SIZE] = 0;
     }
 }
 

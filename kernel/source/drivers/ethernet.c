@@ -187,3 +187,41 @@ uint8_t ethernet_available(){
 uint64_t ethernet_get_phys_memo_base(){
     return ethernet_memory_bar;
 }
+
+uint8_t ethernet_interrupt_handler(){
+    uint32_t cause = ethernet_read_reg(ICR);
+
+    if (cause){
+        if (cause & E1000_ICR_RXT0) {
+            // TODO: Handle RX timeout
+        }
+
+        if (cause & E1000_ICR_RXDMT0) {
+            // TODO: Handle RX DMA
+        }
+
+        if (cause & E1000_ICR_TXDW) {
+            // TODO: Handle TX DMA
+        }
+
+        if (cause & E1000_ICR_TXQE) {
+            // TODO: Handle TX DMA
+        }
+
+        if (cause & E1000_ICR_LSC) {
+            // TODO: Handle Link Status Change
+        }
+
+        if (cause & E1000_ICR_RXO) {
+            // TODO: Handle RX Overrun
+        }
+
+        if (cause & E1000_ICR_RXSEQ) {
+            // TODO: Handle RX Sequence Error
+        }
+
+        return 1;
+    }
+
+    return 0;
+}

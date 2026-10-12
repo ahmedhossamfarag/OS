@@ -97,6 +97,13 @@
 #define IMS_RXDMT0        (1 << 4)  // Receive Descriptor Minimum Threshold Reached
 #define IMS_RXO           (1 << 6)  // Receive Overrun
 #define IMS_RXT           (1 << 7)  // Receiver Timer Interrupt
+#define E1000_ICR_TXDW      (1 << 0) // Transmit Descriptor Written Back
+#define E1000_ICR_TXQE      (1 << 1) // Transmit Queue Empty
+#define E1000_ICR_LSC       (1 << 2) // Link Status Change
+#define E1000_ICR_RXSEQ     (1 << 3) // Receive Sequence Error
+#define E1000_ICR_RXDMT0    (1 << 4) // Receive Descriptor Minimum Threshold Reached
+#define E1000_ICR_RXO       (1 << 6) // Receive Overrun
+#define E1000_ICR_RXT0      (1 << 7) // Receiver Timer Interrupt
 
 // Other Constants
 #define E1000_RCTL_BSIZE_256   0x00030000
@@ -144,3 +151,5 @@ uint8_t ethernet_available();
 uint64_t ethernet_get_phys_memo_base();
 
 uint8_t ethernet_send_packet(void* packet, uint32_t length);
+
+uint8_t ethernet_interrupt_handler();
