@@ -82,9 +82,9 @@ void pci_sendEOI(uint8_t irq){
 }
 
 void pci_handler(){
-    if (hda_interrupt_handler()){
+    if (hda_irq && hda_interrupt_handler()){
         pci_sendEOI(hda_irq);
-    } else if (ethernet_interrupt_handler()){
+    } else if (ethernet_irq && ethernet_interrupt_handler()){
         pci_sendEOI(ethernet_irq);
     }
 }

@@ -95,7 +95,7 @@ void ethernet_alloc_rx_desc(){
 
 void ethernet_enable_interrupts()
 {
-    ethernet_write_reg(IMS, IMS_RXT | IMS_TXDW);
+    ethernet_write_reg(IMS, IMS_TXDW | IMS_TXQE | IMS_LSC | IMS_RXSEQ | IMS_RXDMT0 | IMS_RXO | IMS_RXT);
 }
 
 void ethernet_start()

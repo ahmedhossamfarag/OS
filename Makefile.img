@@ -53,9 +53,9 @@ run: copy
     -pflash $(OVMF_VARS) \
     -m 2048M \
 	-smp 4 \
-#     -audiodev pa,id=audio0 \
-#   	-device intel-hda \
-#   	-device hda-duplex,audiodev=audio0 \
+    -audiodev pa,id=audio0 \
+   	-device intel-hda \
+   	-device hda-duplex,audiodev=audio0 \
 	-netdev user,id=net0 \
 	-device e1000,netdev=net0,mac=52:54:00:12:34:56
 
