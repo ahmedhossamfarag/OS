@@ -2,6 +2,7 @@
 #include "low_level.h"
 #include "memory.h"
 #include "libc.h"
+#include "info.h"
 
 extern uint16_t ethernet_vendorId;
 extern uint16_t ethernet_deviseId;
@@ -63,7 +64,8 @@ void ethernet_alloc_tx_desc(){
     tx_desc = (e1000_tx_desc_t *)alloc_align(sizeof(e1000_tx_desc_t) * E1000_N_DESC, 128);
     mem_set((char *)tx_desc, 0, sizeof(e1000_tx_desc_t) * E1000_N_DESC);
 
-    char *tx_buffer = (char *)alloc_align(RX_BUFFER_SIZE * E1000_N_DESC, 128);
+    uint64_t tx_buffer_virt_addr = (uint64_t)alloc_align(RX_BUFFER_SIZE * E1000_N_DESC, 128);
+    char *tx_buffer = (char *) MEMORY_VIRT_TO_PHYS(tx_buffer_virt_addr);
 
     for(int i = 0; i < E1000_N_DESC; i++){
         tx_desc[i].buffer_addr = (uint64_t)tx_buffer + i * RX_BUFFER_SIZE;
@@ -71,7 +73,7 @@ void ethernet_alloc_tx_desc(){
         tx_desc[i].status = TXD_STAT_DD;
     }
 
-    ethernet_tx_init((uint64_t)tx_desc, sizeof(e1000_tx_desc_t) * E1000_N_DESC);
+    ethernet_tx_init(MEMORY_VIRT_TO_PHYS((uint64_t)tx_desc), sizeof(e1000_tx_desc_t) * E1000_N_DESC);
     
     tx_next_desc = 0;
 }
@@ -80,7 +82,8 @@ void ethernet_alloc_rx_desc(){
     rx_desc = (e1000_rx_desc_t *)alloc_align(sizeof(e1000_rx_desc_t) * E1000_N_DESC, 128);
     mem_set((char *)rx_desc, 0, sizeof(e1000_rx_desc_t) * E1000_N_DESC);
 
-    char *rx_buffer = (char *)alloc_align(RX_BUFFER_SIZE * E1000_N_DESC, 128);
+    uint64_t rx_buffer_virt_addr = (uint64_t)alloc_align(RX_BUFFER_SIZE * E1000_N_DESC, 128);
+    char *rx_buffer = (char *) MEMORY_VIRT_TO_PHYS(rx_buffer_virt_addr);
 
     for(int i = 0; i < E1000_N_DESC; i++){
         rx_desc[i].buffer_addr = (uint64_t)rx_buffer + i * RX_BUFFER_SIZE;
@@ -88,7 +91,7 @@ void ethernet_alloc_rx_desc(){
         rx_desc[i].status = 0;
     }
 
-    ethernet_rx_init((uint64_t)rx_desc, sizeof(e1000_rx_desc_t) * E1000_N_DESC);
+    ethernet_rx_init(MEMORY_VIRT_TO_PHYS((uint64_t)rx_desc), sizeof(e1000_rx_desc_t) * E1000_N_DESC);
 
     rx_next_desc = 0;
 }
@@ -114,7 +117,7 @@ uint8_t ethernet_send_packet(void *packet, uint32_t length)
         return 0;
     }
 
-    mem_copy((char*) packet, (char*) desc->buffer_addr, length);
+    mem_copy((char*) packet, (char*) MEMORY_PHYS_TO_VIRT(desc->buffer_addr), length);
 
     desc->length = length;
     desc->cmd = TXD_CMD_EOP | TXD_CMD_IFCS | TXD_CMD_RS;
@@ -143,7 +146,7 @@ uint8_t ethernet_receive_packet(void *packet){
         if (d->status & RXD_STAT_DD) {
             if ((d->status & RXD_STAT_EOP) && d->errors == 0) {
                 mem_copy(
-                    (char*) rx_desc[rx_next_desc].buffer_addr, 
+                    (char*) MEMORY_PHYS_TO_VIRT(rx_desc[rx_next_desc].buffer_addr),
                     (char*) packet, 
                     rx_desc[rx_next_desc].length
                 );
@@ -185,7 +188,7 @@ uint8_t ethernet_available(){
 }
 
 uint64_t ethernet_get_phys_memo_base(){
-    return ethernet_memory_bar;
+    return MEMORY_VIRT_TO_PHYS(ethernet_memory_bar);
 }
 
 uint8_t ethernet_interrupt_handler(){
