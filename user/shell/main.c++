@@ -413,18 +413,18 @@ int main() {
 
     void* handler = register_window(window);
 
-    event_queue_t* queue = event_queue_new(10);
-    event_queue_register(queue);
+    EventQueue* queue = new EventQueue(100);
+    queue->register_event_queue();
 
     while (1)
     {
-        event_t event = event_queue_deque(queue);
+        Event event = queue->deque();
         if (event.type == KEYBOARD_EVENT)
         {
-            if (event.keyboard_info.key_code == ESC)
+            if (event.key_info.key_code == ESC)
             {
                 deregister_window(handler);
-                event_queue_deregister();
+                queue->deregister_event_queue();
                 break;
             }
         }

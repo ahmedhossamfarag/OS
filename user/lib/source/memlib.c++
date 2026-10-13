@@ -196,22 +196,34 @@ void mfree(void* ptr, uint64_t size){
 }
 
 
-void* operator new(uint64_t size) {
-    void* p = malloc(size);
-    return p;
+void* operator new(uint64_t size) noexcept{
+    uint64_t* p = (uint64_t*) malloc(size + sizeof(uint64_t));
+	if(!p) return NULL;
+	*p = size;
+	uint64_t* _p = p + 1;
+    return (void*) _p;
+}
+
+void operator delete(void* p) {
+	uint64_t* _p = ((uint64_t*) p)- 1;
+	uint64_t size = *(_p);
+    mfree(_p, size + sizeof(uint64_t));
 }
 
 // Overloading the global delete operator
 void operator delete(void* p, uint64_t sz) {
-    mfree(p, sz);
+    operator delete(p);
 }
 
-void* operator new[](uint64_t size) {
-    void* p = malloc(size);
-    return p;
+void* operator new[](uint64_t size) noexcept{
+    return operator new(size);
+}
+
+void operator delete[](void* p) {
+	operator delete(p);
 }
 
 // Overloading the global delete operator
 void operator delete[](void* p, uint64_t sz) {
-    mfree(p, sz);
+    operator delete(p);
 }

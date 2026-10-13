@@ -4,13 +4,13 @@ typedef enum{
 	NO_EVENT = 0,
     MOUSE_EVENT = 1,
     KEYBOARD_EVENT = 2
-} event_type_t;
+} EventType;
 
 typedef struct {
 	char character;
 	uint8_t key_code;
 	uint8_t key_release;
-} key_info_t;
+} KeyInfo;
 
 
 enum Key
@@ -45,29 +45,28 @@ typedef struct{
     int16_t delta_y;
     uint16_t mouse_x;
     uint16_t mouse_y;
-} mouse_info_t;
+} MouseInfo;
 
 typedef struct{
-    event_type_t type;
+    EventType type;
     union{
-        mouse_info_t mouse_info;
-        key_info_t keyboard_info;
+        MouseInfo mouse_info;
+        KeyInfo key_info;
     };
-} event_t;
+} Event;
 
-typedef struct{
-    event_t* events;
-    int capacity;
-    int read_index;
-    int write_index;
-} event_queue_t;
-
-event_queue_t* event_queue_new(uint32_t capacity);
-
-uint8_t event_queue_register(event_queue_t* queue);
-
-void event_wait();
-
-uint8_t event_queue_deregister();
-
-event_t event_queue_deque(event_queue_t* queue);
+class EventQueue
+{
+public:
+    EventQueue(uint32_t capacity);
+    ~EventQueue();
+    uint8_t register_event_queue();
+    void wait();
+    uint8_t deregister_event_queue();
+    Event deque();
+private:
+    uint32_t capacity;
+    uint32_t read_index;
+    uint32_t write_index;
+    Event* events;
+};

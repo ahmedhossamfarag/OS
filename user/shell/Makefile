@@ -1,5 +1,5 @@
 IUSER_LIBS = -I../lib/include
-CUSER_LIBS = $(wildcard ../lib/*.c++)
+CUSER_LIBS = $(wildcard ../lib/source/*.c++)
 USER_LIBS_OBJ = ${CUSER_LIBS:.c++=.o}
 
 C_SOURCES = $(shell find . -name '*.c++')
@@ -12,7 +12,7 @@ ASM_OBJ = ${ASM_SOURCES:.asm=.o}
 
 GCC_INCLUDE := ${IUSER_LIBS} -Iinclude
 %.o : %.c++ ${HEADERS}
-	g++ -m64 -nostdlib -nodefaultlibs -c ${GCC_INCLUDE} $< -o $@
+	g++ -m64 -nostdlib -nodefaultlibs -fno-exceptions -fno-rtti -c ${GCC_INCLUDE} $< -o $@
 
 %.o : %.asm
 	nasm $< -f elf64 -o $@
