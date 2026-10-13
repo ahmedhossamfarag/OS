@@ -4,69 +4,67 @@
 
 #pragma region Queue
 
-typedef struct{
-    uint32_t capacity;
-    uint32_t size;
-    uint32_t head;
-    uint32_t tail;
-    void** data;
-} queue_t;
-
-queue_t* queue_new(uint32_t capacity, char* (*alloc)(uint64_t));
-
-void queue_inque(queue_t* queue, void* item);
-
-void* queue_deque(queue_t* queue);
-
-uint8_t queue_remove(queue_t* queue, void* item);
-
-void queue_delete(queue_t* queue, void (*free)(char*,uint64_t));
+template<typename T>
+class Queue{
+    public:
+        Queue(uint32_t capacity);
+        ~Queue();
+        void enque(T item);
+        T deque();
+        bool any();
+        bool remove(T item);
+    private:
+        uint32_t capacity;
+        T* data;
+        uint32_t size;
+        uint32_t head;
+        uint32_t tail;
+};
 
 #pragma endregion
 
 #pragma region Linked List
 
-typedef struct{
-    void* data;
-    void* next_node;
-} list_node_t;
+template<typename T>
+class ListNode{
+    public:
+        ListNode(T data);
+        ~ListNode();
+        T data;
+        ListNode* next_node;
+};
 
-typedef struct{
-    list_node_t* head;
-    list_node_t* tail;
-    char* (*alloc)(uint64_t);
-    void (*free)(char*,uint64_t);
-} list_t;
-
-list_t* list_new(char* (*alloc)(uint64_t), void (*free)(char*,uint64_t));
-
-void list_append(list_t* list, void* item);
-
-void* list_remove_first(list_t* list);
-
-void list_delete(list_t* list);
+template<typename T>
+class List{
+    public:
+        List();
+        ~List();
+        void append(T item);
+        T remove_first();
+        bool any();
+    private:
+        ListNode<T>* head;
+        ListNode<T>* tail;
+};
 
 #pragma endregion
 
 #pragma region Array
 
-typedef struct{
-    uint32_t capacity;
-    uint32_t size;
-    void** data;
-} array_t;
-
-array_t* array_new(uint32_t capacity, char* (*alloc)(uint64_t));
-
-uint8_t array_contains(array_t* arr, void** pntr);
-
-void** array_add(array_t* arr, void* item);
-
-void* array_get(array_t* arr, void** pntr);
-
-uint8_t array_remove(array_t* arr, void** pntr);
-
-void array_delete(array_t* arr, void (*free)(char*,uint64_t));
+template<typename T>
+class Array{
+    public:
+        Array(uint32_t capacity);
+        ~Array();
+        bool contains(T item);
+        void add(T item);
+        void remove(T item);
+        T* begin();
+        T* end();
+    private:
+        uint32_t capacity;
+        uint32_t size;
+        T* data;
+};
 
 #pragma endregion
-
