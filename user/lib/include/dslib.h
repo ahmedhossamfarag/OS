@@ -19,6 +19,7 @@ class Queue{
         uint32_t size;
         uint32_t head;
         uint32_t tail;
+        void resize(uint32_t new_capacity);
 };
 
 #pragma endregion
@@ -65,6 +66,26 @@ class Array{
         uint32_t capacity;
         uint32_t size;
         T* data;
+        void resize(uint32_t new_capacity);
+};
+
+#pragma endregion
+
+#pragma region Stack
+
+template<typename T>
+class Stack{
+    public:
+        Stack(uint32_t capacity);
+        ~Stack();
+        void push(T item);
+        T pop();
+        bool any();
+    private:
+        uint32_t capacity;
+        uint32_t size;
+        T* data;
+        void resize(uint32_t new_capacity);
 };
 
 #pragma endregion

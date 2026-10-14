@@ -18,6 +18,11 @@ Queue<T>::~Queue(){
 template<typename T>
 void Queue<T>::enque(T item)
 {
+    if (this-> size == this->capacity)
+    {
+        this->resize(this->capacity * 2);
+    }
+
     if(this->size < this->capacity){
         if(this->size == 0){
             this->data[0] = item;
@@ -71,6 +76,24 @@ bool Queue<T>::remove(T item)
     return false;
 }
 
+
+template<typename T>
+void Queue<T>::resize(uint32_t new_capacity)
+{
+    T* new_data = new T[new_capacity];
+
+    for (uint32_t i = 0; i < this->size; i++)
+    {
+        uint32_t index = (this->head + i) % this->capacity;
+        new_data[i] = this->data[index];
+    }
+
+    delete[] this->data;
+    this->data = new_data;
+    this->capacity = new_capacity;
+    this->head = 0;
+    this->tail = this->size - 1;
+}
 
 #pragma endregion
 
@@ -175,6 +198,9 @@ bool Array<T>::contains(T item)
 template<typename T>
 void Array<T>::add(T item)
 {
+    if(this->size == this->capacity){
+        this->resize(this->capacity * 2);
+    }
     if(this->size < this->capacity){
         this->data[this->size] = item;
         this->size ++;
@@ -207,6 +233,79 @@ template<typename T>
 T* Array<T>::end()
 {
     return this->data + this->size;
+}
+
+template<typename T>
+void Array<T>::resize(uint32_t new_capacity)
+{
+    T* new_data = new T[new_capacity];
+    for (uint32_t i = 0; i < this->size; i++)
+    {
+        new_data[i] = this->data[i];
+    }
+    delete[] this->data;
+    this->data = new_data;
+    this->capacity = new_capacity;
+}
+
+#pragma endregion
+
+#pragma region Stack
+
+template<typename T>
+Stack<T>::Stack(uint32_t capacity)
+{
+    this->capacity = capacity;
+    this->data = new T[capacity];
+    this->size = 0;
+}
+
+template<typename T>
+Stack<T>::~Stack()
+{
+    delete[] this->data;
+}
+
+template<typename T>
+void Stack<T>::push(T item)
+{
+    if(this->size == this->capacity){
+        this->resize(this->capacity * 2);
+    }
+    this->data[this->size] = item;
+    this->size ++;
+}
+
+template<typename T>
+T Stack<T>::pop()
+{
+    if(this->size){
+        T item = this->data[this->size - 1];
+        this->size --;
+        return item;
+    }
+
+    // TODO: throw exception
+    while(1);
+}
+
+template<typename T>
+bool Stack<T>::any()
+{
+    return this->size > 0;
+}
+
+template<typename T>
+void Stack<T>::resize(uint32_t new_capacity)
+{
+    T* new_data = new T[new_capacity];
+    for (uint32_t i = 0; i < this->size; i++)
+    {
+        new_data[i] = this->data[i];
+    }
+    delete[] this->data;
+    this->data = new_data;
+    this->capacity = new_capacity;
 }
 
 #pragma endregion
