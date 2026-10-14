@@ -65,8 +65,8 @@ public:
     uint8_t deregister_event_queue();
     Event deque();
 private:
+    Event* events;
     uint32_t capacity;
     uint32_t read_index;
     uint32_t write_index;
-    Event* events;
 };
