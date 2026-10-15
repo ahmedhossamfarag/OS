@@ -2,51 +2,122 @@
 #define GRAPHICS_H
 
 #include <stdint.h>
-#include "winlib.h"   /* window_t */
+
+typedef struct Color {
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+    uint8_t a;
+} Color;
+
+typedef struct Bitmap {
+    uint32_t width;
+    uint32_t height;
+    uint32_t* buffer;
+} Bitmap;
+
+typedef struct Point {
+    int x;
+    int y;
+} Point;
+
+typedef struct Size {
+    uint32_t width;
+    uint32_t height;
+} Size;
+
+typedef struct Rect {
+    int x;
+    int y;
+    uint32_t width;
+    uint32_t height;
+
+    Rect(int x, int y, int width, int height);
+    Rect(Point p, Size s);
+} Rect;
+
+
+class Graphics {
+public:
+    Graphics(Bitmap bitmap);
+    void setPixel(Point p, Color color);
+    Color getPixel(Point p);
+    void setPixelAlpha(Point p, Color color); /* 0xAARRGGBB */
+    void clear(Color color);
+    void drawHline(Point p1, Point p2, Color color);
+    void drawVline(Point p1, Point p2, Color color);
+    void drawLine(Point p1, Point p2, Color color);
+    void drawThickLine(Point p1, Point p2, int thickness, Color color);
+    void drawRectangle(Rect r, Color color);
+    void fillRect(Rect r, Color color);
+    void fillRectAlpha(Rect r, Color color);
+    void drawRectangleThick(Rect r, int thickness, Color color);
+    void drawRoundedRect(Rect r, int radius, Color color);
+    void fillRoundedRect(Rect r, int radius, Color color);
+    void drawCircle(Point p, int radius, Color color);
+    void fillCircle(Point p, int radius, Color color);
+    void drawRing(Point p, int outerR, int innerR, Color color);
+    void drawEllipse(Point p, int rx, int ry, Color color);
+    void fillEllipse(Point p, int rx, int ry, Color color);
+    void drawTriangle(Point p1, Point p2, Point p3, Color color);
+    void fillTriangle(Point p1, Point p2, Point p3, Color color);
+    void drawPolygon(Point* pts, int count, Color color);
+    void fillPolygon(Point* pts, int count, Color color);
+    void fillGradientV(Rect r, Color top, Color bottom);
+    void fillGradientH(Rect r, Color left, Color right);
+    void drawBitmap(Point p, Bitmap* src);
+    void drawBitmapAlpha(Point p, Bitmap* src);
+    void blitBitmap(Rect dstRect, Bitmap* src, Rect srcRect);
+    int floodFill(Point p, Color newColor, int* stack, int stackCapacity);
+
+private:
+    Bitmap bitmap;
+};
+
 
 /* Pixels */
-void     set_pixel(window_t* window, int x, int y, uint32_t color);
-uint32_t get_pixel(window_t* window, int x, int y);
-void     set_pixel_alpha(window_t* window, int x, int y, uint32_t color); /* 0xAARRGGBB */
-void     clear_window(window_t* window, uint32_t color);
+void     set_pixel(Bitmap* bitmap, int x, int y, uint32_t color);
+uint32_t get_pixel(Bitmap* bitmap, int x, int y);
+void     set_pixel_alpha(Bitmap* bitmap, int x, int y, uint32_t color); /* 0xAARRGGBB */
+void     clear_bitmap(Bitmap* bitmap, uint32_t color);
 
 /* Lines */
-void draw_hline(window_t* window, int x0, int x1, int y, uint32_t color);
-void draw_vline(window_t* window, int x, int y0, int y1, uint32_t color);
-void draw_line(window_t* window, int x0, int y0, int x1, int y1, uint32_t color);
-void draw_thick_line(window_t* window, int x0, int y0, int x1, int y1, int thickness, uint32_t color);
+void draw_hline(Bitmap* bitmap, int x0, int x1, int y, uint32_t color);
+void draw_vline(Bitmap* bitmap, int x, int y0, int y1, uint32_t color);
+void draw_line(Bitmap* bitmap, int x0, int y0, int x1, int y1, uint32_t color);
+void draw_thick_line(Bitmap* bitmap, int x0, int y0, int x1, int y1, int thickness, uint32_t color);
 
 /* Rectangles */
-void draw_rectangle(window_t* window, int x, int y, int width, int height, uint32_t color);
-void fill_rect(window_t* window, int x, int y, int width, int height, uint32_t color);
-void fill_rect_alpha(window_t* window, int x, int y, int width, int height, uint32_t color);
-void draw_rectangle_thick(window_t* window, int x, int y, int width, int height, int thickness, uint32_t color);
-void draw_rounded_rect(window_t* window, int x, int y, int width, int height, int radius, uint32_t color);
-void fill_rounded_rect(window_t* window, int x, int y, int width, int height, int radius, uint32_t color);
+void draw_rectangle(Bitmap* bitmap, int x, int y, int width, int height, uint32_t color);
+void fill_rect(Bitmap* bitmap, int x, int y, int width, int height, uint32_t color);
+void fill_rect_alpha(Bitmap* bitmap, int x, int y, int width, int height, uint32_t color);
+void draw_rectangle_thick(Bitmap* bitmap, int x, int y, int width, int height, int thickness, uint32_t color);
+void draw_rounded_rect(Bitmap* bitmap, int x, int y, int width, int height, int radius, uint32_t color);
+void fill_rounded_rect(Bitmap* bitmap, int x, int y, int width, int height, int radius, uint32_t color);
 
 /* Circles & ellipses */
-void draw_circle(window_t* window, int xc, int yc, int radius, uint32_t color);
-void fill_circle(window_t* window, int xc, int yc, int radius, uint32_t color);
-void draw_ring(window_t* window, int xc, int yc, int outer_r, int inner_r, uint32_t color);
-void draw_ellipse(window_t* window, int xc, int yc, int rx, int ry, uint32_t color);
-void fill_ellipse(window_t* window, int xc, int yc, int rx, int ry, uint32_t color);
+void draw_circle(Bitmap* bitmap, int xc, int yc, int radius, uint32_t color);
+void fill_circle(Bitmap* bitmap, int xc, int yc, int radius, uint32_t color);
+void draw_ring(Bitmap* bitmap, int xc, int yc, int outer_r, int inner_r, uint32_t color);
+void draw_ellipse(Bitmap* bitmap, int xc, int yc, int rx, int ry, uint32_t color);
+void fill_ellipse(Bitmap* bitmap, int xc, int yc, int rx, int ry, uint32_t color);
 
 /* Triangles & polygons (pts = {x0,y0,x1,y1,...}) */
-void draw_triangle(window_t* window, int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color);
-void fill_triangle(window_t* window, int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color);
-void draw_polygon(window_t* window, const int* pts, int count, uint32_t color);
-void fill_polygon(window_t* window, const int* pts, int count, uint32_t color);
+void draw_triangle(Bitmap* bitmap, int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color);
+void fill_triangle(Bitmap* bitmap, int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color);
+void draw_polygon(Bitmap* bitmap, const int* pts, int count, uint32_t color);
+void fill_polygon(Bitmap* bitmap, const int* pts, int count, uint32_t color);
 
 /* Gradients */
-void fill_gradient_v(window_t* window, int x, int y, int width, int height, uint32_t top, uint32_t bottom);
-void fill_gradient_h(window_t* window, int x, int y, int width, int height, uint32_t left, uint32_t right);
+void fill_gradient_v(Bitmap* bitmap, int x, int y, int width, int height, uint32_t top, uint32_t bottom);
+void fill_gradient_h(Bitmap* bitmap, int x, int y, int width, int height, uint32_t left, uint32_t right);
 
 /* Bitmaps */
-void draw_bitmap(window_t* window, int x, int y, const uint32_t* bitmap, int w, int h);
-void draw_bitmap_alpha(window_t* window, int x, int y, const uint32_t* bitmap, int w, int h);
-void blit(window_t* dst, int dx, int dy, window_t* src, int sx, int sy, int w, int h);
+void draw_bitmap(Bitmap* dst, int x, int y, Bitmap* src);
+void draw_bitmap_alpha(Bitmap* dst, int x, int y, Bitmap* src);
+void blit(Bitmap* dst, int dx, int dy, Bitmap* src, int sx, int sy, int w, int h);
 
 /* Flood fill: stack needs 2 * stack_capacity ints; returns 0 ok, -1 on overflow */
-int flood_fill(window_t* window, int x, int y, uint32_t new_color, int* stack, int stack_capacity);
+int flood_fill(Bitmap* bitmap, int x, int y, uint32_t new_color, int* stack, int stack_capacity);
 
 #endif

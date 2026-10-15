@@ -1,5 +1,6 @@
 #include "stdint.h"
 #include "graphicslib.h"
+#include "winlib.h"
 
 /* ------------------------------------------------------------------ */
 /* Palette (Ubuntu / Yaru inspired, 0xAARRGGBB)                        */
@@ -130,7 +131,7 @@ static const uint8_t font8x8[95][8] = {
 /* Text helpers                                                        */
 /* ------------------------------------------------------------------ */
 
-static void ui_char(window_t* w, int x, int y, char c, uint32_t color, int scale) {
+static void ui_char(Bitmap* w, int x, int y, char c, uint32_t color, int scale) {
     if (c < 32 || c > 126) return;
     const uint8_t* g = font8x8[c - 32];
     for (int row = 0; row < 8; row++) {
@@ -150,7 +151,7 @@ static int ui_text_width(const char* s, int scale) {
 }
 
 /* Draws text and returns the x position after the last character */
-static int ui_text(window_t* w, int x, int y, const char* s, uint32_t color, int scale) {
+static int ui_text(Bitmap* w, int x, int y, const char* s, uint32_t color, int scale) {
     while (*s) {
         ui_char(w, x, y, *s++, color, scale);
         x += 8 * scale;
@@ -158,7 +159,7 @@ static int ui_text(window_t* w, int x, int y, const char* s, uint32_t color, int
     return x;
 }
 
-static void ui_text_centered(window_t* w, int cx, int y, const char* s, uint32_t color, int scale) {
+static void ui_text_centered(Bitmap* w, int cx, int y, const char* s, uint32_t color, int scale) {
     ui_text(w, cx - ui_text_width(s, scale) / 2, y, s, color, scale);
 }
 
@@ -175,7 +176,7 @@ static void u32_to_str(uint32_t v, char* out) {
 /* Title bar                                                           */
 /* ------------------------------------------------------------------ */
 
-static void draw_title_bar(window_t* w, int W, int title_h) {
+static void draw_title_bar(Bitmap* w, int W, int title_h) {
     fill_gradient_v(w, 0, 0, W, title_h, C_TITLE_TOP, C_TITLE_BOT);
     draw_hline(w, 0, W - 1, title_h - 1, C_BORDER);
 
@@ -205,7 +206,7 @@ static void draw_title_bar(window_t* w, int W, int title_h) {
 /* Sidebar                                                             */
 /* ------------------------------------------------------------------ */
 
-static void draw_icon(window_t* w, int kind, int ix, int iy, uint32_t fg, uint32_t bg) {
+static void draw_icon(Bitmap* w, int kind, int ix, int iy, uint32_t fg, uint32_t bg) {
     switch (kind) {
     case 0: /* Home */
         fill_triangle(w, ix + 7, iy, ix, iy + 7, ix + 14, iy + 7, fg);
@@ -239,7 +240,7 @@ static void draw_icon(window_t* w, int kind, int ix, int iy, uint32_t fg, uint32
     }
 }
 
-static void draw_sidebar(window_t* w, int sb_w, int body_y, int body_h) {
+static void draw_sidebar(Bitmap* w, int sb_w, int body_y, int body_h) {
     static const char* names[6] = {
         "Home", "Documents", "Downloads", "Pictures", "Terminal", "Settings"
     };
@@ -267,7 +268,7 @@ static void draw_sidebar(window_t* w, int sb_w, int body_y, int body_h) {
 /* Main content                                                        */
 /* ------------------------------------------------------------------ */
 
-static void draw_banner(window_t* w, int bx, int by, int bw, int bh) {
+static void draw_banner(Bitmap* w, int bx, int by, int bw, int bh) {
     fill_gradient_h(w, bx, by, bw, bh, C_AUBERGINE, C_DARK_AUB);
 
     /* Decorative shapes on the right */
@@ -283,7 +284,7 @@ static void draw_banner(window_t* w, int bx, int by, int bw, int bh) {
     ui_text(w, bx + 24, by + 98, "Drawn 100% with the custom graphics library", 0xFFD9A8C3, 1);
 }
 
-static void draw_card(window_t* w, int x, int y, int cw, int ch, uint32_t accent,
+static void draw_card(Bitmap* w, int x, int y, int cw, int ch, uint32_t accent,
                       const char* title, const char* line1, const char* line2) {
     fill_rect_alpha(w, x + 2, y + 4, cw, ch, 0x22000000);      /* soft shadow */
     fill_rounded_rect(w, x, y, cw, ch, 8, C_WHITE);
@@ -297,7 +298,7 @@ static void draw_card(window_t* w, int x, int y, int cw, int ch, uint32_t accent
     ui_text(w, x + 16, y + 86, line2, C_TEXT_MUTED, 1);
 }
 
-static int draw_prompt(window_t* w, int x, int y) {
+static int draw_prompt(Bitmap* w, int x, int y) {
     x = ui_text(w, x, y, "user@myos", C_GREEN, 1);
     x = ui_text(w, x, y, ":",         C_WHITE, 1);
     x = ui_text(w, x, y, "~",         C_BLUE,  1);
@@ -305,7 +306,7 @@ static int draw_prompt(window_t* w, int x, int y) {
     return x;
 }
 
-static void draw_terminal(window_t* w, int tx, int ty, int tw, int th, int W, int H) {
+static void draw_terminal(Bitmap* w, int tx, int ty, int tw, int th, int W, int H) {
     int hdr = 22;
     char num[12];
 
@@ -341,7 +342,7 @@ static void draw_terminal(window_t* w, int tx, int ty, int tw, int th, int W, in
     fill_rect(w, x, y - 1, 8, 10, C_WHITE);                  /* block cursor */
 }
 
-static void draw_status_bar(window_t* w, int W, int y, int h) {
+static void draw_status_bar(Bitmap* w, int W, int y, int h) {
     fill_rect(w, 0, y, W, h, 0xFFEDEDED);
     draw_hline(w, 0, W - 1, y, C_CARD_BORDER);
     fill_circle(w, 14, y + h / 2 + 1, 4, C_LEAF);
@@ -353,9 +354,9 @@ static void draw_status_bar(window_t* w, int W, int y, int h) {
 /* Whole window                                                        */
 /* ------------------------------------------------------------------ */
 
-void draw_welcome_window(window_t* w) {
-    int W = (int)w->bounds.width;
-    int H = (int)w->bounds.height;
+void draw_welcome_window(Bitmap* w) {
+    int W = (int)w->width;
+    int H = (int)w->height;
 
     const int TITLE_H   = 38;
     const int STATUS_H  = 24;
@@ -366,7 +367,7 @@ void draw_welcome_window(window_t* w) {
     int main_x = SIDEBAR_W;
     int main_w = W - SIDEBAR_W;
 
-    clear_window(w, C_MAIN_BG);
+    clear_bitmap(w, C_MAIN_BG);
 
     draw_title_bar(w, W, TITLE_H);
     draw_sidebar(w, SIDEBAR_W, body_y, body_h);
@@ -409,7 +410,13 @@ int main() {
 
     window_t* window = create_window(x, y, width, height, bgcolor);
 
-    draw_welcome_window(window);
+    Bitmap* bitmap = new Bitmap{
+        .width = width,
+        .height = height,
+        .buffer = window->buffer
+    };
+
+    draw_welcome_window(bitmap);
 
     void* handler = register_window(window);
 

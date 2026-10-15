@@ -32,42 +32,42 @@ static int gfx_isqrt(int n) {
 /* Pixels                                                              */
 /* ------------------------------------------------------------------ */
 
-void set_pixel(window_t* window, int x, int y, uint32_t color) {
-    if ((uint32_t)x < window->bounds.width && (uint32_t)y < window->bounds.height) {
-        window->buffer[y * window->bounds.width + x] = color;
+void set_pixel(Bitmap* bitmap, int x, int y, uint32_t color) {
+    if ((uint32_t)x < bitmap->width && (uint32_t)y < bitmap->height) {
+        bitmap->buffer[y * bitmap->width + x] = color;
     }
 }
 
-uint32_t get_pixel(window_t* window, int x, int y) {
-    if ((uint32_t)x < window->bounds.width && (uint32_t)y < window->bounds.height) {
-        return window->buffer[y * window->bounds.width + x];
+uint32_t get_pixel(Bitmap* bitmap, int x, int y) {
+    if ((uint32_t)x < bitmap->width && (uint32_t)y < bitmap->height) {
+        return bitmap->buffer[y * bitmap->width + x];
     }
     return 0;
 }
 
 /* Blend `color` (0xAARRGGBB) over the existing pixel using its alpha byte */
-void set_pixel_alpha(window_t* window, int x, int y, uint32_t color) {
-    if ((uint32_t)x >= window->bounds.width || (uint32_t)y >= window->bounds.height)
+void set_pixel_alpha(Bitmap* bitmap, int x, int y, uint32_t color) {
+    if ((uint32_t)x >= bitmap->width || (uint32_t)y >= bitmap->height)
         return;
 
     uint32_t a = color >> 24;
-    if (a == 255) { window->buffer[y * window->bounds.width + x] = color | 0xFF000000; return; }
+    if (a == 255) { bitmap->buffer[y * bitmap->width + x] = color | 0xFF000000; return; }
     if (a == 0) return;
 
-    uint32_t dst = window->buffer[y * window->bounds.width + x];
+    uint32_t dst = bitmap->buffer[y * bitmap->width + x];
     uint32_t ia = 255 - a;
 
     uint32_t r = (((color >> 16) & 0xFF) * a + ((dst >> 16) & 0xFF) * ia) / 255;
     uint32_t g = (((color >> 8)  & 0xFF) * a + ((dst >> 8)  & 0xFF) * ia) / 255;
     uint32_t b = ((color         & 0xFF) * a + (dst         & 0xFF) * ia) / 255;
 
-    window->buffer[y * window->bounds.width + x] = 0xFF000000 | (r << 16) | (g << 8) | b;
+    bitmap->buffer[y * bitmap->width + x] = 0xFF000000 | (r << 16) | (g << 8) | b;
 }
 
-void clear_window(window_t* window, uint32_t color) {
-    uint32_t total = window->bounds.width * window->bounds.height;
+void clear_bitmap(Bitmap* bitmap, uint32_t color) {
+    uint32_t total = bitmap->width * bitmap->height;
     for (uint32_t i = 0; i < total; i++)
-        window->buffer[i] = color;
+        bitmap->buffer[i] = color;
 }
 
 /* ------------------------------------------------------------------ */
@@ -75,37 +75,37 @@ void clear_window(window_t* window, uint32_t color) {
 /* ------------------------------------------------------------------ */
 
 /* Fast clipped horizontal line (inclusive x0..x1) */
-void draw_hline(window_t* window, int x0, int x1, int y, uint32_t color) {
+void draw_hline(Bitmap* bitmap, int x0, int x1, int y, uint32_t color) {
     if (x0 > x1) GFX_SWAP(x0, x1);
-    if (y < 0 || (uint32_t)y >= window->bounds.height) return;
-    if (x1 < 0 || x0 >= (int)window->bounds.width) return;
+    if (y < 0 || (uint32_t)y >= bitmap->height) return;
+    if (x1 < 0 || x0 >= (int)bitmap->width) return;
     if (x0 < 0) x0 = 0;
-    if (x1 >= (int)window->bounds.width) x1 = window->bounds.width - 1;
+    if (x1 >= (int)bitmap->width) x1 = bitmap->width - 1;
 
-    uint32_t* p = &window->buffer[y * window->bounds.width + x0];
+    uint32_t* p = &bitmap->buffer[y * bitmap->width + x0];
     for (int x = x0; x <= x1; x++) *p++ = color;
 }
 
 /* Fast clipped vertical line (inclusive y0..y1) */
-void draw_vline(window_t* window, int x, int y0, int y1, uint32_t color) {
+void draw_vline(Bitmap* bitmap, int x, int y0, int y1, uint32_t color) {
     if (y0 > y1) GFX_SWAP(y0, y1);
-    if (x < 0 || (uint32_t)x >= window->bounds.width) return;
-    if (y1 < 0 || y0 >= (int)window->bounds.height) return;
+    if (x < 0 || (uint32_t)x >= bitmap->width) return;
+    if (y1 < 0 || y0 >= (int)bitmap->height) return;
     if (y0 < 0) y0 = 0;
-    if (y1 >= (int)window->bounds.height) y1 = window->bounds.height - 1;
+    if (y1 >= (int)bitmap->height) y1 = bitmap->height - 1;
 
     for (int y = y0; y <= y1; y++)
-        window->buffer[y * window->bounds.width + x] = color;
+        bitmap->buffer[y * bitmap->width + x] = color;
 }
 
 /* Bresenham's Line Algorithm */
-void draw_line(window_t* window, int x0, int y0, int x1, int y1, uint32_t color) {
+void draw_line(Bitmap* bitmap, int x0, int y0, int x1, int y1, uint32_t color) {
     int dx = math_abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
     int dy = -math_abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
     int err = dx + dy, e2;
 
     while (1) {
-        set_pixel(window, x0, y0, color);
+        set_pixel(bitmap, x0, y0, color);
         if (x0 == x1 && y0 == y1) break;
         e2 = 2 * err;
         if (e2 >= dy) { err += dy; x0 += sx; }
@@ -114,9 +114,9 @@ void draw_line(window_t* window, int x0, int y0, int x1, int y1, uint32_t color)
 }
 
 /* Line with thickness (draws a filled square brush along the line) */
-void draw_thick_line(window_t* window, int x0, int y0, int x1, int y1,
+void draw_thick_line(Bitmap* bitmap, int x0, int y0, int x1, int y1,
                      int thickness, uint32_t color) {
-    if (thickness <= 1) { draw_line(window, x0, y0, x1, y1, color); return; }
+    if (thickness <= 1) { draw_line(bitmap, x0, y0, x1, y1, color); return; }
 
     int dx = math_abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
     int dy = -math_abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
@@ -124,7 +124,7 @@ void draw_thick_line(window_t* window, int x0, int y0, int x1, int y1,
     int half = thickness / 2;
 
     while (1) {
-        fill_rect(window, x0 - half, y0 - half, thickness, thickness, color);
+        fill_rect(bitmap, x0 - half, y0 - half, thickness, thickness, color);
         if (x0 == x1 && y0 == y1) break;
         e2 = 2 * err;
         if (e2 >= dy) { err += dy; x0 += sx; }
@@ -136,35 +136,35 @@ void draw_thick_line(window_t* window, int x0, int y0, int x1, int y1,
 /* Rectangles                                                          */
 /* ------------------------------------------------------------------ */
 
-void draw_rectangle(window_t* window, int x, int y, int width, int height, uint32_t color) {
+void draw_rectangle(Bitmap* bitmap, int x, int y, int width, int height, uint32_t color) {
     if (width <= 0 || height <= 0) return;
-    draw_hline(window, x, x + width - 1, y, color);
-    draw_hline(window, x, x + width - 1, y + height - 1, color);
-    draw_vline(window, x, y, y + height - 1, color);
-    draw_vline(window, x + width - 1, y, y + height - 1, color);
+    draw_hline(bitmap, x, x + width - 1, y, color);
+    draw_hline(bitmap, x, x + width - 1, y + height - 1, color);
+    draw_vline(bitmap, x, y, y + height - 1, color);
+    draw_vline(bitmap, x + width - 1, y, y + height - 1, color);
 }
 
-void fill_rect(window_t* window, int x, int y, int width, int height, uint32_t color) {
+void fill_rect(Bitmap* bitmap, int x, int y, int width, int height, uint32_t color) {
     if (width <= 0 || height <= 0) return;
     for (int j = 0; j < height; j++)
-        draw_hline(window, x, x + width - 1, y + j, color);
+        draw_hline(bitmap, x, x + width - 1, y + j, color);
 }
 
 /* Filled rectangle with alpha blending (color = 0xAARRGGBB) */
-void fill_rect_alpha(window_t* window, int x, int y, int width, int height, uint32_t color) {
+void fill_rect_alpha(Bitmap* bitmap, int x, int y, int width, int height, uint32_t color) {
     int x0 = GFX_MAX(x, 0), y0 = GFX_MAX(y, 0);
-    int x1 = GFX_MIN(x + width,  (int)window->bounds.width);
-    int y1 = GFX_MIN(y + height, (int)window->bounds.height);
+    int x1 = GFX_MIN(x + width,  (int)bitmap->width);
+    int y1 = GFX_MIN(y + height, (int)bitmap->height);
     for (int j = y0; j < y1; j++)
         for (int i = x0; i < x1; i++)
-            set_pixel_alpha(window, i, j, color);
+            set_pixel_alpha(bitmap, i, j, color);
 }
 
 /* Rectangle outline with custom border thickness (drawn inward) */
-void draw_rectangle_thick(window_t* window, int x, int y, int width, int height,
+void draw_rectangle_thick(Bitmap* bitmap, int x, int y, int width, int height,
                           int thickness, uint32_t color) {
     for (int i = 0; i < thickness; i++)
-        draw_rectangle(window, x + i, y + i, width - 2 * i, height - 2 * i, color);
+        draw_rectangle(bitmap, x + i, y + i, width - 2 * i, height - 2 * i, color);
 }
 
 /* ------------------------------------------------------------------ */
@@ -172,16 +172,16 @@ void draw_rectangle_thick(window_t* window, int x, int y, int width, int height,
 /* ------------------------------------------------------------------ */
 
 /* Draw selected quadrants of a midpoint circle */
-static void circle_corners(window_t* window, int xc, int yc, int radius,
+static void circle_corners(Bitmap* bitmap, int xc, int yc, int radius,
                            int mask, uint32_t color) {
     int x = radius, y = 0;
     int p = 1 - radius;
 
     while (x >= y) {
-        if (mask & CORNER_BR) { set_pixel(window, xc + x, yc + y, color); set_pixel(window, xc + y, yc + x, color); }
-        if (mask & CORNER_BL) { set_pixel(window, xc - y, yc + x, color); set_pixel(window, xc - x, yc + y, color); }
-        if (mask & CORNER_TL) { set_pixel(window, xc - x, yc - y, color); set_pixel(window, xc - y, yc - x, color); }
-        if (mask & CORNER_TR) { set_pixel(window, xc + y, yc - x, color); set_pixel(window, xc + x, yc - y, color); }
+        if (mask & CORNER_BR) { set_pixel(bitmap, xc + x, yc + y, color); set_pixel(bitmap, xc + y, yc + x, color); }
+        if (mask & CORNER_BL) { set_pixel(bitmap, xc - y, yc + x, color); set_pixel(bitmap, xc - x, yc + y, color); }
+        if (mask & CORNER_TL) { set_pixel(bitmap, xc - x, yc - y, color); set_pixel(bitmap, xc - y, yc - x, color); }
+        if (mask & CORNER_TR) { set_pixel(bitmap, xc + y, yc - x, color); set_pixel(bitmap, xc + x, yc - y, color); }
         y++;
         if (p <= 0) {
             p = p + 2 * y + 1;
@@ -192,32 +192,32 @@ static void circle_corners(window_t* window, int xc, int yc, int radius,
     }
 }
 
-void draw_rounded_rect(window_t* window, int x, int y, int width, int height,
+void draw_rounded_rect(Bitmap* bitmap, int x, int y, int width, int height,
                        int radius, uint32_t color) {
     if (width <= 0 || height <= 0) return;
     int maxr = GFX_MIN(width, height) / 2;
     if (radius > maxr) radius = maxr;
-    if (radius <= 0) { draw_rectangle(window, x, y, width, height, color); return; }
+    if (radius <= 0) { draw_rectangle(bitmap, x, y, width, height, color); return; }
 
     int x1 = x + width - 1, y1 = y + height - 1;
 
-    draw_hline(window, x + radius, x1 - radius, y,  color);
-    draw_hline(window, x + radius, x1 - radius, y1, color);
-    draw_vline(window, x,  y + radius, y1 - radius, color);
-    draw_vline(window, x1, y + radius, y1 - radius, color);
+    draw_hline(bitmap, x + radius, x1 - radius, y,  color);
+    draw_hline(bitmap, x + radius, x1 - radius, y1, color);
+    draw_vline(bitmap, x,  y + radius, y1 - radius, color);
+    draw_vline(bitmap, x1, y + radius, y1 - radius, color);
 
-    circle_corners(window, x + radius,  y + radius,  radius, CORNER_TL, color);
-    circle_corners(window, x1 - radius, y + radius,  radius, CORNER_TR, color);
-    circle_corners(window, x + radius,  y1 - radius, radius, CORNER_BL, color);
-    circle_corners(window, x1 - radius, y1 - radius, radius, CORNER_BR, color);
+    circle_corners(bitmap, x + radius,  y + radius,  radius, CORNER_TL, color);
+    circle_corners(bitmap, x1 - radius, y + radius,  radius, CORNER_TR, color);
+    circle_corners(bitmap, x + radius,  y1 - radius, radius, CORNER_BL, color);
+    circle_corners(bitmap, x1 - radius, y1 - radius, radius, CORNER_BR, color);
 }
 
-void fill_rounded_rect(window_t* window, int x, int y, int width, int height,
+void fill_rounded_rect(Bitmap* bitmap, int x, int y, int width, int height,
                        int radius, uint32_t color) {
     if (width <= 0 || height <= 0) return;
     int maxr = GFX_MIN(width, height) / 2;
     if (radius > maxr) radius = maxr;
-    if (radius <= 0) { fill_rect(window, x, y, width, height, color); return; }
+    if (radius <= 0) { fill_rect(bitmap, x, y, width, height, color); return; }
 
     for (int row = 0; row < height; row++) {
         int inset = 0;
@@ -228,7 +228,7 @@ void fill_rounded_rect(window_t* window, int x, int y, int width, int height,
             int dy = row - (height - radius - 1);
             inset = radius - gfx_isqrt(radius * radius - dy * dy);
         }
-        draw_hline(window, x + inset, x + width - 1 - inset, y + row, color);
+        draw_hline(bitmap, x + inset, x + width - 1 - inset, y + row, color);
     }
 }
 
@@ -237,20 +237,20 @@ void fill_rounded_rect(window_t* window, int x, int y, int width, int height,
 /* ------------------------------------------------------------------ */
 
 /* Midpoint Circle Algorithm */
-void draw_circle(window_t* window, int xc, int yc, int radius, uint32_t color) {
+void draw_circle(Bitmap* bitmap, int xc, int yc, int radius, uint32_t color) {
     if (radius < 0) return;
     int x = radius, y = 0;
     int p = 1 - radius;
 
     while (x >= y) {
-        set_pixel(window, xc + x, yc + y, color);
-        set_pixel(window, xc + y, yc + x, color);
-        set_pixel(window, xc - y, yc + x, color);
-        set_pixel(window, xc - x, yc + y, color);
-        set_pixel(window, xc - x, yc - y, color);
-        set_pixel(window, xc - y, yc - x, color);
-        set_pixel(window, xc + y, yc - x, color);
-        set_pixel(window, xc + x, yc - y, color);
+        set_pixel(bitmap, xc + x, yc + y, color);
+        set_pixel(bitmap, xc + y, yc + x, color);
+        set_pixel(bitmap, xc - y, yc + x, color);
+        set_pixel(bitmap, xc - x, yc + y, color);
+        set_pixel(bitmap, xc - x, yc - y, color);
+        set_pixel(bitmap, xc - y, yc - x, color);
+        set_pixel(bitmap, xc + y, yc - x, color);
+        set_pixel(bitmap, xc + x, yc - y, color);
         y++;
         if (p <= 0) {
             p = p + 2 * y + 1;
@@ -262,19 +262,19 @@ void draw_circle(window_t* window, int xc, int yc, int radius, uint32_t color) {
 }
 
 /* Filled circle: one horizontal span per scanline (no overdraw) */
-void fill_circle(window_t* window, int xc, int yc, int radius, uint32_t color) {
+void fill_circle(Bitmap* bitmap, int xc, int yc, int radius, uint32_t color) {
     if (radius < 0) return;
     int r2 = radius * radius;
     for (int dy = 0; dy <= radius; dy++) {
         int dx = gfx_isqrt(r2 - dy * dy);
-        draw_hline(window, xc - dx, xc + dx, yc + dy, color);
+        draw_hline(bitmap, xc - dx, xc + dx, yc + dy, color);
         if (dy != 0)
-            draw_hline(window, xc - dx, xc + dx, yc - dy, color);
+            draw_hline(bitmap, xc - dx, xc + dx, yc - dy, color);
     }
 }
 
 /* Circle ring with thickness */
-void draw_ring(window_t* window, int xc, int yc, int outer_r, int inner_r, uint32_t color) {
+void draw_ring(Bitmap* bitmap, int xc, int yc, int outer_r, int inner_r, uint32_t color) {
     if (inner_r < 0) inner_r = 0;
     if (inner_r >= outer_r) return;
     int o2 = outer_r * outer_r, i2 = inner_r * inner_r;
@@ -285,10 +285,10 @@ void draw_ring(window_t* window, int xc, int yc, int outer_r, int inner_r, uint3
             if (dy == 0 && s == -1) continue;
             int yy = yc + s * dy;
             if (ix < 0) {
-                draw_hline(window, xc - ox, xc + ox, yy, color);
+                draw_hline(bitmap, xc - ox, xc + ox, yy, color);
             } else {
-                draw_hline(window, xc - ox, xc - ix - 1, yy, color);
-                draw_hline(window, xc + ix + 1, xc + ox, yy, color);
+                draw_hline(bitmap, xc - ox, xc - ix - 1, yy, color);
+                draw_hline(bitmap, xc + ix + 1, xc + ox, yy, color);
             }
         }
     }
@@ -298,15 +298,15 @@ void draw_ring(window_t* window, int xc, int yc, int outer_r, int inner_r, uint3
 /* Ellipses                                                            */
 /* ------------------------------------------------------------------ */
 
-static void ellipse_plot4(window_t* window, int xc, int yc, int x, int y, uint32_t color) {
-    set_pixel(window, xc + x, yc + y, color);
-    set_pixel(window, xc - x, yc + y, color);
-    set_pixel(window, xc + x, yc - y, color);
-    set_pixel(window, xc - x, yc - y, color);
+static void ellipse_plot4(Bitmap* bitmap, int xc, int yc, int x, int y, uint32_t color) {
+    set_pixel(bitmap, xc + x, yc + y, color);
+    set_pixel(bitmap, xc - x, yc + y, color);
+    set_pixel(bitmap, xc + x, yc - y, color);
+    set_pixel(bitmap, xc - x, yc - y, color);
 }
 
 /* Midpoint Ellipse Algorithm */
-void draw_ellipse(window_t* window, int xc, int yc, int rx, int ry, uint32_t color) {
+void draw_ellipse(Bitmap* bitmap, int xc, int yc, int rx, int ry, uint32_t color) {
     if (rx < 0 || ry < 0) return;
     long long rx2 = (long long)rx * rx, ry2 = (long long)ry * ry;
     long long x = 0, y = ry;
@@ -315,7 +315,7 @@ void draw_ellipse(window_t* window, int xc, int yc, int rx, int ry, uint32_t col
 
     /* Region 1 */
     while (px < py) {
-        ellipse_plot4(window, xc, yc, (int)x, (int)y, color);
+        ellipse_plot4(bitmap, xc, yc, (int)x, (int)y, color);
         x++;
         px += 2 * ry2;
         if (p < 0) {
@@ -330,7 +330,7 @@ void draw_ellipse(window_t* window, int xc, int yc, int rx, int ry, uint32_t col
     /* Region 2 */
     p = (ry2 * (2 * x + 1) * (2 * x + 1)) / 4 + rx2 * (y - 1) * (y - 1) - rx2 * ry2;
     while (y >= 0) {
-        ellipse_plot4(window, xc, yc, (int)x, (int)y, color);
+        ellipse_plot4(bitmap, xc, yc, (int)x, (int)y, color);
         y--;
         py -= 2 * rx2;
         if (p > 0) {
@@ -343,7 +343,7 @@ void draw_ellipse(window_t* window, int xc, int yc, int rx, int ry, uint32_t col
     }
 }
 
-void fill_ellipse(window_t* window, int xc, int yc, int rx, int ry, uint32_t color) {
+void fill_ellipse(Bitmap* bitmap, int xc, int yc, int rx, int ry, uint32_t color) {
     if (rx < 0 || ry < 0) return;
     long long rx2 = (long long)rx * rx, ry2 = (long long)ry * ry;
     long long limit = rx2 * ry2;
@@ -352,9 +352,9 @@ void fill_ellipse(window_t* window, int xc, int yc, int rx, int ry, uint32_t col
     for (int dy = 0; dy <= ry; dy++) {
         while (x > 0 && (long long)x * x * ry2 + (long long)dy * dy * rx2 > limit)
             x--;
-        draw_hline(window, xc - x, xc + x, yc + dy, color);
+        draw_hline(bitmap, xc - x, xc + x, yc + dy, color);
         if (dy != 0)
-            draw_hline(window, xc - x, xc + x, yc - dy, color);
+            draw_hline(bitmap, xc - x, xc + x, yc - dy, color);
     }
 }
 
@@ -362,14 +362,14 @@ void fill_ellipse(window_t* window, int xc, int yc, int rx, int ry, uint32_t col
 /* Triangles & polygons                                                */
 /* ------------------------------------------------------------------ */
 
-void draw_triangle(window_t* window, int x0, int y0, int x1, int y1,
+void draw_triangle(Bitmap* bitmap, int x0, int y0, int x1, int y1,
                    int x2, int y2, uint32_t color) {
-    draw_line(window, x0, y0, x1, y1, color);
-    draw_line(window, x1, y1, x2, y2, color);
-    draw_line(window, x2, y2, x0, y0, color);
+    draw_line(bitmap, x0, y0, x1, y1, color);
+    draw_line(bitmap, x1, y1, x2, y2, color);
+    draw_line(bitmap, x2, y2, x0, y0, color);
 }
 
-void fill_triangle(window_t* window, int x0, int y0, int x1, int y1,
+void fill_triangle(Bitmap* bitmap, int x0, int y0, int x1, int y1,
                    int x2, int y2, uint32_t color) {
     /* Sort vertices by y (y0 <= y1 <= y2) */
     if (y0 > y1) { GFX_SWAP(y0, y1); GFX_SWAP(x0, x1); }
@@ -379,7 +379,7 @@ void fill_triangle(window_t* window, int x0, int y0, int x1, int y1,
     if (y0 == y2) { /* degenerate: all on one row */
         int minx = GFX_MIN(x0, GFX_MIN(x1, x2));
         int maxx = GFX_MAX(x0, GFX_MAX(x1, x2));
-        draw_hline(window, minx, maxx, y0, color);
+        draw_hline(bitmap, minx, maxx, y0, color);
         return;
     }
 
@@ -394,21 +394,21 @@ void fill_triangle(window_t* window, int x0, int y0, int x1, int y1,
                ? x1 + (x2 - x1) * (y - y1) / seg_h
                : x0 + (x1 - x0) * (y - y0) / seg_h;
 
-        draw_hline(window, xa, xb, y, color);
+        draw_hline(bitmap, xa, xb, y, color);
     }
 }
 
 /* Polygon outline; pts = {x0,y0, x1,y1, ...} */
-void draw_polygon(window_t* window, const int* pts, int count, uint32_t color) {
+void draw_polygon(Bitmap* bitmap, const int* pts, int count, uint32_t color) {
     if (count < 2) return;
     for (int i = 0; i < count; i++) {
         int j = (i + 1) % count;
-        draw_line(window, pts[2 * i], pts[2 * i + 1], pts[2 * j], pts[2 * j + 1], color);
+        draw_line(bitmap, pts[2 * i], pts[2 * i + 1], pts[2 * j], pts[2 * j + 1], color);
     }
 }
 
 /* Even-odd scanline fill for arbitrary polygons (max 64 edge crossings/row) */
-void fill_polygon(window_t* window, const int* pts, int count, uint32_t color) {
+void fill_polygon(Bitmap* bitmap, const int* pts, int count, uint32_t color) {
     if (count < 3) return;
 
     int miny = pts[1], maxy = pts[1];
@@ -417,7 +417,7 @@ void fill_polygon(window_t* window, const int* pts, int count, uint32_t color) {
         maxy = GFX_MAX(maxy, pts[2 * i + 1]);
     }
     if (miny < 0) miny = 0;
-    if (maxy >= (int)window->bounds.height) maxy = window->bounds.height - 1;
+    if (maxy >= (int)bitmap->height) maxy = bitmap->height - 1;
 
     for (int y = miny; y <= maxy; y++) {
         int nodes[64], n = 0;
@@ -436,7 +436,7 @@ void fill_polygon(window_t* window, const int* pts, int count, uint32_t color) {
             nodes[b + 1] = v;
         }
         for (int a = 0; a + 1 < n; a += 2)
-            draw_hline(window, nodes[a], nodes[a + 1], y, color);
+            draw_hline(bitmap, nodes[a], nodes[a + 1], y, color);
     }
 }
 
@@ -452,38 +452,38 @@ static uint32_t lerp_color(uint32_t c0, uint32_t c1, int t, int max) {
     return 0xFF000000 | ((uint32_t)r << 16) | ((uint32_t)g << 8) | (uint32_t)b;
 }
 
-void fill_gradient_v(window_t* window, int x, int y, int width, int height,
+void fill_gradient_v(Bitmap* bitmap, int x, int y, int width, int height,
                      uint32_t top, uint32_t bottom) {
     for (int j = 0; j < height; j++)
-        draw_hline(window, x, x + width - 1, y + j, lerp_color(top, bottom, j, height - 1));
+        draw_hline(bitmap, x, x + width - 1, y + j, lerp_color(top, bottom, j, height - 1));
 }
 
-void fill_gradient_h(window_t* window, int x, int y, int width, int height,
+void fill_gradient_h(Bitmap* bitmap, int x, int y, int width, int height,
                      uint32_t left, uint32_t right) {
     for (int i = 0; i < width; i++)
-        draw_vline(window, x + i, y, y + height - 1, lerp_color(left, right, i, width - 1));
+        draw_vline(bitmap, x + i, y, y + height - 1, lerp_color(left, right, i, width - 1));
 }
 
 /* ------------------------------------------------------------------ */
 /* Bitmaps / blitting                                                  */
 /* ------------------------------------------------------------------ */
 
-/* Copy a w*h ARGB bitmap to the window at (x,y) */
-void draw_bitmap(window_t* window, int x, int y, const uint32_t* bitmap, int w, int h) {
-    for (int j = 0; j < h; j++)
-        for (int i = 0; i < w; i++)
-            set_pixel(window, x + i, y + j, bitmap[j * w + i]);
+/* Copy a w*h ARGB bitmap to the bitmap at (x,y) */
+void draw_bitmap(Bitmap* dst, int x, int y, Bitmap* src) {
+    for (int j = 0; j < src->height; j++)
+        for (int i = 0; i < src->width; i++)
+            set_pixel(dst, x + i, y + j, get_pixel(src, i, j));
 }
 
 /* Same, but blends using each pixel's alpha and skips fully transparent ones */
-void draw_bitmap_alpha(window_t* window, int x, int y, const uint32_t* bitmap, int w, int h) {
-    for (int j = 0; j < h; j++)
-        for (int i = 0; i < w; i++)
-            set_pixel_alpha(window, x + i, y + j, bitmap[j * w + i]);
+void draw_bitmap_alpha(Bitmap* dst, int x, int y, Bitmap* src) {
+    for (int j = 0; j < src->height; j++)
+        for (int i = 0; i < src->width; i++)
+            set_pixel_alpha(dst, x + i, y + j, get_pixel(src, i, j));
 }
 
-/* Copy a region from one window to another */
-void blit(window_t* dst, int dx, int dy, window_t* src, int sx, int sy, int w, int h) {
+/* Copy a region from one bitmap to another */
+void blit(Bitmap* dst, int dx, int dy, Bitmap* src, int sx, int sy, int w, int h) {
     for (int j = 0; j < h; j++)
         for (int i = 0; i < w; i++)
             set_pixel(dst, dx + i, dy + j, get_pixel(src, sx + i, sy + j));
@@ -495,11 +495,11 @@ void blit(window_t* dst, int dx, int dy, window_t* src, int sx, int sy, int w, i
 
 /* stack must hold at least 2 * stack_capacity ints. Returns 0 on success,
    -1 if the stack overflowed (fill is then partial). */
-int flood_fill(window_t* window, int x, int y, uint32_t new_color,
+int flood_fill(Bitmap* bitmap, int x, int y, uint32_t new_color,
                int* stack, int stack_capacity) {
-    uint32_t target = get_pixel(window, x, y);
+    uint32_t target = get_pixel(bitmap, x, y);
     if (target == new_color) return 0;
-    if ((uint32_t)x >= window->bounds.width || (uint32_t)y >= window->bounds.height) return 0;
+    if ((uint32_t)x >= bitmap->width || (uint32_t)y >= bitmap->height) return 0;
 
     int sp = 0;
     stack[sp * 2] = x; stack[sp * 2 + 1] = y; sp++;
@@ -507,20 +507,20 @@ int flood_fill(window_t* window, int x, int y, uint32_t new_color,
     while (sp > 0) {
         sp--;
         int cx = stack[sp * 2], cy = stack[sp * 2 + 1];
-        if (get_pixel(window, cx, cy) != target) continue;
+        if (get_pixel(bitmap, cx, cy) != target) continue;
 
         int l = cx, r = cx;
-        while (l > 0 && get_pixel(window, l - 1, cy) == target) l--;
-        while (r < (int)window->bounds.width - 1 && get_pixel(window, r + 1, cy) == target) r++;
+        while (l > 0 && get_pixel(bitmap, l - 1, cy) == target) l--;
+        while (r < (int)bitmap->width - 1 && get_pixel(bitmap, r + 1, cy) == target) r++;
 
-        draw_hline(window, l, r, cy, new_color);
+        draw_hline(bitmap, l, r, cy, new_color);
 
         for (int dy = -1; dy <= 1; dy += 2) {
             int ny = cy + dy;
-            if (ny < 0 || ny >= (int)window->bounds.height) continue;
+            if (ny < 0 || ny >= (int)bitmap->height) continue;
             int in_span = 0;
             for (int i = l; i <= r; i++) {
-                if (get_pixel(window, i, ny) == target) {
+                if (get_pixel(bitmap, i, ny) == target) {
                     if (!in_span) {
                         if (sp >= stack_capacity) return -1;
                         stack[sp * 2] = i; stack[sp * 2 + 1] = ny; sp++;
@@ -533,4 +533,114 @@ int flood_fill(window_t* window, int x, int y, uint32_t new_color,
         }
     }
     return 0;
+}
+
+static inline uint32_t ColorToUint32(Color c)
+{
+    return ((uint32_t)c.a << 24) |
+           ((uint32_t)c.b << 16) |
+           ((uint32_t)c.g <<  8) |
+           ((uint32_t)c.r);
+}
+
+static inline Color ColorFromUint32(uint32_t v)
+{
+    return (Color) {
+        .r = (uint8_t)(v),
+        .g = (uint8_t)(v >> 8),
+        .b = (uint8_t)(v >> 16),
+        .a = (uint8_t)(v >> 24),
+    };
+}
+
+Rect::Rect(int x, int y, int width, int height): x(x), y(y), width(width), height(height) {}
+Rect::Rect(Point p, Size s): Rect(p.x, p.y, s.width, s.height) {}
+
+Graphics::Graphics(Bitmap bitmap): bitmap(bitmap) {}
+void Graphics::setPixel(Point p, Color c) {
+    set_pixel(&bitmap, p.x, p.y, ColorToUint32(c));
+}
+Color Graphics::getPixel(Point p) {
+    return ColorFromUint32(get_pixel(&bitmap, p.x, p.y));
+}
+void Graphics::setPixelAlpha(Point p, Color c) {
+    set_pixel_alpha(&bitmap, p.x, p.y, ColorToUint32(c));
+}
+void Graphics::clear(Color c) {
+    clear_bitmap(&bitmap, ColorToUint32(c));
+}
+void Graphics::drawHline(Point p1, Point p2, Color c) {
+    draw_hline(&bitmap, p1.x, p2.x, p1.y, ColorToUint32(c));
+}
+void Graphics::drawVline(Point p1, Point p2, Color c) {
+    draw_vline(&bitmap, p1.x, p1.y, p2.y, ColorToUint32(c));
+}
+void Graphics::drawLine(Point p1, Point p2, Color c) {
+    draw_line(&bitmap, p1.x, p1.y, p2.x, p2.y, ColorToUint32(c));
+}
+void Graphics::drawThickLine(Point p1, Point p2, int thickness, Color c) {
+    draw_thick_line(&bitmap, p1.x, p1.y, p2.x, p2.y, thickness, ColorToUint32(c));
+}
+void Graphics::drawRectangle(Rect r, Color c) {
+    draw_rectangle(&bitmap, r.x, r.y, r.width, r.height, ColorToUint32(c));
+}
+void Graphics::fillRect(Rect r, Color c) {
+    fill_rect(&bitmap, r.x, r.y, r.width, r.height, ColorToUint32(c));
+}
+void Graphics::fillRectAlpha(Rect r, Color c) {
+    fill_rect_alpha(&bitmap, r.x, r.y, r.width, r.height, ColorToUint32(c));
+}
+void Graphics::drawRectangleThick(Rect r, int thickness, Color c) {
+    draw_rectangle_thick(&bitmap, r.x, r.y, r.width, r.height, thickness, ColorToUint32(c));
+}
+void Graphics::drawRoundedRect(Rect r, int radius, Color c) {
+    draw_rounded_rect(&bitmap, r.x, r.y, r.width, r.height, radius, ColorToUint32(c));
+}
+void Graphics::fillRoundedRect(Rect r, int radius, Color c) {
+    fill_rounded_rect(&bitmap, r.x, r.y, r.width, r.height, radius, ColorToUint32(c));
+}
+void Graphics::drawCircle(Point p, int radius, Color c) {
+    draw_circle(&bitmap, p.x, p.y, radius, ColorToUint32(c));
+}
+void Graphics::fillCircle(Point p, int radius, Color c) {
+    fill_circle(&bitmap, p.x, p.y, radius, ColorToUint32(c));
+}
+void Graphics::drawRing(Point p, int outerR, int innerR, Color c) {
+    draw_ring(&bitmap, p.x, p.y, outerR, innerR, ColorToUint32(c));
+}
+void Graphics::drawEllipse(Point p, int rx, int ry, Color c) {
+    draw_ellipse(&bitmap, p.x, p.y, rx, ry, ColorToUint32(c));
+}
+void Graphics::fillEllipse(Point p, int rx, int ry, Color c) {
+    fill_ellipse(&bitmap, p.x, p.y, rx, ry, ColorToUint32(c));
+}
+void Graphics::drawTriangle(Point p1, Point p2, Point p3, Color c) {
+    draw_triangle(&bitmap, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, ColorToUint32(c));
+}
+void Graphics::fillTriangle(Point p1, Point p2, Point p3, Color c) {
+    fill_triangle(&bitmap, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, ColorToUint32(c));
+}
+void Graphics::drawPolygon(Point* pts, int count, Color c) {
+    draw_polygon(&bitmap, (const int*)pts, count, ColorToUint32(c));
+}
+void Graphics::fillPolygon(Point* pts, int count, Color c) {
+    fill_polygon(&bitmap, (const int*)pts, count, ColorToUint32(c));
+}
+void Graphics::fillGradientV(Rect r, Color top, Color bottom) {
+    fill_gradient_v(&bitmap, r.x, r.y, r.width, r.height, ColorToUint32(top), ColorToUint32(bottom));
+}
+void Graphics::fillGradientH(Rect r, Color left, Color right) {
+    fill_gradient_h(&bitmap, r.x, r.y, r.width, r.height, ColorToUint32(left), ColorToUint32(right));
+}
+void Graphics::drawBitmap(Point p, Bitmap* src) {
+    draw_bitmap(&bitmap, p.x, p.y, src);
+}
+void Graphics::drawBitmapAlpha(Point p, Bitmap* src) {
+    draw_bitmap_alpha(&bitmap, p.x, p.y, src);
+}
+void Graphics::blitBitmap(Rect dstRect, Bitmap* src, Rect srcRect) {
+    blit(&bitmap, dstRect.x, dstRect.y, src, srcRect.x, srcRect.y, srcRect.width, srcRect.height);
+}
+int Graphics::floodFill(Point p, Color newColor, int* stack, int stackCapacity) {
+    return flood_fill(&bitmap, p.x, p.y, ColorToUint32(newColor), stack, stackCapacity);
 }
