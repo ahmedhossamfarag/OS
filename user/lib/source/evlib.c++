@@ -21,7 +21,7 @@ EventQueue::~EventQueue()
 
 uint8_t EventQueue::register_event_queue()
 {
-    asm("mov %0, %%rsi\n\t""int $0x80"::"i"(EVENT_QUEUE_REG_INT), "b"((uint64_t)this));
+    asm("mov %0, %%rsi\n\t""int $0x80"::"i"(EVENT_QUEUE_REG_SYSCALL), "b"((uint64_t)this));
 
     uint64_t result;
     asm("mov %%rax, %0":"=m"(result));
@@ -31,12 +31,12 @@ uint8_t EventQueue::register_event_queue()
 
 void EventQueue::wait()
 {
-    asm("mov %0, %%rsi\n\t""int $0x80"::"i"(EVENT_WAIT_INT));
+    asm("mov %0, %%rsi\n\t""int $0x80"::"i"(EVENT_WAIT_SYSCALL));
 }
 
 uint8_t EventQueue::deregister_event_queue()
 {
-    asm("mov %0, %%rsi\n\t""int $0x80"::"i"(EVENT_QUEUE_DEREG_INT));
+    asm("mov %0, %%rsi\n\t""int $0x80"::"i"(EVENT_QUEUE_DEREG_SYSCALL));
 
     uint64_t result;
     asm("mov %%rax, %0":"=m"(result));

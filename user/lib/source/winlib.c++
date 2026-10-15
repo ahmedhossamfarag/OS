@@ -51,12 +51,35 @@ uint8_t redraw_window(void* window_handle)
     return (uint8_t)result;
 }
 
+uint8_t redraw_window_region(void* window_handle, bounds_t* bounds)
+{
+    asm("mov %0, %%rsi\n\t""int $0x80"::"i"(REDRAW_WINDOW_REGION_SYSCALL),"d"((uint64_t)window_handle),"c"((uint64_t)bounds));
+
+    uint64_t result;
+    asm("mov %%rax, %0":"=m"(result));
+    
+    return (uint8_t)result;
+}
+
 uint8_t update_window_bounds(void* window_handle, bounds_t* bounds)
 {
     asm("mov %0, %%rsi\n\t""int $0x80"::"i"(UPDATE_WINDOW_BOUNDS_SYSCALL),"d"((uint64_t)window_handle),"c"((uint64_t)bounds));
 
     uint64_t result;
     asm("mov %%rax, %0":"=m"(result));
+    
+    return (uint8_t)result;
+}
+
+uint8_t get_screen_size(int32_t* width, int32_t* height)
+{
+    asm("mov %0, %%rsi\n\t""int $0x80"::"i"(GET_SCREEN_SIZE_SYSCALL));
+
+    uint64_t result;
+    asm("mov %%rax, %0":"=m"(result));
+    
+    *width = (int32_t)(result & 0xFFFFFFFF);
+    *height = (int32_t)(result >> 32);
     
     return (uint8_t)result;
 }

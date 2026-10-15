@@ -1,6 +1,7 @@
 #include "win_syscall.h"
 #include "resources.h"
 #include "windows.h"
+#include "info.h"
 
 void* windows_lock;
 
@@ -45,6 +46,20 @@ void redraw_window_handler(cpu_state_t* state){
     state->rax = 1;
 }
 
+void redraw_window_region_handler(cpu_state_t* state){
+    thread_t* thread = get_current_thread();
+    
+    resource_lock_request(&windows_lock, thread);
+
+    window_t* window = (window_t*)state->rdx;
+    bounds_t* bounds = (bounds_t*)state->rcx;
+    redraw_window_region(window, bounds);
+
+    resource_lock_free(&windows_lock, thread);
+
+    state->rax = 1;
+}
+
 void update_window_bounds_handler(cpu_state_t* state){
     thread_t* thread = get_current_thread();
     
@@ -57,4 +72,9 @@ void update_window_bounds_handler(cpu_state_t* state){
     resource_lock_free(&windows_lock, thread);
 
     state->rax = 1;
+}
+
+void get_screen_size_handler(cpu_state_t* state){
+    graphics_info_t* info = info_get_graphics();
+    state->rax = (uint64_t)info->Width | ((uint64_t)info->Height << 32);
 }

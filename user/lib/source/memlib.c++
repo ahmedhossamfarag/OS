@@ -9,7 +9,7 @@ static void* lock;
 
 void minit()
 {
-   	asm("mov %0, %%rsi\n\t""int $0x80":: "i"(MEMORY_INIT_INT));
+   	asm("mov %0, %%rsi\n\t""int $0x80":: "i"(MEMORY_INIT_SYSCALL));
     asm("mov %%rbx, %0" : "=b"(MemoryBeginAddress), "=d"(MemoryEnd));
 
 	mhead = MemoryBeginAddress;
