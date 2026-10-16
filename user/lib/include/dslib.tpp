@@ -236,6 +236,18 @@ T* Array<T>::end()
 }
 
 template<typename T>
+uint32_t Array<T>::count()
+{
+    return this->size;
+}
+
+template<typename T>
+T& Array<T>::operator[](uint32_t index)
+{
+    return this->data[index];
+}
+
+template<typename T>
 void Array<T>::resize(uint32_t new_capacity)
 {
     T* new_data = new T[new_capacity];

@@ -62,6 +62,8 @@ class Array{
         void remove(T item);
         T* begin();
         T* end();
+        uint32_t count();
+        T& operator[](uint32_t index);
     private:
         uint32_t capacity;
         uint32_t size;
@@ -89,3 +91,5 @@ class Stack{
 };
 
 #pragma endregion
+
+#include "dslib.tpp"

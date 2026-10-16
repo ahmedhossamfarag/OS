@@ -81,7 +81,7 @@ uint8_t get_screen_size(int32_t* width, int32_t* height)
     *width = (int32_t)(result & 0xFFFFFFFF);
     *height = (int32_t)(result >> 32);
     
-    return (uint8_t)result;
+    return result != 0;
 }
 
 #endif // !WINLIB_H

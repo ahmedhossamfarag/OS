@@ -410,11 +410,10 @@ int main() {
 
     window_t* window = create_window(x, y, width, height, bgcolor);
 
-    Bitmap* bitmap = new Bitmap{
-        .width = width,
-        .height = height,
-        .buffer = window->buffer
-    };
+    Bitmap* bitmap = new Bitmap();
+    bitmap->width = width;
+    bitmap->height = height;
+    bitmap->buffer = window->buffer;
 
     draw_welcome_window(bitmap);
 

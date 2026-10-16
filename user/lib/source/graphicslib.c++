@@ -535,112 +535,122 @@ int flood_fill(Bitmap* bitmap, int x, int y, uint32_t new_color,
     return 0;
 }
 
-static inline uint32_t ColorToUint32(Color c)
-{
-    return ((uint32_t)c.a << 24) |
-           ((uint32_t)c.b << 16) |
-           ((uint32_t)c.g <<  8) |
-           ((uint32_t)c.r);
+Color::Color(): r(0), g(0), b(0), a(0) {}
+Color::Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a): r(r), g(g), b(b), a(a) {}
+Color::Color(uint8_t r, uint8_t g, uint8_t b): r(r), g(g), b(b), a(255) {}
+Color::Color(uint32_t color): r(color & 0xFF), g((color >> 8) & 0xFF), b((color >> 16) & 0xFF), a((color >> 24) & 0xFF) {}
+uint32_t Color::toUint32() { return ((uint32_t)a << 24) | ((uint32_t)b << 16) | ((uint32_t)g << 8) | (uint32_t)r; }
+
+Bitmap::Bitmap(): width(0), height(0), buffer(nullptr) {}
+Bitmap::Bitmap(uint32_t width, uint32_t height): width(width), height(height), buffer(nullptr) {
+    if (width > 0 && height > 0) {
+        buffer = new uint32_t[width * height];
+    }
 }
 
-static inline Color ColorFromUint32(uint32_t v)
-{
-    return (Color) {
-        .r = (uint8_t)(v),
-        .g = (uint8_t)(v >> 8),
-        .b = (uint8_t)(v >> 16),
-        .a = (uint8_t)(v >> 24),
-    };
-}
+Point::Point(): x(0), y(0) {}
+Point::Point(int x, int y): x(x), y(y) {}
+Point Point::operator+(Point& p) { return Point(x + p.x, y + p.y); }
+Point Point::operator-(Point& p) { return Point(x - p.x, y - p.y); }
+bool Point::operator==(Point& p) { return x == p.x && y == p.y; }
+bool Point::operator!=(Point& p) { return x != p.x || y != p.y; }
 
+Size::Size(): width(0), height(0) {}
+Size::Size(uint32_t width, uint32_t height): width(width), height(height) {}
+Size Size::operator+(Size& s) { return Size(width + s.width, height + s.height); }
+Size Size::operator-(Size& s) { return Size(width - s.width, height - s.height); }
+bool Size::operator==(Size& s) { return width == s.width && height == s.height; }
+bool Size::operator!=(Size& s) { return width != s.width || height != s.height; }
+
+Rect::Rect(): x(0), y(0), width(0), height(0) {}
 Rect::Rect(int x, int y, int width, int height): x(x), y(y), width(width), height(height) {}
 Rect::Rect(Point p, Size s): Rect(p.x, p.y, s.width, s.height) {}
 
-Graphics::Graphics(Bitmap bitmap): bitmap(bitmap) {}
+Graphics::Graphics(Bitmap* bitmap): bitmap(bitmap) {}
 void Graphics::setPixel(Point p, Color c) {
-    set_pixel(&bitmap, p.x, p.y, ColorToUint32(c));
+    set_pixel(bitmap, p.x, p.y, c.toUint32());
 }
 Color Graphics::getPixel(Point p) {
-    return ColorFromUint32(get_pixel(&bitmap, p.x, p.y));
+    return Color(get_pixel(bitmap, p.x, p.y));
 }
 void Graphics::setPixelAlpha(Point p, Color c) {
-    set_pixel_alpha(&bitmap, p.x, p.y, ColorToUint32(c));
+    set_pixel_alpha(bitmap, p.x, p.y, c.toUint32());
 }
 void Graphics::clear(Color c) {
-    clear_bitmap(&bitmap, ColorToUint32(c));
+    clear_bitmap(bitmap, c.toUint32());
 }
 void Graphics::drawHline(Point p1, Point p2, Color c) {
-    draw_hline(&bitmap, p1.x, p2.x, p1.y, ColorToUint32(c));
+    draw_hline(bitmap, p1.x, p2.x, p1.y, c.toUint32());
 }
 void Graphics::drawVline(Point p1, Point p2, Color c) {
-    draw_vline(&bitmap, p1.x, p1.y, p2.y, ColorToUint32(c));
+    draw_vline(bitmap, p1.x, p1.y, p2.y, c.toUint32());
 }
 void Graphics::drawLine(Point p1, Point p2, Color c) {
-    draw_line(&bitmap, p1.x, p1.y, p2.x, p2.y, ColorToUint32(c));
+    draw_line(bitmap, p1.x, p1.y, p2.x, p2.y, c.toUint32());
 }
 void Graphics::drawThickLine(Point p1, Point p2, int thickness, Color c) {
-    draw_thick_line(&bitmap, p1.x, p1.y, p2.x, p2.y, thickness, ColorToUint32(c));
+    draw_thick_line(bitmap, p1.x, p1.y, p2.x, p2.y, thickness, c.toUint32());
 }
 void Graphics::drawRectangle(Rect r, Color c) {
-    draw_rectangle(&bitmap, r.x, r.y, r.width, r.height, ColorToUint32(c));
+    draw_rectangle(bitmap, r.x, r.y, r.width, r.height, c.toUint32());
 }
 void Graphics::fillRect(Rect r, Color c) {
-    fill_rect(&bitmap, r.x, r.y, r.width, r.height, ColorToUint32(c));
+    fill_rect(bitmap, r.x, r.y, r.width, r.height, c.toUint32());
 }
 void Graphics::fillRectAlpha(Rect r, Color c) {
-    fill_rect_alpha(&bitmap, r.x, r.y, r.width, r.height, ColorToUint32(c));
+    fill_rect_alpha(bitmap, r.x, r.y, r.width, r.height, c.toUint32());
 }
 void Graphics::drawRectangleThick(Rect r, int thickness, Color c) {
-    draw_rectangle_thick(&bitmap, r.x, r.y, r.width, r.height, thickness, ColorToUint32(c));
+    draw_rectangle_thick(bitmap, r.x, r.y, r.width, r.height, thickness, c.toUint32());
 }
 void Graphics::drawRoundedRect(Rect r, int radius, Color c) {
-    draw_rounded_rect(&bitmap, r.x, r.y, r.width, r.height, radius, ColorToUint32(c));
+    draw_rounded_rect(bitmap, r.x, r.y, r.width, r.height, radius, c.toUint32());
 }
 void Graphics::fillRoundedRect(Rect r, int radius, Color c) {
-    fill_rounded_rect(&bitmap, r.x, r.y, r.width, r.height, radius, ColorToUint32(c));
+    fill_rounded_rect(bitmap, r.x, r.y, r.width, r.height, radius, c.toUint32());
 }
 void Graphics::drawCircle(Point p, int radius, Color c) {
-    draw_circle(&bitmap, p.x, p.y, radius, ColorToUint32(c));
+    draw_circle(bitmap, p.x, p.y, radius, c.toUint32());
 }
 void Graphics::fillCircle(Point p, int radius, Color c) {
-    fill_circle(&bitmap, p.x, p.y, radius, ColorToUint32(c));
+    fill_circle(bitmap, p.x, p.y, radius, c.toUint32());
 }
 void Graphics::drawRing(Point p, int outerR, int innerR, Color c) {
-    draw_ring(&bitmap, p.x, p.y, outerR, innerR, ColorToUint32(c));
+    draw_ring(bitmap, p.x, p.y, outerR, innerR, c.toUint32());
 }
 void Graphics::drawEllipse(Point p, int rx, int ry, Color c) {
-    draw_ellipse(&bitmap, p.x, p.y, rx, ry, ColorToUint32(c));
+    draw_ellipse(bitmap, p.x, p.y, rx, ry, c.toUint32());
 }
 void Graphics::fillEllipse(Point p, int rx, int ry, Color c) {
-    fill_ellipse(&bitmap, p.x, p.y, rx, ry, ColorToUint32(c));
+    fill_ellipse(bitmap, p.x, p.y, rx, ry, c.toUint32());
 }
 void Graphics::drawTriangle(Point p1, Point p2, Point p3, Color c) {
-    draw_triangle(&bitmap, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, ColorToUint32(c));
+    draw_triangle(bitmap, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, c.toUint32());
 }
 void Graphics::fillTriangle(Point p1, Point p2, Point p3, Color c) {
-    fill_triangle(&bitmap, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, ColorToUint32(c));
+    fill_triangle(bitmap, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, c.toUint32());
 }
 void Graphics::drawPolygon(Point* pts, int count, Color c) {
-    draw_polygon(&bitmap, (const int*)pts, count, ColorToUint32(c));
+    draw_polygon(bitmap, (const int*)pts, count, c.toUint32());
 }
 void Graphics::fillPolygon(Point* pts, int count, Color c) {
-    fill_polygon(&bitmap, (const int*)pts, count, ColorToUint32(c));
+    fill_polygon(bitmap, (const int*)pts, count, c.toUint32());
 }
 void Graphics::fillGradientV(Rect r, Color top, Color bottom) {
-    fill_gradient_v(&bitmap, r.x, r.y, r.width, r.height, ColorToUint32(top), ColorToUint32(bottom));
+    fill_gradient_v(bitmap, r.x, r.y, r.width, r.height, top.toUint32(), bottom.toUint32());
 }
 void Graphics::fillGradientH(Rect r, Color left, Color right) {
-    fill_gradient_h(&bitmap, r.x, r.y, r.width, r.height, ColorToUint32(left), ColorToUint32(right));
+    fill_gradient_h(bitmap, r.x, r.y, r.width, r.height, left.toUint32(), right.toUint32());
 }
 void Graphics::drawBitmap(Point p, Bitmap* src) {
-    draw_bitmap(&bitmap, p.x, p.y, src);
+    draw_bitmap(bitmap, p.x, p.y, src);
 }
 void Graphics::drawBitmapAlpha(Point p, Bitmap* src) {
-    draw_bitmap_alpha(&bitmap, p.x, p.y, src);
+    draw_bitmap_alpha(bitmap, p.x, p.y, src);
 }
 void Graphics::blitBitmap(Rect dstRect, Bitmap* src, Rect srcRect) {
-    blit(&bitmap, dstRect.x, dstRect.y, src, srcRect.x, srcRect.y, srcRect.width, srcRect.height);
+    blit(bitmap, dstRect.x, dstRect.y, src, srcRect.x, srcRect.y, srcRect.width, srcRect.height);
 }
 int Graphics::floodFill(Point p, Color newColor, int* stack, int stackCapacity) {
-    return flood_fill(&bitmap, p.x, p.y, ColorToUint32(newColor), stack, stackCapacity);
+    return flood_fill(bitmap, p.x, p.y, newColor.toUint32(), stack, stackCapacity);
 }

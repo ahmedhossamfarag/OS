@@ -8,22 +8,48 @@ typedef struct Color {
     uint8_t g;
     uint8_t b;
     uint8_t a;
+
+    Color();
+    Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+    Color(uint8_t r, uint8_t g, uint8_t b);
+    Color(uint32_t color);
+
+    uint32_t toUint32();
 } Color;
 
 typedef struct Bitmap {
     uint32_t width;
     uint32_t height;
     uint32_t* buffer;
+
+    Bitmap();
+    Bitmap(uint32_t width, uint32_t height);
 } Bitmap;
 
 typedef struct Point {
     int x;
     int y;
+
+    Point();
+    Point(int x, int y);
+
+    Point operator+(Point& p);
+    Point operator-(Point& p);
+    bool operator==(Point& p);
+    bool operator!=(Point& p);
 } Point;
 
 typedef struct Size {
     uint32_t width;
     uint32_t height;
+
+    Size();
+    Size(uint32_t width, uint32_t height);
+
+    Size operator+(Size& s);
+    Size operator-(Size& s);
+    bool operator==(Size& s);
+    bool operator!=(Size& s);
 } Size;
 
 typedef struct Rect {
@@ -32,6 +58,7 @@ typedef struct Rect {
     uint32_t width;
     uint32_t height;
 
+    Rect();
     Rect(int x, int y, int width, int height);
     Rect(Point p, Size s);
 } Rect;
@@ -39,7 +66,7 @@ typedef struct Rect {
 
 class Graphics {
 public:
-    Graphics(Bitmap bitmap);
+    Graphics(Bitmap* bitmap);
     void setPixel(Point p, Color color);
     Color getPixel(Point p);
     void setPixelAlpha(Point p, Color color); /* 0xAARRGGBB */
@@ -71,7 +98,7 @@ public:
     int floodFill(Point p, Color newColor, int* stack, int stackCapacity);
 
 private:
-    Bitmap bitmap;
+    Bitmap* bitmap;
 };
 
 
