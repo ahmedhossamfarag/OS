@@ -19,6 +19,12 @@ typedef struct Constraints {
     uint32_t maxHeight = 0xFFFFFFFF;
 } Constraints;
 
+typedef struct LayoutProperties {
+    bool flexGrow = false;
+    uint32_t gridRowSpan = 1;
+    uint32_t gridColumnSpan = 1;
+} LayoutProperties;
+
 typedef struct WidgetProperties {
     Point location = {};
     Size preferredSize = {};
@@ -26,17 +32,25 @@ typedef struct WidgetProperties {
     Border border = {};
     Constraints constraints = {};
     Color backgroundColor = {};
+    LayoutProperties layoutProperties = {};
 } WidgetProperties;
 
 class Widget {
     public:
         Widget();
         Widget(WidgetProperties properties);
-        
+
+        Rect getBounds();
+        Rect getInnerBounds();
+        LayoutProperties &getLayoutProperties();
         virtual uint32_t getWidth();
         virtual uint32_t getHeight();
-        void setPiantWidth(uint32_t width);
+        void setPaintWidth(uint32_t width);
         void setPaintHeight(uint32_t height);
+        uint32_t getPaintWidth();
+        uint32_t getPaintHeight();
+        void setLocation(Point location);
+        Point getLocation();
         void destroy();
 
     protected:
@@ -48,6 +62,7 @@ class Widget {
         Border border;
         Constraints constraints;
         Color backgroundColor;
+        LayoutProperties layoutProperties;
         Bitmap bitmap;
         Graphics graphics;
 };
@@ -78,38 +93,36 @@ typedef enum Alignment {
 
 class FlexLayout : public Layout {
     public:
-        FlexLayout();
-        FlexLayout(FlexDirection direction, uint32_t alignment, uint32_t spacing);
         uint32_t getComputedWidth(Array<Widget*> &widgets, uint32_t height) override;
         uint32_t getComputedHeight(Array<Widget*> &widgets, uint32_t width) override;
         void performLayout(Array<Widget*> &widgets, Rect &bounds) override;
 
-        FlexDirection direction;
-        uint32_t alignment;
-        uint32_t spacing;
+        FlexDirection direction = FLEX_DIRECTION_ROW;
+        uint32_t spacing = 0;
+        uint32_t alignment = ALIGNMENT_LEFT | ALIGNMENT_TOP;
 };
 
 class GridLayout : public Layout {
     public:
-        GridLayout();
-        GridLayout(uint32_t columns, uint32_t rows);
         uint32_t getComputedWidth(Array<Widget*> &widgets, uint32_t height) override;
         uint32_t getComputedHeight(Array<Widget*> &widgets, uint32_t width) override;
         void performLayout(Array<Widget*> &widgets, Rect &bounds) override;
 
-        uint32_t columns;
-        uint32_t rows;
+        uint32_t columns = 1;
+        uint32_t rows = 1;
+        uint32_t spacing = 0;
+        uint32_t alignment = ALIGNMENT_LEFT | ALIGNMENT_TOP;
 };
 
 class FlowLayout : public Layout {
     public:
-        FlowLayout();
-        FlowLayout(uint32_t columns);
         uint32_t getComputedWidth(Array<Widget*> &widgets, uint32_t height) override;
         uint32_t getComputedHeight(Array<Widget*> &widgets, uint32_t width) override;
         void performLayout(Array<Widget*> &widgets, Rect &bounds) override;
 
         uint32_t columns;
+        uint32_t spacing = 0;
+        uint32_t alignment = ALIGNMENT_LEFT | ALIGNMENT_TOP;
 };
 
 class Container : public Widget {
