@@ -20,7 +20,7 @@
             "name": "User",
             "includePath": [
                 "${workspaceFolder}/user/lib/include",
-                "${workspaceFolder}/user/shell/include"
+                "${workspaceFolder}/user/desktop/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/g++",

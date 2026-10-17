@@ -17,8 +17,8 @@ GCC_INCLUDE := ${IUSER_LIBS} -Iinclude
 %.o : %.asm
 	nasm $< -f elf64 -o $@
 
-all: shell.o
+all: desktop.o
 
 
-shell.o: start.o ${C_OBJ} ${ASM_OBJ} ${USER_LIBS_OBJ}
+desktop.o: start.o ${C_OBJ} ${ASM_OBJ} ${USER_LIBS_OBJ}
 	g++ -m64 -nostdlib -nodefaultlibs -nostartfiles -o $@ $^ -z noexecstack

@@ -75,7 +75,7 @@ static void read_file(){
 }
 
 static void open_file(){
-    file_open((dir_entity_t*)args.root_dir, "shell", &args.filefs, read_file, loader_error);
+    file_open((dir_entity_t*)args.root_dir, "desktop.o", &args.filefs, read_file, loader_error);
 }
 
 void load_program(SUCC_ERR)
