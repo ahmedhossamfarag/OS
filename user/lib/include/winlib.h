@@ -25,4 +25,6 @@ uint8_t redraw_window(void* window_handle);
 
 uint8_t update_window_bounds(void* window_handle, bounds_t* bounds);
 
+uint8_t redraw_window_region(void* window_handle, bounds_t* bounds);
+
 uint8_t get_screen_size(uint32_t* width, uint32_t* height);

@@ -539,6 +539,8 @@ Color::Color(): r(0), g(0), b(0), a(0) {}
 Color::Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a): r(r), g(g), b(b), a(a) {}
 Color::Color(uint8_t r, uint8_t g, uint8_t b): r(r), g(g), b(b), a(255) {}
 Color::Color(uint32_t color): r(color & 0xFF), g((color >> 8) & 0xFF), b((color >> 16) & 0xFF), a((color >> 24) & 0xFF) {}
+bool Color::operator==(Color& c) { return r == c.r && g == c.g && b == c.b && a == c.a; }
+bool Color::operator!=(Color& c) { return r != c.r || g != c.g || b != c.b || a != c.a; }
 uint32_t Color::toUint32() { return ((uint32_t)a << 24) | ((uint32_t)b << 16) | ((uint32_t)g << 8) | (uint32_t)r; }
 
 Bitmap::Bitmap(): width(0), height(0), buffer(nullptr) {}
@@ -565,6 +567,21 @@ bool Size::operator!=(Size& s) { return width != s.width || height != s.height; 
 Rect::Rect(): x(0), y(0), width(0), height(0) {}
 Rect::Rect(int x, int y, int width, int height): x(x), y(y), width(width), height(height) {}
 Rect::Rect(Point p, Size s): Rect(p.x, p.y, s.width, s.height) {}
+Rect Rect::operator+(Point& p) { return Rect(x + p.x, y + p.y, width, height); }
+Rect Rect::operator-(Point& p) { return Rect(x - p.x, y - p.y, width, height); }
+Rect Rect::operator+(Rect& r) { 
+    if (r.width == 0 || r.height == 0) {
+        return Rect(x, y, width, height);
+    }
+    if (width == 0 || height == 0) {
+        return Rect(r.x, r.y, r.width, r.height);
+    }
+    uint32_t minX = math_min(x, r.x);
+    uint64_t minY = math_min(y, r.y);
+    uint64_t maxX = math_max(x + width, r.x + r.width);
+    uint64_t maxY = math_max(y + height, r.y + r.height);
+    return Rect(minX, minY, maxX - minX, maxY - minY);
+}
 
 Graphics::Graphics(Bitmap* bitmap): bitmap(bitmap) {}
 void Graphics::setPixel(Point p, Color c) {

@@ -1,4 +1,5 @@
 #include "graphicslib.h"
+#include "evlib.h"
 #include "dslib.h"
 
 typedef struct Border {
@@ -35,6 +36,13 @@ typedef struct WidgetProperties {
     LayoutProperties layoutProperties = {};
 } WidgetProperties;
 
+typedef enum WidgetPaintState{
+    WIDGET_PAINT_STATE_INIT = 0,
+    WIDGET_PAINT_STATE_PAINTED = 0b1,
+    WIDGET_PAINT_STATE_REPAINT_REQUIRED = 0b10,
+    WIDGET_PAINT_STATE_LAYOUT_REQUIRED = 0b100
+} WidgetPaintState;
+
 class Widget {
     public:
         Widget();
@@ -52,15 +60,27 @@ class Widget {
         uint32_t getPaintHeight();
         void setLocation(Point location);
         Point getLocation();
+        void setPreferredSize(Size preferredSize);
+        Size getPreferredSize();
+        void setBackgroundColor(Color backgroundColor);
+        Color getBackgroundColor();
+        bool containtPoint(Point p);
+        virtual Widget* getWidgetAt(Point p);
         Widget* getParent();
         void setParent(Widget* parent);
         virtual void paint();
+        virtual void repaint();
         virtual void copyBitmap(Graphics &g);
+        uint32_t getPaintState();
+        virtual void updatePaintState();
+        virtual Rect getRepaintBounds();
+        virtual void handleEvent(Event* event);
         virtual void destroy();
 
     protected:
         Widget* parent;
         Point location;
+        Point paintLocation;
         Size preferredSize;
         Size paintSize;
         Padding padding;
@@ -70,6 +90,7 @@ class Widget {
         LayoutProperties layoutProperties;
         Bitmap bitmap;
         Graphics graphics;
+        uint32_t paintState;
 
         void paintBorder();
         void paintBackground();
@@ -150,8 +171,13 @@ class Container : public Widget {
         void removeChild(Widget* widget);
         uint32_t getWidth() override;
         uint32_t getHeight() override;
+        Widget* getWidgetAt(Point p) override;
         void paint() override;
+        void repaint() override;
         void performLayout();
+        void updateLayout();
+        void updatePaintState() override;
+        Rect getRepaintBounds() override;
         void destroy() override;
 
     protected:
@@ -167,8 +193,17 @@ class Window : public Container {
         void setFullscreen(bool fullscreen);
         void registerWindow();
         void unregisterWindow();
+        void listenToEvents();
+        void updateRegion(Rect &bounds);
+        void destroy() override;
 
     protected:
         void* handle;
         bool fullscreen;
+        EventQueue* eventQueue;
+        Widget* focusedWidget;
+
+        void handleWindowEvent(Event* event);
+        void handlePaintUpdate(Widget* widget);
+
 };

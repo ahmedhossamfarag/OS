@@ -9,6 +9,7 @@ Widget::Widget(): Widget(WidgetProperties()) {}
 Widget::Widget(WidgetProperties properties): 
         parent(nullptr), 
         location(properties.location), 
+        paintLocation(),
         preferredSize(properties.preferredSize), 
         paintSize(), 
         padding(properties.padding), 
@@ -17,7 +18,8 @@ Widget::Widget(WidgetProperties properties):
         backgroundColor(properties.backgroundColor),
         layoutProperties(properties.layoutProperties),
         bitmap(),
-        graphics(nullptr)
+        graphics(nullptr),
+        paintState(WIDGET_PAINT_STATE_INIT)
         {}
 Rect Widget::getBounds() {
     return Rect(location, paintSize);
@@ -78,10 +80,47 @@ uint32_t Widget::getPaintHeight() {
     return paintSize.height;
 }
 void Widget::setLocation(Point location) {
-    this->location = location;
+    if (this->location != location){
+        this->location = location;
+        if (paintState != WIDGET_PAINT_STATE_INIT) {
+            paintState = WIDGET_PAINT_STATE_LAYOUT_REQUIRED;
+        }
+    }
 }
 Point Widget::getLocation() {
     return location;
+}
+void Widget::setPreferredSize(Size preferedSize) {
+    if (this->preferredSize != preferedSize) {
+        this->preferredSize = preferedSize;
+        if (paintState != WIDGET_PAINT_STATE_INIT) {
+            paintState |= WIDGET_PAINT_STATE_LAYOUT_REQUIRED;
+        }
+    }
+}
+Size Widget::getPreferredSize() {
+    return preferredSize;
+}
+void Widget::setBackgroundColor(Color backgroundColor) {
+    if (this->backgroundColor != backgroundColor) {
+        this->backgroundColor = backgroundColor;
+        if (paintState != WIDGET_PAINT_STATE_INIT) {
+            paintState |= WIDGET_PAINT_STATE_REPAINT_REQUIRED;
+        }
+    }
+}
+Color Widget::getBackgroundColor() {
+    return backgroundColor;
+}
+bool Widget::containtPoint(Point p) {
+    return p.x >= location.x && p.y >= location.y && 
+            p.x < location.x + paintSize.width && p.y < location.y + paintSize.height;
+}
+Widget* Widget::getWidgetAt(Point p) {
+    if (containtPoint(p)) {
+        return this;
+    }
+    return nullptr;
 }
 Widget* Widget::getParent() {
     return parent;
@@ -110,13 +149,43 @@ void Widget::paintBackground() {
 void Widget::paint() {
     bitmap = Bitmap(paintSize.width, paintSize.height);
     graphics = Graphics(&bitmap);
-    paintBackground();
-    paintBorder();
+    if (bitmap.buffer) {
+        paintBackground();
+        paintBorder();
+    }
+    paintLocation = location;
+    paintState = WIDGET_PAINT_STATE_PAINTED;
+}
+void Widget::repaint() {
+    if (paintState & WIDGET_PAINT_STATE_REPAINT_REQUIRED) {
+        paint();
+    }
 }
 void Widget::copyBitmap(Graphics &g) {
     if (bitmap.buffer) {
         g.drawBitmapAlpha(location, &bitmap);
     }
+}
+uint32_t Widget::getPaintState() {
+    return paintState;
+}
+void Widget::updatePaintState() {
+    if (paintLocation != location || paintSize.width != bitmap.width || paintSize.height != bitmap.height) {
+        paintState |= WIDGET_PAINT_STATE_REPAINT_REQUIRED;
+    } else if (!(paintState & WIDGET_PAINT_STATE_REPAINT_REQUIRED)) {
+        paintState = WIDGET_PAINT_STATE_PAINTED;
+    }
+}
+Rect Widget::getRepaintBounds() {
+    if (paintState & WIDGET_PAINT_STATE_REPAINT_REQUIRED) {
+        Rect paintedBounds = Rect(paintLocation.x, paintLocation.y, bitmap.width, bitmap.height);
+        return Rect(location, paintSize) + paintedBounds;
+    } else {
+        return Rect();
+    }
+}
+void Widget::handleEvent(Event* event) {
+    // TODO: Implement event handling
 }
 void Widget::destroy() {
     if (bitmap.buffer) {
@@ -500,10 +569,16 @@ void Container::addChild(Widget* widget) {
     }
     children.add(widget);
     widget->setParent(this);
+    if (paintState != WIDGET_PAINT_STATE_INIT){
+        paintState |= WIDGET_PAINT_STATE_LAYOUT_REQUIRED;
+    }
 }
 void Container::removeChild(Widget* widget) {
     children.remove(widget);
     widget->setParent(nullptr);
+    if (paintState != WIDGET_PAINT_STATE_INIT){
+        paintState |= WIDGET_PAINT_STATE_LAYOUT_REQUIRED;
+    }
 }
 uint32_t Container::getWidth() {
     if (preferredSize.width) {
@@ -523,10 +598,35 @@ uint32_t Container::getHeight() {
         return Widget::getHeight();
     }
 }
+Widget* Container::getWidgetAt(Point p) {
+    if (Widget::containtPoint(p)) {
+        p = p - location;
+        for (Widget* widget : children) {
+            if (widget->containtPoint(p)) {
+                return widget;
+            }
+        }
+        return this;
+    }
+    return nullptr;
+}
 void Container::paint() {
     Widget::paint();
-    for (Widget* widget : children) {
-        widget->copyBitmap(graphics);
+    if (bitmap.buffer) {
+        for (Widget* widget : children) {
+            widget->copyBitmap(graphics);
+        }
+    }
+}
+void Container::repaint() {
+    if (paintState & WIDGET_PAINT_STATE_REPAINT_REQUIRED) {
+        Widget::paint();
+        if (bitmap.buffer) {
+            for (Widget* widget : children) {
+                widget->repaint();
+                widget->copyBitmap(graphics);
+            }
+        }
     }
 }
 void Container::performLayout() {
@@ -536,6 +636,37 @@ void Container::performLayout() {
     } else {
         DefaultLayout layout;
         layout.performLayout(children, bounds);
+    }
+}
+void Container::updateLayout() {
+    performLayout();
+    for (Widget* widget : children) {
+        widget->updatePaintState();
+    }
+}
+void Container::updatePaintState() {
+    Widget::updatePaintState();
+    if (!(paintState & WIDGET_PAINT_STATE_REPAINT_REQUIRED)) {
+        for (Widget* widget : children) {
+            if (widget->getPaintState() != WIDGET_PAINT_STATE_PAINTED) {
+                paintState |= WIDGET_PAINT_STATE_REPAINT_REQUIRED;
+                break;
+            }
+        }
+    }
+}
+Rect Container::getRepaintBounds() {
+    if (paintState & WIDGET_PAINT_STATE_REPAINT_REQUIRED) {
+        return Widget::getRepaintBounds();
+    } else {
+        Rect bounds;
+        for (int i = 0; i < children.count(); i++){
+            if (children[i]->getPaintState() == WIDGET_PAINT_STATE_REPAINT_REQUIRED) {
+                Rect childBounds = children[i]->getRepaintBounds();
+                bounds = bounds + childBounds;
+            }
+        }
+        return bounds + location;
     }
 }
 void Container::destroy() {
@@ -586,4 +717,81 @@ void Window::unregisterWindow() {
         deregister_window(handle);
         handle = nullptr;
     }
+}
+void Window::handleWindowEvent(Event* event) {
+    if (event->type == MOUSE_EVENT) {
+        MouseInfo mouseInfo = event->mouse_info;
+        Widget* widget = getWidgetAt(Point(mouseInfo.mouse_x, mouseInfo.mouse_y));
+        if (widget) {
+            if (mouseInfo.left_button) {
+                focusedWidget = widget;
+            }
+            widget->handleEvent(event);
+            handlePaintUpdate(widget);
+        }
+    } else if (event->type == KEYBOARD_EVENT) {
+        if (focusedWidget) {
+            focusedWidget->handleEvent(event);
+            handlePaintUpdate(focusedWidget);
+        }
+    }
+}
+void Window::handlePaintUpdate(Widget* widget) {
+    Widget* currentWidget = nullptr;
+    Rect repaintBounds;
+    if (widget->getPaintState() & WIDGET_PAINT_STATE_LAYOUT_REQUIRED) {
+        Widget* parent = widget->getParent();
+        if (parent) {
+           ((Container*)parent)->updateLayout();
+           currentWidget = parent;
+           repaintBounds = parent->getRepaintBounds();
+           parent->updatePaintState();
+        }
+    }
+    if (currentWidget == nullptr) {
+        currentWidget = widget;
+        repaintBounds = widget->getRepaintBounds();
+    }
+    while (currentWidget->getParent()) {
+        currentWidget = currentWidget->getParent();
+        Point location = currentWidget->getLocation();
+        repaintBounds = repaintBounds + location;
+        widget->updatePaintState();
+    }
+    if (repaintBounds.width > 0 && repaintBounds.height > 0) {
+        repaint();
+        updateRegion(repaintBounds);
+    }
+}
+void Window::listenToEvents() {
+    eventQueue = new EventQueue(10);
+    eventQueue->register_event_queue();
+
+    while (true) {
+        Event event = eventQueue->deque();
+        if (event.type != NO_EVENT) {
+            handleWindowEvent(&event);
+        }
+    }
+}
+void Window::updateRegion(Rect &bounds) {
+    if (handle) {
+        bounds_t abs_bounds;
+        abs_bounds.locationx = bounds.x;
+        abs_bounds.locationy = bounds.y;
+        abs_bounds.width = bounds.width;
+        abs_bounds.height = bounds.height;
+        redraw_window_region(handle, &abs_bounds);
+    }
+}
+void Window::destroy() {
+    if (eventQueue) {
+        eventQueue->deregister_event_queue();
+        delete eventQueue;
+        eventQueue = nullptr;
+    }
+    if (handle) {
+        unregisterWindow();
+    }
+    Container::destroy();
 }

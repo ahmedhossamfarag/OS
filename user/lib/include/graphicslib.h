@@ -14,6 +14,8 @@ typedef struct Color {
     Color(uint8_t r, uint8_t g, uint8_t b);
     Color(uint32_t color);
 
+    bool operator==(Color& c);
+    bool operator!=(Color& c);
     uint32_t toUint32();
 } Color;
 
@@ -61,6 +63,9 @@ typedef struct Rect {
     Rect();
     Rect(int x, int y, int width, int height);
     Rect(Point p, Size s);
+    Rect operator+(Point& p);
+    Rect operator-(Point& p);
+    Rect operator+(Rect& r);    // Union of two rectangles
 } Rect;
 
 
