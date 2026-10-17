@@ -131,18 +131,19 @@ void Widget::setParent(Widget* parent) {
 void Widget::paintBorder() {
     if (border.thickness) {
         if (border.radius) {
-            graphics.drawRoundedRect(Rect(location, paintSize), border.radius, border.color);
+            graphics.drawRoundedRect(Rect(Point(0, 0), paintSize), border.radius, border.color);
         } else {
-            graphics.drawRectangle(Rect(location, paintSize), border.color);
+            graphics.drawRectangle(Rect(Point(0, 0), paintSize), border.color);
         }
     }
 }
 void Widget::paintBackground() {
+    graphics.clear(Color());
     if (backgroundColor.a) {
         if (border.radius) {
-            graphics.fillRoundedRect(Rect(location, paintSize), border.radius, backgroundColor);
+            graphics.fillRoundedRect(Rect(Point(0, 0), paintSize), border.radius, backgroundColor);
         } else {
-            graphics.fillRect(Rect(location, paintSize), backgroundColor);
+            graphics.fillRect(Rect(Point(0, 0), paintSize), backgroundColor);
         }
     }
 }
@@ -258,7 +259,7 @@ void FlexLayout::performLayout(Array<Widget*> &widgets, Rect &bounds) {
 
     if (direction == FLEX_DIRECTION_ROW || direction == FLEX_DIRECTION_ROW_REVERSE) {
         uint32_t computedWidth = getComputedWidth(widgets, bounds.height);
-        uint32_t growableWidth = math_max(0, bounds.width - computedWidth);
+        uint32_t growableWidth = math_max(0u, bounds.width - computedWidth);
         for (int i = 0; i < widgets.count(); i++) {
             Widget* widget = widgets[i];
             if (availableWidth == 0) {
@@ -291,7 +292,7 @@ void FlexLayout::performLayout(Array<Widget*> &widgets, Rect &bounds) {
         }
     } else if (direction == FLEX_DIRECTION_COLUMN || direction == FLEX_DIRECTION_COLUMN_REVERSE) {
         uint32_t computedHeight = getComputedHeight(widgets, bounds.width);
-        uint32_t growableHeight = math_max(0, bounds.height - computedHeight);
+        uint32_t growableHeight = math_max(0u, bounds.height - computedHeight);
         for (int i = 0; i < widgets.count(); i++) {
             Widget* widget = widgets[i];
             if (availableHeight == 0) {
@@ -322,6 +323,7 @@ void FlexLayout::performLayout(Array<Widget*> &widgets, Rect &bounds) {
                     availableHeight -= spacing;
                 }
             }
+        }
     }
 
     if (direction == FLEX_DIRECTION_ROW_REVERSE) {
@@ -373,7 +375,7 @@ void FlexLayout::performLayout(Array<Widget*> &widgets, Rect &bounds) {
             int x;
             if (alignment & ALIGNMENT_RIGHT) {
                 x = bounds.x + bounds.width - widget->getPaintWidth();
-            } else if (alignment & ALIGNMENT_MIDDLE) {
+            } else if (alignment & ALIGNMENT_CENTER) {
                 x = bounds.x + (bounds.width - widget->getPaintWidth()) / 2;
             } else {
                 x = bounds.x;
@@ -392,7 +394,7 @@ void FlexLayout::performLayout(Array<Widget*> &widgets, Rect &bounds) {
             int x;
             if (alignment & ALIGNMENT_RIGHT) {
                 x = bounds.x + bounds.width - widget->getPaintWidth();
-            } else if (alignment & ALIGNMENT_MIDDLE) {
+            } else if (alignment & ALIGNMENT_CENTER) {
                 x = bounds.x + (bounds.width - widget->getPaintWidth()) / 2;
             } else {
                 x = bounds.x;
@@ -403,8 +405,6 @@ void FlexLayout::performLayout(Array<Widget*> &widgets, Rect &bounds) {
     }
 }
 
-}
-
 uint32_t GridLayout::getComputedWidth(Array<Widget*> &widgets, uint32_t height) {
     return 0;
 }
@@ -412,8 +412,8 @@ uint32_t GridLayout::getComputedHeight(Array<Widget*> &widgets, uint32_t width) 
     return 0;
 }
 void GridLayout::performLayout(Array<Widget*> &widgets, Rect &bounds) {
-    uint32_t cellWidth = math_max(0,  (bounds.width - (columns - 1) * spacing) / columns);
-    uint32_t cellHeight = math_max(0, (bounds.height - (rows - 1) * spacing) / rows);
+    uint32_t cellWidth = math_max(0u,  (bounds.width - (columns - 1) * spacing) / columns);
+    uint32_t cellHeight = math_max(0u, (bounds.height - (rows - 1) * spacing) / rows);
 
     if (cellWidth == 0 || cellHeight == 0 || columns == 0 || rows == 0) {
         for (Widget* widget : widgets) {
@@ -466,7 +466,7 @@ void GridLayout::performLayout(Array<Widget*> &widgets, Rect &bounds) {
             x = bounds.x;
             if (maxRowSpan > 0) {
                 row += maxRowSpan;
-                y += cellHeight * maxRowSpan + spacing * (maxRowSpan - 1);
+                y += cellHeight * maxRowSpan + spacing * maxRowSpan;
                 maxRowSpan = 0;
             }
         }
@@ -489,7 +489,7 @@ uint32_t FlowLayout::getComputedHeight(Array<Widget*> &widgets, uint32_t width) 
     return height;
 }
 void FlowLayout::performLayout(Array<Widget*> &widgets, Rect &bounds) {
-    uint32_t columnWidth = math_max(0,  (bounds.width - (columns - 1) * spacing) / columns);
+    uint32_t columnWidth = math_max(0u,  (bounds.width - (columns - 1) * spacing) / columns);
 
     if (columnWidth == 0 || columns == 0 || bounds.height == 0) {
         for (Widget* widget : widgets) {
@@ -613,7 +613,9 @@ Widget* Container::getWidgetAt(Point p) {
 void Container::paint() {
     Widget::paint();
     if (bitmap.buffer) {
+        performLayout();
         for (Widget* widget : children) {
+            widget->paint();
             widget->copyBitmap(graphics);
         }
     }
@@ -678,7 +680,9 @@ void Container::destroy() {
 }
 
 Window::Window(): Window(WidgetProperties()) {}
-Window::Window(WidgetProperties properties): Container(properties), handle(nullptr), fullscreen(false) {}
+Window::Window(WidgetProperties properties): Container(properties), handle(nullptr), fullscreen(false) {
+    paintSize = properties.preferredSize;
+}
 void Window::setFullscreen(bool fullscreen) {
     this->fullscreen = fullscreen;
     if (fullscreen) {

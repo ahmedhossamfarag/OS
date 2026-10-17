@@ -1,16 +1,20 @@
 #include <stdint.h>
 
-int math_ciel(float x);
 
-/* Return x as ciel multiple of m */
-uint32_t math_cielm(uint32_t x, uint32_t m);
+template <typename T>
+T math_abs(T x)
+{
+    return x < 0 ? -x : x;
+}
 
-/* Return x as floor multiple of m */
-uint32_t math_floorm(uint32_t x, uint32_t m);
+template <typename T>
+T math_max(T x, T y)
+{
+    return x >= y ? x : y;
+}
 
-int math_abs(int x);
-
-
-int math_max(int x, int y);
-
-int math_min(int x, int y);
+template <typename T>
+T math_min(T x, T y)
+{
+    return x <= y ? x : y;
+}
