@@ -259,7 +259,7 @@ void FlexLayout::performLayout(Array<Widget*> &widgets, Rect &bounds) {
 
     if (direction == FLEX_DIRECTION_ROW || direction == FLEX_DIRECTION_ROW_REVERSE) {
         uint32_t computedWidth = getComputedWidth(widgets, bounds.height);
-        uint32_t growableWidth = math_max(0u, bounds.width - computedWidth);
+        uint32_t growableWidth = math_max(0, (int)bounds.width - (int)computedWidth);
         for (int i = 0; i < widgets.count(); i++) {
             Widget* widget = widgets[i];
             if (availableWidth == 0) {
@@ -292,7 +292,7 @@ void FlexLayout::performLayout(Array<Widget*> &widgets, Rect &bounds) {
         }
     } else if (direction == FLEX_DIRECTION_COLUMN || direction == FLEX_DIRECTION_COLUMN_REVERSE) {
         uint32_t computedHeight = getComputedHeight(widgets, bounds.width);
-        uint32_t growableHeight = math_max(0u, bounds.height - computedHeight);
+        uint32_t growableHeight = math_max(0, (int)bounds.height - (int)computedHeight);
         for (int i = 0; i < widgets.count(); i++) {
             Widget* widget = widgets[i];
             if (availableHeight == 0) {
@@ -412,8 +412,8 @@ uint32_t GridLayout::getComputedHeight(Array<Widget*> &widgets, uint32_t width) 
     return 0;
 }
 void GridLayout::performLayout(Array<Widget*> &widgets, Rect &bounds) {
-    uint32_t cellWidth = math_max(0u,  (bounds.width - (columns - 1) * spacing) / columns);
-    uint32_t cellHeight = math_max(0u, (bounds.height - (rows - 1) * spacing) / rows);
+    uint32_t cellWidth = math_max(0,  ((int)bounds.width - ((int)columns - 1) * (int)spacing) / (int)columns);
+    uint32_t cellHeight = math_max(0, ((int)bounds.height - ((int)rows - 1) * (int)spacing) / (int)rows);
 
     if (cellWidth == 0 || cellHeight == 0 || columns == 0 || rows == 0) {
         for (Widget* widget : widgets) {
@@ -489,7 +489,7 @@ uint32_t FlowLayout::getComputedHeight(Array<Widget*> &widgets, uint32_t width) 
     return height;
 }
 void FlowLayout::performLayout(Array<Widget*> &widgets, Rect &bounds) {
-    uint32_t columnWidth = math_max(0u,  (bounds.width - (columns - 1) * spacing) / columns);
+    uint32_t columnWidth = math_max(0,  ((int)bounds.width - ((int)columns - 1) * (int)spacing) / (int)columns);
 
     if (columnWidth == 0 || columns == 0 || bounds.height == 0) {
         for (Widget* widget : widgets) {
