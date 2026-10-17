@@ -71,15 +71,15 @@ uint8_t update_window_bounds(void* window_handle, bounds_t* bounds)
     return (uint8_t)result;
 }
 
-uint8_t get_screen_size(int32_t* width, int32_t* height)
+uint8_t get_screen_size(uint32_t* width, uint32_t* height)
 {
     asm("mov %0, %%rsi\n\t""int $0x80"::"i"(GET_SCREEN_SIZE_SYSCALL));
 
     uint64_t result;
     asm("mov %%rax, %0":"=m"(result));
     
-    *width = (int32_t)(result & 0xFFFFFFFF);
-    *height = (int32_t)(result >> 32);
+    *width = (uint32_t)(result & 0xFFFFFFFF);
+    *height = (uint32_t)(result >> 32);
     
     return result != 0;
 }

@@ -42,6 +42,7 @@ class Widget {
 
         Rect getBounds();
         Rect getInnerBounds();
+        Rect getRelativeInnerBounds();
         LayoutProperties &getLayoutProperties();
         virtual uint32_t getWidth();
         virtual uint32_t getHeight();
@@ -51,7 +52,11 @@ class Widget {
         uint32_t getPaintHeight();
         void setLocation(Point location);
         Point getLocation();
-        void destroy();
+        Widget* getParent();
+        void setParent(Widget* parent);
+        virtual void paint();
+        virtual void copyBitmap(Graphics &g);
+        virtual void destroy();
 
     protected:
         Widget* parent;
@@ -65,6 +70,9 @@ class Widget {
         LayoutProperties layoutProperties;
         Bitmap bitmap;
         Graphics graphics;
+
+        void paintBorder();
+        void paintBackground();
 };
 
 class Layout {
@@ -72,6 +80,13 @@ class Layout {
         virtual uint32_t getComputedWidth(Array<Widget*> &widgets, uint32_t height) = 0;
         virtual uint32_t getComputedHeight(Array<Widget*> &widgets, uint32_t width) = 0;
         virtual void performLayout(Array<Widget*> &widgets, Rect &bounds) = 0;
+};
+
+class DefaultLayout : public Layout {
+    public:
+        uint32_t getComputedWidth(Array<Widget*> &widgets, uint32_t height) override;
+        uint32_t getComputedHeight(Array<Widget*> &widgets, uint32_t width) override;
+        void performLayout(Array<Widget*> &widgets, Rect &bounds) override;
 };
 
 typedef enum FlexDirection {
@@ -135,8 +150,25 @@ class Container : public Widget {
         void removeChild(Widget* widget);
         uint32_t getWidth() override;
         uint32_t getHeight() override;
+        void paint() override;
+        void performLayout();
+        void destroy() override;
 
     protected:
         Array<Widget*> children;
         Layout* layout;
+};
+
+class Window : public Container {
+    public:
+        Window();
+        Window(WidgetProperties properties);
+
+        void setFullscreen(bool fullscreen);
+        void registerWindow();
+        void unregisterWindow();
+
+    protected:
+        void* handle;
+        bool fullscreen;
 };

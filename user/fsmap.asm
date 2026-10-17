@@ -2,7 +2,7 @@ NameLn equ 100
 FILE_TYPE equ 0x33
 DIR_TYPE equ 0x55
 
-SHELL_N_BLOCKS equ 100
+SHELL_N_BLOCKS equ 120
 
 ; RLBA equ 201
 ; DLBA equ 203
