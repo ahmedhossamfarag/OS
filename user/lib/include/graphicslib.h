@@ -2,6 +2,7 @@
 #define GRAPHICS_H
 
 #include <stdint.h>
+#include <dslib.h>
 
 typedef struct Color {
     uint8_t r;
@@ -66,6 +67,11 @@ typedef struct Rect {
     Rect operator+(Point& p);
     Rect operator-(Point& p);
     Rect operator+(Rect& r);    // Union of two rectangles
+    operator bool();
+    Rect intersect(Rect& r);
+    int endX();
+    int endY();
+    bool contains(Point p);
 } Rect;
 
 
@@ -106,6 +112,25 @@ private:
     Bitmap* bitmap;
 };
 
+
+class BmDrawer {
+    public:
+        BmDrawer(Bitmap* bitmap);
+        void setOrigin(Point p);
+        void setClipping(Rect r);
+        void clearOrigin();
+        void clearClipping();
+        void drawBitmap(Point p, Bitmap* src);
+        void drawBitmapAlpha(Point p, Bitmap* src);
+        uint32_t* getBuffer();
+
+    private:
+        Bitmap* bitmap;
+        Point origin;
+        Rect clipping;
+        Stack<Point> originStack;
+        Stack<Rect> clippingStack;
+};
 
 /* Pixels */
 void     set_pixel(Bitmap* bitmap, int x, int y, uint32_t color);

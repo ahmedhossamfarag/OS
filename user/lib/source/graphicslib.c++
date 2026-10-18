@@ -580,7 +580,22 @@ Rect Rect::operator+(Rect& r) {
     uint64_t minY = math_min(y, r.y);
     uint64_t maxX = math_max(x + width, r.x + r.width);
     uint64_t maxY = math_max(y + height, r.y + r.height);
+    if (maxX < minX || maxY < minY) return Rect();
     return Rect(minX, minY, maxX - minX, maxY - minY);
+}
+Rect::operator bool() { return width > 0 && height > 0; }
+Rect Rect::intersect(Rect& r) {
+    uint32_t minX = math_max(x, r.x);
+    uint32_t minY = math_max(y, r.y);
+    uint32_t maxX = math_min(x + width, r.x + r.width);
+    uint32_t maxY = math_min(y + height, r.y + r.height);
+    if (maxX < minX || maxY < minY) return Rect();
+    return Rect(minX, minY, maxX - minX, maxY - minY);
+}
+int Rect::endX() { return x + width; }
+int Rect::endY() { return y + height; }
+bool Rect::contains(Point p) {
+    return p.x >= x && p.y >= y && p.x < x + width && p.y < y + height;
 }
 
 Graphics::Graphics(Bitmap* bitmap): bitmap(bitmap) {}
@@ -670,4 +685,67 @@ void Graphics::blitBitmap(Rect dstRect, Bitmap* src, Rect srcRect) {
 }
 int Graphics::floodFill(Point p, Color newColor, int* stack, int stackCapacity) {
     return flood_fill(bitmap, p.x, p.y, newColor.toUint32(), stack, stackCapacity);
+}
+
+
+BmDrawer::BmDrawer(Bitmap* bitmap):
+            bitmap(bitmap), 
+            origin(), 
+            clipping(0, 0, bitmap->width, bitmap->height), 
+            originStack(10), 
+            clippingStack(10) 
+            {}
+void BmDrawer::setOrigin(Point p) {
+    originStack.push(origin);
+    origin = origin + p;
+}
+void BmDrawer::setClipping(Rect r) {
+    r = r + origin;
+    clippingStack.push(clipping);
+    clipping = clipping.intersect(r);
+}
+void BmDrawer::clearOrigin() {
+    if (originStack.any()){
+        origin = originStack.pop();
+    }
+}
+void BmDrawer::clearClipping() {
+    if (clippingStack.any()){
+        clipping = clippingStack.pop();
+    }
+}
+void BmDrawer::drawBitmap(Point p, Bitmap* src) {
+    if (bitmap == src) {
+        return;
+    }
+    p = p + origin;
+    if (clipping) {
+        for (int y = 0; y < src->height; y++) {
+            for (int x = 0; x < src->width; x++) {
+                Point dstPoint = Point(p.x + x, p.y + y);
+                if (clipping.contains(dstPoint)) {
+                    set_pixel(bitmap, p.x + x, p.y + y, get_pixel(src, x, y));
+                }
+            }
+        }
+    }
+}
+void BmDrawer::drawBitmapAlpha(Point p, Bitmap* src) {
+    if (bitmap == src) {
+        return;
+    }
+    p = p + origin;
+    if (clipping) {
+        for (int y = 0; y < src->height; y++) {
+            for (int x = 0; x < src->width; x++) {
+                Point dstPoint = Point(p.x + x, p.y + y);
+                if (clipping.contains(dstPoint)) {
+                    set_pixel_alpha(bitmap, p.x + x, p.y + y, get_pixel(src, x, y));
+                }
+            }
+        }
+    }
+}
+uint32_t* BmDrawer::getBuffer() {
+    return bitmap->buffer;
 }

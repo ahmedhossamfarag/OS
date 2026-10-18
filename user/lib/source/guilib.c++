@@ -17,6 +17,10 @@ Widget::Widget(WidgetProperties properties):
         constraints(properties.constraints), 
         backgroundColor(properties.backgroundColor),
         layoutProperties(properties.layoutProperties),
+        eventHandlers(properties.eventHandlers),
+        mouseOver(false),
+        mouseDown(false),
+        mousePressed(false),
         bitmap(),
         graphics(nullptr),
         paintState(WIDGET_PAINT_STATE_INIT)
@@ -46,7 +50,7 @@ Rect Widget::getRelativeInnerBounds() {
         paintSize.height - padding.vertical * 2
     );
 }
-LayoutProperties &Widget::getLayoutProperties() {
+LayoutProperties Widget::getLayoutProperties() {
     return layoutProperties;
 }
 uint32_t Widget::getWidth() {
@@ -112,11 +116,19 @@ void Widget::setBackgroundColor(Color backgroundColor) {
 Color Widget::getBackgroundColor() {
     return backgroundColor;
 }
+EventHandlers Widget::getEventHandlers() {
+    return eventHandlers;
+}
+void Widget::setEventHandlers(EventHandlers eventHandlers) {
+    this->eventHandlers = eventHandlers;
+}
+bool Widget::isFocus() { return focus; }
+void Widget::setFocus(bool focus) { this->focus = focus; }
 bool Widget::containtPoint(Point p) {
     return p.x >= location.x && p.y >= location.y && 
             p.x < location.x + paintSize.width && p.y < location.y + paintSize.height;
 }
-Widget* Widget::getWidgetAt(Point p) {
+Widget* Widget::getWidgetAt(Point &p) {
     if (containtPoint(p)) {
         return this;
     }
@@ -147,24 +159,36 @@ void Widget::paintBackground() {
         }
     }
 }
-void Widget::paint() {
-    bitmap = Bitmap(paintSize.width, paintSize.height);
+void Widget::paint(BmDrawer* bmDrawer) {
+    if (bitmap.width != paintSize.width || bitmap.height != paintSize.height) {
+        if (bitmap.buffer) {
+            delete[] bitmap.buffer;
+        }
+        bitmap = Bitmap(paintSize.width, paintSize.height);
+    }
     graphics = Graphics(&bitmap);
     if (bitmap.buffer) {
         paintBackground();
         paintBorder();
+        if (bmDrawer) {
+            bmDrawer->drawBitmapAlpha(location, &bitmap);
+        }
     }
     paintLocation = location;
     paintState = WIDGET_PAINT_STATE_PAINTED;
 }
-void Widget::repaint() {
+void Widget::repaint(BmDrawer* bmDrawer) {
     if (paintState & WIDGET_PAINT_STATE_REPAINT_REQUIRED) {
-        paint();
+        paint(bmDrawer);
     }
 }
-void Widget::copyBitmap(Graphics &g) {
-    if (bitmap.buffer) {
-        g.drawBitmapAlpha(location, &bitmap);
+void Widget::copyBitmap(BmDrawer* bmDrawer) {
+    if (paintState & WIDGET_PAINT_STATE_REPAINT_REQUIRED) {
+        repaint(bmDrawer);
+        return;
+    }
+    if (bitmap.buffer && bmDrawer) {
+        bmDrawer->drawBitmapAlpha(location, &bitmap);
     }
 }
 uint32_t Widget::getPaintState() {
@@ -172,7 +196,7 @@ uint32_t Widget::getPaintState() {
 }
 void Widget::updatePaintState() {
     if (paintLocation != location || paintSize.width != bitmap.width || paintSize.height != bitmap.height) {
-        paintState |= WIDGET_PAINT_STATE_REPAINT_REQUIRED;
+        paintState |= WIDGET_PAINT_STATE_REPAINT_REQUIRED | WIDGET_PAINT_STATE_LAYOUT_REQUIRED;
     } else if (!(paintState & WIDGET_PAINT_STATE_REPAINT_REQUIRED)) {
         paintState = WIDGET_PAINT_STATE_PAINTED;
     }
@@ -186,7 +210,70 @@ Rect Widget::getRepaintBounds() {
     }
 }
 void Widget::handleEvent(Event* event) {
-    // TODO: Implement event handling
+    if (event->type == MOUSE_EVENT) {
+        MouseInfo mouseInfo = event->mouse_info;
+        if (!containtPoint(Point(mouseInfo.mouse_x, mouseInfo.mouse_y))) {
+            mouseOver = false;
+            if (eventHandlers.onMouseLeave){
+                eventHandlers.onMouseLeave(this, mouseInfo);
+            }
+            return;
+        }
+        if (!mouseOver) {
+            mouseOver = true;
+            mouseDown = mouseInfo.left_button;
+            mousePressed = false;
+            if (eventHandlers.onMouseEnter) {
+                eventHandlers.onMouseEnter(this, mouseInfo);
+            }
+            return;
+        }
+        if (mouseInfo.left_button != mouseDown){
+            mouseDown = mouseInfo.left_button;
+            if (mouseDown) {
+                if (eventHandlers.onMouseDown) {
+                    eventHandlers.onMouseDown(this, mouseInfo);
+                }
+                mousePressed = true;
+            } else {
+                if (eventHandlers.onMouseUp) {
+                    eventHandlers.onMouseUp(this, mouseInfo);
+                }
+                if (mousePressed) {
+                    if (eventHandlers.onClick) {
+                        eventHandlers.onClick(this, mouseInfo);
+                    }
+                    mousePressed = false;
+                }
+            }
+            return;
+        }
+        if (eventHandlers.onMouseMove) {
+            eventHandlers.onMouseMove(this, mouseInfo);
+        }
+    } else if (event->type == KEYBOARD_EVENT) {
+        KeyInfo keyInfo = event->key_info;
+        if (keyInfo.key_release) {
+            if (eventHandlers.onKeyUp) {
+                eventHandlers.onKeyUp(this, keyInfo);
+            }
+        } else {
+            if (eventHandlers.onKeyDown) {
+                eventHandlers.onKeyDown(this, keyInfo);
+            }
+        }
+    }
+}
+void Widget::handleFocusChange() {
+    if (focus) {
+        if (eventHandlers.onFocusIn) {
+            eventHandlers.onFocusIn(this);
+        }
+    } else {
+        if (eventHandlers.onFocusOut) {
+            eventHandlers.onFocusOut(this);
+        }
+    }
 }
 void Widget::destroy() {
     if (bitmap.buffer) {
@@ -598,37 +685,84 @@ uint32_t Container::getHeight() {
         return Widget::getHeight();
     }
 }
-Widget* Container::getWidgetAt(Point p) {
+Widget* Container::getWidgetAt(Point &p) {
     if (Widget::containtPoint(p)) {
-        p = p - location;
+        Point localPoint = p - location;
         for (Widget* widget : children) {
-            if (widget->containtPoint(p)) {
+            if (widget->containtPoint(localPoint)) {
+                p.x = localPoint.x - widget->getLocation().x;
+                p.y = localPoint.y - widget->getLocation().y;
                 return widget;
             }
         }
+        p = localPoint;
         return this;
     }
     return nullptr;
 }
-void Container::paint() {
-    Widget::paint();
-    if (bitmap.buffer) {
+void Container::paint(BmDrawer* bmDrawer) {
+    Widget::paint(bmDrawer);
+    if (bitmap.buffer && bmDrawer) {
         performLayout();
+        if (parent) {
+            bmDrawer->setOrigin(location);
+            bmDrawer->setClipping(getInnerBounds());
+        }
         for (Widget* widget : children) {
-            widget->paint();
-            widget->copyBitmap(graphics);
+            widget->paint(bmDrawer);
+        }
+        if (parent) {
+            bmDrawer->clearClipping();
+            bmDrawer->clearOrigin();
         }
     }
 }
-void Container::repaint() {
-    if (paintState & WIDGET_PAINT_STATE_REPAINT_REQUIRED) {
-        Widget::paint();
+void Container::repaint(BmDrawer* bmDrawer) {
+    if (paintState & WIDGET_PAINT_STATE_REPAINT_REQUIRED && bmDrawer) {
+        Widget::paint(bmDrawer);
+        if (parent) {
+            bmDrawer->setOrigin(location);
+            bmDrawer->setClipping(getInnerBounds());
+        }
         if (bitmap.buffer) {
             for (Widget* widget : children) {
-                widget->repaint();
-                widget->copyBitmap(graphics);
+                widget->copyBitmap(bmDrawer);
             }
         }
+        if (parent) {
+            bmDrawer->clearClipping();
+            bmDrawer->clearOrigin();
+        }
+        return;
+    }
+    if (parent) {
+        bmDrawer->setOrigin(location);
+        bmDrawer->setClipping(getInnerBounds());
+    }
+    if (bitmap.buffer) {
+        for (Widget* widget : children) {
+            widget->repaint(bmDrawer);
+        }
+    }
+    if (parent) {
+        bmDrawer->clearClipping();
+        bmDrawer->clearOrigin();
+    }
+}
+void Container::copyBitmap(BmDrawer* bmDrawer) {
+    if (paintState & WIDGET_PAINT_STATE_REPAINT_REQUIRED) {
+        repaint(bmDrawer);
+        return;
+    }
+    Widget::copyBitmap(bmDrawer);
+    if (bitmap.buffer) {
+        bmDrawer->setOrigin(location);
+        bmDrawer->setClipping(getInnerBounds());
+        for (Widget* widget : children) {
+            widget->copyBitmap(bmDrawer);
+        }
+        bmDrawer->clearClipping();
+        bmDrawer->clearOrigin();
     }
 }
 void Container::performLayout() {
@@ -650,7 +784,7 @@ void Container::updatePaintState() {
     Widget::updatePaintState();
     if (!(paintState & WIDGET_PAINT_STATE_REPAINT_REQUIRED)) {
         for (Widget* widget : children) {
-            if (widget->getPaintState() != WIDGET_PAINT_STATE_PAINTED) {
+            if (widget->getPaintState() & WIDGET_PAINT_STATE_LAYOUT_REQUIRED) {
                 paintState |= WIDGET_PAINT_STATE_REPAINT_REQUIRED;
                 break;
             }
@@ -680,7 +814,7 @@ void Container::destroy() {
 }
 
 Window::Window(): Window(WidgetProperties()) {}
-Window::Window(WidgetProperties properties): Container(properties), handle(nullptr), fullscreen(false) {
+Window::Window(WidgetProperties properties): Container(properties), handle(nullptr), fullscreen(false), bmDrawer(nullptr) {
     paintSize = properties.preferredSize;
 }
 void Window::setFullscreen(bool fullscreen) {
@@ -700,7 +834,9 @@ void Window::registerWindow() {
         this->unregisterWindow();
     }
     if (!bitmap.buffer) {
-        paint();
+        bitmap = Bitmap(paintSize.width, paintSize.height);
+        bmDrawer = new BmDrawer(&bitmap);
+        paint(bmDrawer);
     }
     if (bitmap.buffer) {
         window_t window{
@@ -711,7 +847,7 @@ void Window::registerWindow() {
                 .height = (int32_t)paintSize.height
             },
             .owner = 0,
-            .buffer = bitmap.buffer
+            .buffer = bmDrawer->getBuffer()
         };
         handle = register_window(&window);
     }
@@ -725,13 +861,26 @@ void Window::unregisterWindow() {
 void Window::handleWindowEvent(Event* event) {
     if (event->type == MOUSE_EVENT) {
         MouseInfo mouseInfo = event->mouse_info;
-        Widget* widget = getWidgetAt(Point(mouseInfo.mouse_x, mouseInfo.mouse_y));
+        Point mousePos{mouseInfo.mouse_x, mouseInfo.mouse_y};
+        Widget* widget = getWidgetAt(mousePos);
         if (widget) {
-            if (mouseInfo.left_button) {
-                focusedWidget = widget;
-            }
+            event->mouse_info.mouse_x = mousePos.x;
+            event->mouse_info.mouse_y = mousePos.y;
             widget->handleEvent(event);
             handlePaintUpdate(widget);
+            if (widget->isFocus()){
+                if (focusedWidget != widget) {
+                    if (focusedWidget) {
+                        focusedWidget->setFocus(false);
+                        focusedWidget->handleFocusChange();
+                        handlePaintUpdate(focusedWidget);
+                    }
+                    focusedWidget = widget;
+                    focusedWidget->setFocus(true);
+                    focusedWidget->handleFocusChange();
+                    handlePaintUpdate(focusedWidget);
+                }
+            }
         }
     } else if (event->type == KEYBOARD_EVENT) {
         if (focusedWidget) {
@@ -747,7 +896,6 @@ void Window::handlePaintUpdate(Widget* widget) {
         Widget* parent = widget->getParent();
         if (parent) {
            ((Container*)parent)->updateLayout();
-           currentWidget = parent;
            repaintBounds = parent->getRepaintBounds();
            parent->updatePaintState();
         }
@@ -756,14 +904,8 @@ void Window::handlePaintUpdate(Widget* widget) {
         currentWidget = widget;
         repaintBounds = widget->getRepaintBounds();
     }
-    while (currentWidget->getParent()) {
-        currentWidget = currentWidget->getParent();
-        Point location = currentWidget->getLocation();
-        repaintBounds = repaintBounds + location;
-        widget->updatePaintState();
-    }
     if (repaintBounds.width > 0 && repaintBounds.height > 0) {
-        repaint();
+        repaint(bmDrawer);
         updateRegion(repaintBounds);
     }
 }
@@ -796,6 +938,10 @@ void Window::destroy() {
     }
     if (handle) {
         unregisterWindow();
+    }
+    if (bmDrawer) {
+        delete bmDrawer;
+        bmDrawer = nullptr;
     }
     Container::destroy();
 }

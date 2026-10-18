@@ -2,6 +2,8 @@
 #include "evlib.h"
 #include "dslib.h"
 
+class Widget;
+
 typedef struct Border {
     uint32_t thickness = 0;
     Color color = {};
@@ -26,6 +28,20 @@ typedef struct LayoutProperties {
     uint32_t gridColumnSpan = 1;
 } LayoutProperties;
 
+typedef struct EventHandlers {
+    void (*onClick)(Widget* widget, MouseInfo mouseInfo) = nullptr;
+    void (*onMouseEnter)(Widget* widget, MouseInfo mouseInfo) = nullptr;
+    void (*onMouseLeave)(Widget* widget, MouseInfo mouseInfo) = nullptr;
+    void (*onMouseMove)(Widget* widget, MouseInfo mouseInfo) = nullptr;
+    void (*onMouseDown)(Widget* widget, MouseInfo mouseInfo) = nullptr;
+    void (*onMouseUp)(Widget* widget, MouseInfo mouseInfo) = nullptr;
+    void (*onMouseWheel)(Widget* widget, MouseInfo mouseInfo) = nullptr;
+    void (*onKeyDown)(Widget* widget, KeyInfo keyInfo) = nullptr;
+    void (*onKeyUp)(Widget* widget, KeyInfo keyInfo) = nullptr;
+    void (*onFocusIn)(Widget* widget) = nullptr;
+    void (*onFocusOut)(Widget* widget) = nullptr;
+} EventHandlers;
+
 typedef struct WidgetProperties {
     Point location = {};
     Size preferredSize = {};
@@ -34,6 +50,7 @@ typedef struct WidgetProperties {
     Constraints constraints = {};
     Color backgroundColor = {};
     LayoutProperties layoutProperties = {};
+    EventHandlers eventHandlers = {};
 } WidgetProperties;
 
 typedef enum WidgetPaintState{
@@ -51,7 +68,7 @@ class Widget {
         Rect getBounds();
         Rect getInnerBounds();
         Rect getRelativeInnerBounds();
-        LayoutProperties &getLayoutProperties();
+        LayoutProperties getLayoutProperties();
         virtual uint32_t getWidth();
         virtual uint32_t getHeight();
         void setPaintWidth(uint32_t width);
@@ -64,17 +81,22 @@ class Widget {
         Size getPreferredSize();
         void setBackgroundColor(Color backgroundColor);
         Color getBackgroundColor();
+        EventHandlers getEventHandlers();
+        void setEventHandlers(EventHandlers eventHandlers);
+        bool isFocus();
+        void setFocus(bool focus);
         bool containtPoint(Point p);
-        virtual Widget* getWidgetAt(Point p);
+        virtual Widget* getWidgetAt(Point &p);
         Widget* getParent();
         void setParent(Widget* parent);
-        virtual void paint();
-        virtual void repaint();
-        virtual void copyBitmap(Graphics &g);
+        virtual void paint(BmDrawer* bmDrawer);
+        virtual void repaint(BmDrawer* bmDrawer);
+        virtual void copyBitmap(BmDrawer* bmDrawer);
         uint32_t getPaintState();
         virtual void updatePaintState();
         virtual Rect getRepaintBounds();
         virtual void handleEvent(Event* event);
+        virtual void handleFocusChange();
         virtual void destroy();
 
     protected:
@@ -88,6 +110,11 @@ class Widget {
         Constraints constraints;
         Color backgroundColor;
         LayoutProperties layoutProperties;
+        EventHandlers eventHandlers;
+        bool mouseOver;
+        bool mouseDown;
+        bool mousePressed;
+        bool focus;
         Bitmap bitmap;
         Graphics graphics;
         uint32_t paintState;
@@ -171,9 +198,10 @@ class Container : public Widget {
         void removeChild(Widget* widget);
         uint32_t getWidth() override;
         uint32_t getHeight() override;
-        Widget* getWidgetAt(Point p) override;
-        void paint() override;
-        void repaint() override;
+        Widget* getWidgetAt(Point &p) override;
+        void paint(BmDrawer* bmDrawer) override;
+        void repaint(BmDrawer* bmDrawer) override;
+        void copyBitmap(BmDrawer* bmDrawer) override;
         void performLayout();
         void updateLayout();
         void updatePaintState() override;
@@ -202,6 +230,7 @@ class Window : public Container {
         bool fullscreen;
         EventQueue* eventQueue;
         Widget* focusedWidget;
+        BmDrawer* bmDrawer;
 
         void handleWindowEvent(Event* event);
         void handlePaintUpdate(Widget* widget);
